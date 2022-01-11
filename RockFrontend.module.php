@@ -10,6 +10,7 @@ class RockFrontend extends WireData implements Module {
 
   const tags = "RockFrontend";
   const prefix = "rockfrontend_";
+  const tagsUrl = "/rockfrontend-layout-suggestions/{q}";
 
   const field_layout = self::prefix."layout";
 
@@ -19,7 +20,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.1',
+      'version' => '0.0.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -40,6 +41,46 @@ class RockFrontend extends WireData implements Module {
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
+    $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
+  }
+
+  /**
+   * Find files to suggest
+   * @return array
+   */
+  public function ___findSuggestFiles($q) {
+    $suggestions = [];
+    foreach($this->folders as $dir) {
+      // find all files to add
+      $files = $this->wire->files->find($dir, [
+        'extensions' => ['php'],
+        'excludeDirNames' => [
+          'cache',
+        ],
+      ]);
+
+      // modify file paths
+      $files = array_map(function($item) use($dir) {
+        // strip path from file
+        $str = str_replace($dir, "", $item);
+        // strip php file extension
+        return substr($str, 0, -4);
+      }, $files);
+
+      // only use files from within subfolders of the specified directory
+      $files = array_filter($files, function($str) use($q) {
+        if(!strpos($str, "/")) return false;
+        return !(strpos($str, $q)<0);
+      });
+
+      // merge files into final array
+      $suggestions = array_merge(
+        $suggestions,
+        $files
+      );
+    }
+    // bd($suggestions);
+    return $suggestions;
   }
 
   /**
@@ -71,6 +112,16 @@ class RockFrontend extends WireData implements Module {
   }
 
   /**
+   * Get layout from page field
+   * @return array|false
+   */
+  public function getLayout($page) {
+    $layout = $page->get(self::field_layout);
+    if(!$layout) return false;
+    return explode(" ", $layout);
+  }
+
+  /**
    * Hide layout field for non-superusers
    * @return void
    */
@@ -80,17 +131,29 @@ class RockFrontend extends WireData implements Module {
     $form->remove(self::field_layout);
   }
 
+  /**
+   * Return layout suggestions
+   */
+  public function layoutSuggestions(HookEvent $event) {
+    return $this->findSuggestFiles($event->q);
+  }
+
   public function migrate() {
     $rm = $this->rm();
     $rm->migrate([
       'fields' => [
         self::field_layout => [
-          'type' => 'textarea',
+          'type' => 'text',
           'tags' => self::tags,
           'label' => 'Layout',
           'icon' => 'cubes',
           'collapsed' => Inputfield::collapsedYes,
           'notes' => 'This field is only visible to superusers',
+          'inputfieldClass' => 'InputfieldTextTags',
+          'allowUserTags' => false,
+          'useAjax' => true,
+          'tagsUrl' => self::tagsUrl,
+          'closeAfterSelect' => false,
         ],
       ],
     ]);
@@ -152,6 +215,18 @@ class RockFrontend extends WireData implements Module {
 
     $options = $opt->getArray();
     return $this->wire->files->render($file, $vars, $options);
+  }
+
+  /**
+   * Render layout of given page
+   * @return string
+   */
+  public function renderLayout(Page $page, array $fallback) {
+    $layout = $this->getLayout($page);
+    if($layout === false) return $this->render($fallback);
+    $out = '';
+    foreach($layout as $file) $out .= $this->render($file);
+    return $out;
   }
 
   /**
