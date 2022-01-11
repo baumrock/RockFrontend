@@ -20,7 +20,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.3',
+      'version' => '0.0.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -134,6 +134,16 @@ class RockFrontend extends WireData implements Module {
   }
 
   /**
+   * Return an image tag for the given file
+   * @return string
+   */
+  public function img($file) {
+    $url = $this->url($file);
+    if($url) return "<img src='$url'>";
+    return '';
+  }
+
+  /**
    * Return layout suggestions
    */
   public function layoutSuggestions(HookEvent $event) {
@@ -187,6 +197,9 @@ class RockFrontend extends WireData implements Module {
     $page = $this->wire->page;
     if(!$vars) $vars = [];
 
+    // we add the $rf variable to all files that are rendered via RockFrontend
+    $vars = array_merge($vars, ['rf'=>$this]);
+
     // options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
@@ -236,6 +249,16 @@ class RockFrontend extends WireData implements Module {
    */
   public function rm() {
     return $this->wire->modules->get('RockMigrations');
+  }
+
+  /**
+   * Given a path return the url relative to pw root
+   * @return string
+   */
+  public function url($path) {
+    $path = $this->getFile($path);
+    $config = $this->wire->config;
+    return str_replace($config->paths->root, $config->urls->root, $path);
   }
 
   public function ___install() {
