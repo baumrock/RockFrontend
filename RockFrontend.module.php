@@ -20,12 +20,14 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.2',
+      'version' => '0.0.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
       'icon' => 'code',
-      'requires' => [],
+      'requires' => [
+        'RockMigrations',
+      ],
       'installs' => [],
     ];
   }
@@ -153,10 +155,13 @@ class RockFrontend extends WireData implements Module {
           'allowUserTags' => false,
           'useAjax' => true,
           'tagsUrl' => self::tagsUrl,
-          'closeAfterSelect' => false,
+          'closeAfterSelect' => 0, // dont use false
         ],
       ],
     ]);
+    foreach($this->wire->templates as $tpl) {
+      $rm->addFieldToTemplate(self::field_layout, $tpl);
+    }
   }
 
   /**
@@ -185,10 +190,7 @@ class RockFrontend extends WireData implements Module {
     // options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
-      'allowedPaths' => [
-        $this->assets,
-        $this->wire->config->paths->templates,
-      ],
+      'allowedPaths' => $this->folders,
     ]);
     $opt->setArray($options);
 
