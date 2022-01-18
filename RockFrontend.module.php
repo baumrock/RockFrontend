@@ -20,7 +20,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.4',
+      'version' => '0.0.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -166,10 +166,12 @@ class RockFrontend extends WireData implements Module {
           'useAjax' => true,
           'tagsUrl' => self::tagsUrl,
           'closeAfterSelect' => 0, // dont use false
+          'flags' => Field::flagSystem,
         ],
       ],
     ]);
     foreach($this->wire->templates as $tpl) {
+      if($tpl->flags) continue;
       $rm->addFieldToTemplate(self::field_layout, $tpl);
     }
   }
@@ -179,10 +181,10 @@ class RockFrontend extends WireData implements Module {
    *
    * If path is provided as array then the first path that returns
    * some output will be used. This makes it possible to define a fallback
-   * for rendering: echo $uk->render(["$template.php", "basic-page.php"]);
+   * for rendering: echo $rf->render(["$template.php", "basic-page.php"]);
    *
    * Usage with selectors:
-   * echo $uk->render([
+   * echo $rf->render([
    *  'id=1' => 'layouts/home',
    *  'template=foo|bar' => 'layouts/foobar',
    *  'layouts/default', // default layout (fallback)
@@ -234,14 +236,35 @@ class RockFrontend extends WireData implements Module {
 
   /**
    * Render layout of given page
+   *
+   * Usage:
+   * $rf->renderLayout($page);
+   *
+   * With custom options:
+   * $rf->renderLayout($page, [
+   *   'id=123' => 'layout/for/123page',
+   *   'id=456' => 'layout/for/456page',
+   * ]);
+   *
+   * Custom
    * @return string
    */
-  public function renderLayout(Page $page, array $fallback) {
+  public function renderLayout(Page $page, $fallback = [], $noMerge = false) {
+    $defaultFallback = [
+      "layouts/{$page->template}",
+      "layouts/default",
+    ];
+
+    // by default we will merge the default array with the array
+    // provided by the user
+    if(!$noMerge) $fallback = $fallback + $defaultFallback;
+
+    // bd($fallback);
+
+    // try to find layout from layout field of the page editor
     $layout = $this->getLayout($page);
-    if($layout === false) return $this->render($fallback);
-    $out = '';
-    foreach($layout as $file) $out .= $this->render($file);
-    return $out;
+    if($layout) return $this->render($layout);
+    return $this->render($fallback);
   }
 
   /**
