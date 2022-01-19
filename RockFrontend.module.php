@@ -20,21 +20,28 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.5',
+      'version' => '0.0.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
       'icon' => 'code',
       'requires' => [
-        'RockMigrations',
+        // The module will work without RockMigrations but you will have to create
+        // the layout field manually and add it to templates if you want to use it
       ],
       'installs' => [],
     ];
   }
 
   public function init() {
+    $this->path = $this->wire->config->paths($this);
     $this->wire('rockfrontend', $this);
-    $this->rm()->fireOnRefresh($this, "migrate");
+    
+    // attach rockmigrations (if available)
+    if($rm = $this->rm()) {
+      if(method_exists($rm, "watch")) $rm->watch($this->path, false);
+      $rm->fireOnRefresh($this, "migrate");
+    }
 
     // setup folders that are scanned for files
     $this->folders = $this->wire(new WireArray());
@@ -151,6 +158,7 @@ class RockFrontend extends WireData implements Module {
   }
 
   public function migrate() {
+    $this->log("Migrating RockFrontend...");
     $rm = $this->rm();
     $rm->migrate([
       'fields' => [
