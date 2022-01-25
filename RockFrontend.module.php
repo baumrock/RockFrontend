@@ -20,7 +20,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.6',
+      'version' => '0.0.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -36,7 +36,7 @@ class RockFrontend extends WireData implements Module {
   public function init() {
     $this->path = $this->wire->config->paths($this);
     $this->wire('rockfrontend', $this);
-    
+
     // attach rockmigrations (if available)
     if($rm = $this->rm()) {
       if(method_exists($rm, "watch")) $rm->watch($this->path, false);
@@ -94,11 +94,20 @@ class RockFrontend extends WireData implements Module {
 
   /**
    * Get file path of file
-   * If path is relative we look in the assets folder of RockUikit
+   *
+   * You can look for files in folders like this:
+   * $rf->getFile("mockups/demo.png");
+   *
+   * If path is relative we look in $this->folders for matching files
+   *
    * @return string
    */
   public function getFile($file) {
     $file = Paths::normalizeSeparators($file);
+
+    // we always add a slash to the file
+    // this is to ensure that relative paths are not found by is_file() below
+    $file = "/".ltrim($file, "/");
 
     // add php extension if file has no extension
     if(!pathinfo($file, PATHINFO_EXTENSION)) $file .= ".php";
@@ -284,12 +293,16 @@ class RockFrontend extends WireData implements Module {
 
   /**
    * Given a path return the url relative to pw root
+   *
+   * If second parameter is true we add ?m=filemtime for cache busting
+   *
    * @return string
    */
-  public function url($path) {
+  public function url($path, $cacheBuster = false) {
     $path = $this->getFile($path);
     $config = $this->wire->config;
-    return str_replace($config->paths->root, $config->urls->root, $path);
+    $m = (is_file($path) AND $cacheBuster) ? "?m=".filemtime($path) : '';
+    return str_replace($config->paths->root, $config->urls->root, $path.$m);
   }
 
   public function ___install() {
