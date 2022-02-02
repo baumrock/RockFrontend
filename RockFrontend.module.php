@@ -17,10 +17,13 @@ class RockFrontend extends WireData implements Module {
   /** @var WireArray $folders */
   public $folders;
 
+  /** @var WireArray $layoutFolders */
+  public $layoutFolders;
+
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.8',
+      'version' => '0.0.9',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -47,6 +50,12 @@ class RockFrontend extends WireData implements Module {
     $this->folders = $this->wire(new WireArray());
     $this->folders->add($this->config->paths->templates);
     $this->folders->add($this->config->paths->assets);
+    $this->folders->add($this->config->paths->root);
+
+    // layout folders
+    $this->layoutFolders = $this->wire(new WireArray());
+    $this->layoutFolders->add($this->config->paths->templates);
+    $this->layoutFolders->add($this->config->paths->assets);
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
@@ -59,7 +68,7 @@ class RockFrontend extends WireData implements Module {
    */
   public function ___findSuggestFiles($q) {
     $suggestions = [];
-    foreach($this->folders as $dir) {
+    foreach($this->layoutFolders as $dir) {
       // find all files to add
       $files = $this->wire->files->find($dir, [
         'extensions' => ['php'],
@@ -121,8 +130,8 @@ class RockFrontend extends WireData implements Module {
     foreach($this->folders as $folder) {
       $folder = Paths::normalizeSeparators($folder);
       $folder = rtrim($folder,"/")."/";
-      $file = $folder.ltrim($file,"/");
-      if(is_file($file)) return $file;
+      $path = $folder.ltrim($file,"/");
+      if(is_file($path)) return $path;
     }
 
     // no file, return false
