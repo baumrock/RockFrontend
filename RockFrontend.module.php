@@ -23,7 +23,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.9',
+      'version' => '0.0.10',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -42,8 +42,9 @@ class RockFrontend extends WireData implements Module {
 
     // attach rockmigrations (if available)
     if($rm = $this->rm()) {
-      if(method_exists($rm, "watch")) $rm->watch($this->path, false);
-      $rm->fireOnRefresh($this, "migrate");
+      $rm->watch($this);
+      $rm->watch($this->path, false);
+      $rm->migrateOnRefresh($this);
     }
 
     // setup folders that are scanned for files
