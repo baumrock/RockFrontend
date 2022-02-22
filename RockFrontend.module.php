@@ -23,7 +23,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.11',
+      'version' => '0.0.12',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -173,8 +173,8 @@ class RockFrontend extends WireData implements Module {
   }
 
   public function migrate() {
-    $this->log("Migrating RockFrontend...");
     $rm = $this->rm();
+    $rm->log("Migrating RockFrontend");
     $rm->migrate([
       'fields' => [
         self::field_layout => [
