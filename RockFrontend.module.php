@@ -174,7 +174,6 @@ class RockFrontend extends WireData implements Module {
 
   public function migrate() {
     $rm = $this->rm();
-    $rm->log("Migrating RockFrontend");
     $rm->migrate([
       'fields' => [
         self::field_layout => [
