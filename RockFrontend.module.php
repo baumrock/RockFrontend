@@ -1,4 +1,8 @@
 <?php namespace ProcessWire;
+
+use RockFrontend\ScriptsArray;
+use RockFrontend\StylesArray;
+
 /**
  * @author Bernhard Baumrock, 05.01.2022
  * @license COMMERCIAL DO NOT DISTRIBUTE
@@ -11,6 +15,7 @@ class RockFrontend extends WireData implements Module {
   const tags = "RockFrontend";
   const prefix = "rockfrontend_";
   const tagsUrl = "/rockfrontend-layout-suggestions/{q}";
+  const permission_alfred = "rockfrontend-alfred";
 
   const field_layout = self::prefix."layout";
 
@@ -20,10 +25,16 @@ class RockFrontend extends WireData implements Module {
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
 
+  /** @var string */
+  public $path;
+
+  private $scripts;
+  private $styles;
+
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.13',
+      'version' => '0.0.14',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -54,9 +65,92 @@ class RockFrontend extends WireData implements Module {
     $this->layoutFolders->add($this->config->paths->templates);
     $this->layoutFolders->add($this->config->paths->assets);
 
+    // Alfred
+    $this->createPermission(self::permission_alfred,
+      "Is allowed to use ALFRED frontend editing");
+    $this->createCSS();
+    $this->scripts('head')->add($this->path."Alfred.js");
+    $this->styles('head')->add($this->path."Alfred.css");
+
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
+  }
+
+  /**
+   * Create CSS from LESS file
+   * @return void
+   */
+  public function createCSS() {
+    if(!$this->wire->user->isSuperuser()) return;
+    $css = $this->path."Alfred.css";
+    $lessFile = $this->path."Alfred.less";
+    if(filemtime($css) > filemtime($lessFile)) return;
+    if(!$less = $this->wire->modules->get("Less")) return;
+    /** @var Less $less */
+    $less->addFile($lessFile);
+    $less->saveCSS($css);
+    $this->message("Created $css from $lessFile");
+  }
+
+  /**
+   * Create permission
+   * @return void
+   */
+  public function createPermission($name, $title) {
+    $p = $this->wire->permissions->get($name);
+    if($p AND $p->id) return;
+    $p = $this->wire->permissions->add($name);
+    $p->setAndSave('title', $title);
+  }
+
+  /**
+   * Show edit-info on hover
+   * @return string
+   */
+  public function alfred($page = null) {
+    if(!$this->wire->user->isLoggedin()) return;
+
+    // icons
+    $icons = [];
+    if($page AND $page->editable()) $icons[] = (object)[
+      'icon' => 'edit',
+      'label' => $page->title,
+      'tooltip' => 'Edit page',
+      'href' => $page->editUrl(),
+    ];
+    if($this->wire->user->isSuperuser()) {
+      $path = debug_backtrace()[0]['file'];
+      $tracy = $this->wire->config->tracy;
+      if(is_array($tracy) and array_key_exists('localRootPath', $tracy))
+        $root = $tracy['localRootPath'];
+      else $root = $this->wire->config->paths->root;
+      $link = str_replace($this->wire->config->paths->root, $root, $path);
+
+      // file edit link
+      $icons[] = (object)[
+        'icon' => 'code',
+        'label' => $path,
+        'href' => "vscode://file/$link",
+        'tooltip' => 'Open markup file in VSCode',
+      ];
+      // style edit link
+      $less = substr($path, 0, -4).".less";
+      if(is_file($less)) {
+        $icons[] = (object)[
+          'icon' => 'paint-bucket',
+          'label' => $less,
+          'href' => "vscode://file/$less",
+          'tooltip' => 'Open LESS file in VSCode',
+        ];
+      }
+    }
+    if(!count($icons)) return;
+
+    $str = json_encode((object)[
+      'icons' => $icons,
+    ]);
+    return " alfred='$str'";
   }
 
   /**
@@ -109,6 +203,9 @@ class RockFrontend extends WireData implements Module {
    * @return string
    */
   public function getFile($file) {
+    if(strpos($file, "//") === 0) return $file;
+    if(strpos($file, "https://") === 0) return $file;
+    if(strpos($file, "https://") === 0) return $file;
     $file = Paths::normalizeSeparators($file);
 
     // we always add a slash to the file
@@ -297,12 +394,62 @@ class RockFrontend extends WireData implements Module {
   }
 
   /**
+   * Get given ScriptsArray instance or a new one if no name is provided
+   *
+   * Usage:
+   * $rockfrontend->scripts()->add(...)->add(...)->render();
+   *
+   * // file1.php
+   * $rockfrontend->scripts('head')->add(...);
+   * // file2.php
+   * $rockfrontend->scripts('head')->add(...);
+   * // _main.php
+   * $rockfrontend->scripts('head')->render();
+   *
+   * @return ScriptsArray
+   */
+  public function scripts($name = null) {
+    if(!$this->scripts) $this->scripts = new WireData();
+    require_once($this->path."Asset.php");
+    require_once($this->path."AssetsArray.php");
+    require_once($this->path."ScriptsArray.php");
+    $script = $this->scripts->get($name) ?: new ScriptsArray($this);
+    if($name) $this->scripts->set($name, $script);
+    return $script;
+  }
+
+  /**
    * Return script-tag
    * @return string
    */
   public function scriptTag($path, $cacheBuster = false) {
     $src = $this->url($path, $cacheBuster);
     return "<script type='text/javascript' src='$src'></script>";
+  }
+
+  /**
+   * Get given StylesArray instance or a new one if no name is provided
+   *
+   * Usage:
+   * $rockfrontend->styles()->add(...)->add(...)->render();
+   *
+   * // file1.php
+   * $rockfrontend->styles('head')->add(...);
+   * // file2.php
+   * $rockfrontend->styles('head')->add(...);
+   * // _main.php
+   * $rockfrontend->styles('head')->render();
+   *
+   * @return StylesArray
+   */
+  public function styles($name = null) {
+    if(!$this->styles) $this->styles = new WireData();
+    require_once($this->path."Asset.php");
+    require_once($this->path."AssetsArray.php");
+    require_once($this->path."StylesArray.php");
+    $style = $this->styles->get($name) ?: new StylesArray($this);
+    if($name) $this->styles->set($name, $style);
+    return $style;
   }
 
   /**

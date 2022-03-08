@@ -1,0 +1,44 @@
+// variables
+@grey: #ececec;
+@outline: 3px solid @grey;
+
+// block hover
+[alfred]:hover {
+  outline: @outline;
+}
+
+.alfred {
+  position: relative;
+  .icons {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    img {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+    }
+    .icon {
+      border-radius: 0;
+      background-color: white;
+      color: black !important;
+      text-transform: none;
+      padding: 5px 10px;
+      outline: @outline;
+      .label {
+        transition: max-width 1s ease, color 1s ease;
+        display: inline-block;
+        color: white;
+        margin-left: 5px;
+        max-width: 0;
+      }
+      &:hover .label { max-width: 1000px; color: black; }
+    }
+  }
+  &:hover {
+    > .icons { display: inline-block; }
+  }
+}

@@ -1,0 +1,41 @@
+[alfred]:hover {
+  outline: 3px solid #ececec;
+}
+.alfred {
+  position: relative;
+}
+.alfred .icons {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.alfred .icons img {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}
+.alfred .icons .icon {
+  border-radius: 0;
+  background-color: white;
+  color: black !important;
+  text-transform: none;
+  padding: 5px 10px;
+  outline: 3px solid #ececec;
+}
+.alfred .icons .icon .label {
+  transition: max-width 1s ease, color 1s ease;
+  display: inline-block;
+  color: white;
+  margin-left: 5px;
+  max-width: 0;
+}
+.alfred .icons .icon:hover .label {
+  max-width: 1000px;
+  color: black;
+}
+.alfred:hover > .icons {
+  display: inline-block;
+}
