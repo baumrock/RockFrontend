@@ -23,7 +23,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.12',
+      'version' => '0.0.13',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -294,6 +294,24 @@ class RockFrontend extends WireData implements Module {
    */
   public function rm() {
     return $this->wire->modules->get('RockMigrations');
+  }
+
+  /**
+   * Return script-tag
+   * @return string
+   */
+  public function scriptTag($path, $cacheBuster = false) {
+    $src = $this->url($path, $cacheBuster);
+    return "<script type='text/javascript' src='$src'></script>";
+  }
+
+  /**
+   * Return style-tag
+   * @return string
+   */
+  public function styleTag($path, $cacheBuster = false) {
+    $href = $this->url($path, $cacheBuster);
+    return "<link href='$href' rel='stylesheet'>";
   }
 
   /**
