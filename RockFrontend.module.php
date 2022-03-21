@@ -202,7 +202,7 @@ class RockFrontend extends WireData implements Module {
    *
    * @return string
    */
-  public function getFile($file) {
+  public function getFile($file, $forcePath = false) {
     if(strpos($file, "//") === 0) return $file;
     if(strpos($file, "https://") === 0) return $file;
     if(strpos($file, "https://") === 0) return $file;
@@ -227,6 +227,11 @@ class RockFrontend extends WireData implements Module {
       $path = $folder.ltrim($file,"/");
       if(is_file($path)) return $path;
     }
+
+    // no file found
+    // if force path is set true we return the path nonetheless
+    // this should help on frontend development to get a 404 when using wrong paths
+    if($forcePath) return $file;
 
     // no file, return false
     return false;
@@ -469,7 +474,7 @@ class RockFrontend extends WireData implements Module {
    * @return string
    */
   public function url($path, $cacheBuster = false) {
-    $path = $this->getFile($path);
+    $path = $this->getFile($path, true);
     $config = $this->wire->config;
     $m = (is_file($path) AND $cacheBuster) ? "?m=".filemtime($path) : '';
     return str_replace($config->paths->root, $config->urls->root, $path.$m);

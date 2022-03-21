@@ -1,5 +1,39 @@
 # RockFrontend
 
+## Example _main.php
+
+```php
+<?php namespace ProcessWire;
+/** @var RockFrontend $rockfrontend */
+// render layout from page field or from /site/templates/layouts
+// do this above markup so that we can add scripts and styles from layout files
+$body = $rockfrontend->renderLayout($page);
+?><!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?= $page->seo ?>
+  <?php
+  echo $rockfrontend->styles('head')
+    ->add('/site/templates/bundle/main.css')
+    ->render();
+  echo $rockfrontend->scripts('head')
+    ->render();
+  ?>
+</head>
+<body>
+  <?= $body ?>
+  <?php
+  echo $rockfrontend->scripts('body')
+    ->add('site/templates/bundle/main.js')
+    ->render();
+  ?>
+</body>
+</html>
+```
+
 ## Adding assets to your site (JS or CSS)
 
 While you can always add custom `<script>` or `<link>` tags to your site's markup it is recommended that you use RockFrontend's `AssetsArray` feature:

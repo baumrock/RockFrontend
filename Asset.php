@@ -1,5 +1,6 @@
 <?php namespace RockFrontend;
 
+use ProcessWire\RockFrontend;
 use ProcessWire\WireData;
 
 class Asset extends WireData {
@@ -11,7 +12,7 @@ class Asset extends WireData {
   public function __construct($file, $suffix = '') {
     /** @var RockFrontend $rockfrontend */
     $rockfrontend = $this->wire->modules->get('RockFrontend');
-    $this->path = $rockfrontend->getFile($file);
+    $this->path = $rockfrontend->getFile($file, true);
     $this->url = $rockfrontend->url($file);
     $this->m = is_file($file) ? filemtime($file) : null;
     $this->suffix = $suffix;
