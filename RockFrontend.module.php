@@ -34,7 +34,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.0.15',
+      'version' => '0.1.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -53,6 +53,9 @@ class RockFrontend extends WireData implements Module {
 
     // watch this file and run "migrate" on change or refresh
     if($rm = $this->rm()) $rm->watch($this, 0.01);
+
+    // copy stubs files
+    $this->copyStubs();
 
     // setup folders that are scanned for files
     $this->folders = $this->wire(new WireArray());
@@ -75,6 +78,17 @@ class RockFrontend extends WireData implements Module {
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
+  }
+
+  /**
+   * Copy skeleton files to /site/templates
+   * @return void
+   */
+  public function copyStubs() {
+    $path = $this->wire->config->paths->templates;
+    if(is_dir($path."layouts")) return;
+    if(is_dir($path."sections")) return;
+    $this->wire->files->copy($this->path."stubs", $path);
   }
 
   /**
@@ -245,6 +259,28 @@ class RockFrontend extends WireData implements Module {
     $layout = $page->get(self::field_layout);
     if(!$layout) return false;
     return explode(" ", $layout);
+  }
+
+  /**
+   * Find path in rockfrontend folders
+   * Returns path with trailing slash
+   * @return string|false
+   */
+  public function getPath($path, $forcePath = false) {
+    $path = Paths::normalizeSeparators($path);
+
+    // if the path is already absolute and exists we return it
+    // we dont return relative paths!
+    if(strpos($path, '/')===0 AND is_dir($path)) return rtrim($path,'/').'/';
+
+    foreach($this->folders as $f) {
+      $dir = $f.ltrim($path, '/');
+      if(is_dir($dir)) return rtrim($dir, '/').'/';
+    }
+
+    if($forcePath) return rtrim($path,'/').'/';
+
+    return false;
   }
 
   /**
@@ -452,7 +488,7 @@ class RockFrontend extends WireData implements Module {
     require_once($this->path."Asset.php");
     require_once($this->path."AssetsArray.php");
     require_once($this->path."StylesArray.php");
-    $style = $this->styles->get($name) ?: new StylesArray($this);
+    $style = $this->styles->get($name) ?: new StylesArray($name);
     if($name) $this->styles->set($name, $style);
     return $style;
   }

@@ -17,6 +17,9 @@ $body = $rockfrontend->renderLayout($page);
   <?= $page->seo ?>
   <?php
   echo $rockfrontend->styles('head')
+    // add uikit theme from wire folder
+    // this is just for demonstration! RockFrontend does NOT depend on UIkit!
+    ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/src/less/uikit.theme.less')
     ->add('/site/templates/bundle/main.css')
     ->render();
   echo $rockfrontend->scripts('head')
