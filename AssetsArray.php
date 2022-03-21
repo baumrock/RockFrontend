@@ -1,7 +1,4 @@
 <?php namespace RockFrontend;
-
-use ProcessWire\RockFrontend;
-
 class AssetsArray extends \ProcessWire\WireArray {
 
   /**
