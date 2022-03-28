@@ -1,4 +1,4 @@
-<div class='tm-grid-cols'>
+<div class='tm-grid-cols uk-background-muted'>
   <div></div>
   <div class='tm-grid-rows uk-card uk-card-default'>
     <?= $rf->render("sections/header") ?>
