@@ -1,5 +1,23 @@
 body {
-  /* needed to always place footer at bottom, see https://stackoverflow.com/a/20352949 */
+  min-height: 100vh;
+
+  // prevent long urls or strings from causing horizontal scrollbars
+  // https://bit.ly/3ICsI3c
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/**
+ * sticky footer at the bottom of the page
+ * https://stackoverflow.com/a/20352949
+ */
+.tm-grid-cols {
+  display: grid;
+  grid-template-columns: auto minmax(auto, 1600px) auto;
+}
+.tm-grid-rows {
   min-height: 100vh;
   margin: 0;
   display: grid;
