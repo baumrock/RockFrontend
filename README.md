@@ -91,7 +91,7 @@ RockFrontend itself uses this technique to inject the styles and scripts necessa
 
 ## Adding folders to scan for frontend files
 
-By default RockFrontend scans the folders `/site/assets` and `/site/templates` for files that you want to render via `$rf->render("layouts/foo")`.
+By default RockFrontend scans the folders `/site/assets` and `/site/templates` for files that you want to render via `$rockfrontend->render("layouts/foo")`.
 
 If you want to add another directory to scan you can add it to the `folders` property of RockFrontend:
 
