@@ -1,5 +1,9 @@
 # RockFrontend
 
+## Does RockFrontend force me to use a CSS Frontend Framework?
+
+No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
+
 ## Example _main.php
 
 ```php
