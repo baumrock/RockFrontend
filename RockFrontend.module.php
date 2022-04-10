@@ -34,7 +34,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.1.0',
+      'version' => '0.1.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -134,7 +134,7 @@ class RockFrontend extends WireData implements Module {
       'href' => $page->editUrl(),
     ];
     if($this->wire->user->isSuperuser()) {
-      $path = debug_backtrace()[0]['file'];
+      $path = $this->getTplPath();
       $tracy = $this->wire->config->tracy;
       if(is_array($tracy) and array_key_exists('localRootPath', $tracy))
         $root = $tracy['localRootPath'];
@@ -281,6 +281,35 @@ class RockFrontend extends WireData implements Module {
     if($forcePath) return rtrim($path,'/').'/';
 
     return false;
+  }
+
+  /**
+   * Find template file from trace
+   * @return string
+   */
+  public function getTplPath() {
+    $trace = debug_backtrace();
+    $paths = $this->wire->config->paths;
+    foreach($trace as $step) {
+      $file = $step['file'];
+      $skip = [
+        $paths->cache,
+        $paths($this),
+        $paths->root."vendor/"
+      ];
+      foreach($skip as $p) {
+        if(strpos($file, $p)===0) $skip = true;
+      }
+      // special case: rockmatrix block
+      if($file === $paths->siteModules."RockMatrix/Block.php") {
+        // return the block view file instead of the block controller
+        return $step['args'][0];
+      }
+
+      // try next entry or return file
+      if($skip === true) continue;
+      else return $file;
+    }
   }
 
   /**
