@@ -4,6 +4,33 @@
 
 No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
 
+## LATTE Templating Engine
+
+RockFrontend supports the `latte` templating engine by Nette (see https://latte.nette.org/en/syntax).
+
+```
+cd /path/to/your/pw/root
+composer require latte/latte
+```
+
+To render a latte file simply call `$rockfrontend->render('/your/latte/file.latte')`
+
+### Why Latte?
+
+* Latte can simplify the markup a lot (see `n:if` or `n-foreach`)
+* Latte adds additional security (see https://latte.nette.org/en/safety-first)
+* Latte makes it possible to still use PHP expressions (see https://latte.nette.org/en/tags#toc-var-expr-expr)
+
+For example you can use this statement to use Tracy's `bardump()` in your template file:
+
+```php
+{bd($page, 'test dump')}
+```
+
+### Is it possible to use other templating engines?
+
+It is easy to add support for other templating engines as well. Please submit a PR or ask for support in the support forum.
+
 ## Example _main.php
 
 ```php
@@ -102,4 +129,17 @@ If you want to add another directory to scan you can add it to the `folders` pro
 ```php
 // in site/ready.php
 $rockfrontend->folders->add('/site/templates/my-template/');
+```
+
+## SVGs
+
+You can use the `render()` method to write SVG markup directly to your template file:
+
+```php
+// latte
+// icon is in /site/templates/img/icon.svg
+{$rockfrontend->render('img/icon.svg')|noescape}
+
+// php
+echo $rockfrontend->render('img/icon.svg');
 ```

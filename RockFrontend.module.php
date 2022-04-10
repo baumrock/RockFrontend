@@ -1,5 +1,6 @@
 <?php namespace ProcessWire;
 
+use Latte\Engine;
 use RockFrontend\ScriptsArray;
 use RockFrontend\StylesArray;
 
@@ -22,6 +23,11 @@ class RockFrontend extends WireData implements Module {
   /** @var WireArray $folders */
   public $folders;
 
+  public $home;
+
+  /** @var Engine */
+  private $latte;
+
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
 
@@ -34,7 +40,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '0.1.1',
+      'version' => '1.0.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -49,6 +55,7 @@ class RockFrontend extends WireData implements Module {
 
   public function init() {
     $this->path = $this->wire->config->paths($this);
+    $this->home = $this->wire->pages->get(1);
     $this->wire('rockfrontend', $this);
 
     // watch this file and run "migrate" on change or refresh
@@ -226,8 +233,11 @@ class RockFrontend extends WireData implements Module {
     // this is to ensure that relative paths are not found by is_file() below
     $file = "/".ltrim($file, "/");
 
-    // add php extension if file has no extension
-    if(!pathinfo($file, PATHINFO_EXTENSION)) $file .= ".php";
+    // if no extension was provided try php or latte extension
+    if(!pathinfo($file, PATHINFO_EXTENSION)) {
+      if($f = $this->getFile("$file.php", $forcePath)) return $f;
+      if($f = $this->getFile("$file.latte", $forcePath)) return $f;
+    }
 
     // if file exists return it
     // this will also find files relative to /site/templates!
@@ -300,9 +310,14 @@ class RockFrontend extends WireData implements Module {
       foreach($skip as $p) {
         if(strpos($file, $p)===0) $skip = true;
       }
+
       // special case: rockmatrix block
       if($file === $paths->siteModules."RockMatrix/Block.php") {
         // return the block view file instead of the block controller
+        return $step['args'][0];
+      }
+      elseif($file === $paths->siteModules."RockFrontend/RockFrontend.module.php"
+        AND count($step['args'])) {
         return $step['args'][0];
       }
 
@@ -389,7 +404,7 @@ class RockFrontend extends WireData implements Module {
     if(!$vars) $vars = [];
 
     // we add the $rf variable to all files that are rendered via RockFrontend
-    $vars = array_merge($vars, ['rf'=>$this]);
+    $vars = array_merge($this->wire('all')->getArray(), $vars, ['rf'=>$this]);
 
     // options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
@@ -419,6 +434,20 @@ class RockFrontend extends WireData implements Module {
     $file = $this->getFile($path);
     if(!$file) return;
 
+    if(pathinfo($file, PATHINFO_EXTENSION) === 'latte') {
+      $latte = $this->latte;
+      if(!$latte) {
+        try {
+          require_once $this->wire->config->paths->root."vendor/autoload.php";
+          $latte = new Engine();
+          $latte->setTempDirectory($this->wire->config->paths->cache."Latte");
+          $this->latte = $latte;
+        } catch (\Throwable $th) {
+          return $th->getMessage();
+        }
+      }
+      return $latte->renderToString($file, $vars);
+    }
     $options = $opt->getArray();
     return $this->wire->files->render($file, $vars, $options);
   }
