@@ -40,7 +40,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.0.0',
+      'version' => '1.0.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -438,7 +438,12 @@ class RockFrontend extends WireData implements Module {
       $latte = $this->latte;
       if(!$latte) {
         try {
-          require_once $this->wire->config->paths->root."vendor/autoload.php";
+          $loader = $this->wire->config->paths->root."vendor/autoload.php";
+          if(!is_file($loader)) {
+            throw new WireException("You need to install latte to render latte files!
+              Use >> composer require latte/latte << in the PW root directory");
+          }
+          require_once $loader;
           $latte = new Engine();
           $latte->setTempDirectory($this->wire->config->paths->cache."Latte");
           $this->latte = $latte;
