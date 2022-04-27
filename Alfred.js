@@ -16,9 +16,9 @@ Alfred.prototype.addIcons = function(el, icons) {
         +(icon.href?icon.href:'#')
         +"' "
         +(icon.tooltip ? " title='" + icon.tooltip + "'" : '')
-        +"class='icon' data-barba-prevent>"
+        +"class='icon "+icon.class+"'"
+        +" data-barba-prevent "+icon.suffix+">"
       +"<img src='/site/modules/RockFrontend/icons/"+icon.icon+".svg'></span>"
-      +"<span class='label uk-text-nowrap'>"+icon.label+"</span>"
       +"</a>";
   });
   wrapper.innerHTML = inner;
@@ -44,5 +44,30 @@ var Alfred = new Alfred();
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
     Alfred.initAll();
+    console.log('Alfred is ready');
+
+    // reload page when an editing modal is closed
+    // jquery is loaded, so alfred is ready
+    let $ = jQuery;
+    let getJ = function() {
+      console.log('Loading jQuery...');
+      $ = jQuery;
+      if(typeof $ == 'function') return ready();
+      setTimeout(getJ, 100);
+    }
+
+    // attach jquery listeners when it is ready
+    let ready = function() {
+      $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
+        if(eventData.abort) return; // modal.js populates 'abort' if "x" button was clicked
+        console.log('reloading...');
+        location.reload();
+      });
+      $(document).on("dialogresizestop", ".ui-resizable", function( event, ui ) {
+        console.log(event);
+      } );
+    }
+
+    getJ();
   });
 })()

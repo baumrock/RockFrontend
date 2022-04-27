@@ -40,7 +40,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.0.1',
+      'version' => '1.1.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -134,12 +134,16 @@ class RockFrontend extends WireData implements Module {
 
     // icons
     $icons = [];
-    if($page AND $page->editable()) $icons[] = (object)[
-      'icon' => 'edit',
-      'label' => $page->title,
-      'tooltip' => 'Edit page',
-      'href' => $page->editUrl(),
-    ];
+    if($page AND $page->editable()) {
+      $icons[] = (object)[
+        'icon' => 'edit',
+        'label' => $page->title,
+        'tooltip' => 'Edit page',
+        'href' => $page->editUrl(),
+        'class' => 'pw-modal',
+        'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
+      ];
+    }
     if($this->wire->user->isSuperuser()) {
       $path = $this->getTplPath();
       $tracy = $this->wire->config->tracy;
@@ -153,7 +157,7 @@ class RockFrontend extends WireData implements Module {
         'icon' => 'code',
         'label' => $path,
         'href' => "vscode://file/$link",
-        'tooltip' => 'Open markup file in VSCode',
+        'tooltip' => $link,
       ];
       // style edit link
       $less = substr($path, 0, -4).".less";

@@ -3,19 +3,18 @@
 @outline: 3px solid @grey;
 
 // block hover
-[alfred]:hover {
+.alfred:hover {
   outline: @outline;
 }
 
+// the alfred class is added by JS on init()
 .alfred {
   position: relative;
   .icons {
     display: none;
     position: absolute;
-    top: 0;
+    top: 3px;
     right: 0;
-    white-space: nowrap;
-    overflow: hidden;
     img {
       display: inline-block;
       width: 16px;
@@ -35,7 +34,6 @@
         margin-left: 5px;
         max-width: 0;
       }
-      &:hover .label { max-width: 1000px; color: black; }
     }
   }
   &:hover {
