@@ -40,7 +40,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.1.0',
+      'version' => '1.1.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -79,8 +79,10 @@ class RockFrontend extends WireData implements Module {
     $this->createPermission(self::permission_alfred,
       "Is allowed to use ALFRED frontend editing");
     $this->createCSS();
-    $this->scripts('head')->add($this->path."Alfred.js");
-    $this->styles('head')->add($this->path."Alfred.css");
+    if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
+      $this->scripts('head')->add($this->path."Alfred.js");
+      $this->styles('head')->add($this->path."Alfred.css");
+    }
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");

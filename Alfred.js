@@ -48,12 +48,16 @@ var Alfred = new Alfred();
 
     // reload page when an editing modal is closed
     // jquery is loaded, so alfred is ready
-    let $ = jQuery;
+    let tries = 0;
     let getJ = function() {
       console.log('Loading jQuery...');
-      $ = jQuery;
-      if(typeof $ == 'function') return ready();
-      setTimeout(getJ, 100);
+      if(typeof jQuery == 'undefined') {
+        if(++tries<=10) setTimeout(getJ, 100);
+        else console.log("jQuery not found");
+        return;
+      }
+      let $ = jQuery;
+      ready();
     }
 
     // attach jquery listeners when it is ready
