@@ -56,12 +56,12 @@ var Alfred = new Alfred();
         else console.log("jQuery not found");
         return;
       }
-      let $ = jQuery;
       ready();
     }
 
     // attach jquery listeners when it is ready
     let ready = function() {
+      let $ = jQuery;
       $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
         if(eventData.abort) return; // modal.js populates 'abort' if "x" button was clicked
         console.log('reloading...');
@@ -69,7 +69,7 @@ var Alfred = new Alfred();
       });
       $(document).on("dialogresizestop", ".ui-resizable", function( event, ui ) {
         console.log(event);
-      } );
+      });
     }
 
     getJ();
