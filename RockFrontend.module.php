@@ -40,7 +40,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.1.1',
+      'version' => '1.1.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -49,7 +49,9 @@ class RockFrontend extends WireData implements Module {
         // The module will work without RockMigrations but you will have to create
         // the layout field manually and add it to templates if you want to use it
       ],
-      'installs' => [],
+      'installs' => [
+        'PageFrontEdit',
+      ],
     ];
   }
 
@@ -80,6 +82,7 @@ class RockFrontend extends WireData implements Module {
       "Is allowed to use ALFRED frontend editing");
     $this->createCSS();
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
+      bd('hier');
       $this->scripts('head')->add($this->path."Alfred.js");
       $this->styles('head')->add($this->path."Alfred.css");
     }
