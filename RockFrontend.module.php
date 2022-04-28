@@ -25,6 +25,9 @@ class RockFrontend extends WireData implements Module {
 
   public $home;
 
+  /** @var bool */
+  private $isAlfred = false;
+
   /** @var Engine */
   private $latte;
 
@@ -82,14 +85,25 @@ class RockFrontend extends WireData implements Module {
       "Is allowed to use ALFRED frontend editing");
     $this->createCSS();
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
-      bd('hier');
       $this->scripts('head')->add($this->path."Alfred.js");
       $this->styles('head')->add($this->path."Alfred.css");
     }
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
+    $this->addHookAfter("Page::render", $this, "addEditTag");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
+  }
+
+  /**
+   * Add a fake edit tag to the page so that PageFrontEdit loads all assets
+   */
+  public function addEditTag(HookEvent $event) {
+    if(!$this->isAlfred) return;
+    $html = $event->return;
+    $faketag = "<div edit=title hidden>title</div>";
+    $html = str_replace("</body", "$faketag</body", $html);
+    $event->return = $html;
   }
 
   /**
@@ -136,6 +150,9 @@ class RockFrontend extends WireData implements Module {
    */
   public function alfred($page = null) {
     if(!$this->wire->user->isLoggedin()) return;
+    // set flag to show that at least one alfred tag is on the page
+    // this flag is used to load the PW frontend editing assets
+    $this->isAlfred = true;
 
     // icons
     $icons = [];
