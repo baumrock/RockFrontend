@@ -169,7 +169,7 @@ class RockFrontend extends WireData implements Module {
       $icons[] = (object)[
         'icon' => 'edit',
         'label' => $page->title,
-        'tooltip' => 'Edit page',
+        'tooltip' => "Edit Block #{$page->id}",
         'href' => $page->editUrl(),
         'class' => 'pw-modal',
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
@@ -195,10 +195,10 @@ class RockFrontend extends WireData implements Module {
       $less = substr($path, 0, -4).".less";
       if(is_file($less)) {
         $icons[] = (object)[
-          'icon' => 'paint-bucket',
+          'icon' => 'eye',
           'label' => $less,
           'href' => "vscode://file/$less",
-          'tooltip' => 'Open LESS file in VSCode',
+          'tooltip' => $less,
         ];
       }
     }
