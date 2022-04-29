@@ -45,7 +45,8 @@
   Alfred.prototype.plus = function(type, href) {
     return "<div class='add-"+type+"'>"
       +"<a href='"+href+"' title='Add Content' class='icon pw-modal' "
-        +" data-barba-prevent='' data-autoclose='.rmx-button' data-reload=''>"
+        +" data-barba-prevent='' data-buttons='button.ui-button[type=submit]'"
+        +" data-autoclose='' data-reload=''>"
         +"<img src='/site/modules/RockFrontend/icons/plus.svg'>"
       +"</a>"
     +"</div>";
