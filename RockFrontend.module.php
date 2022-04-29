@@ -3,6 +3,7 @@
 use Latte\Engine;
 use RockFrontend\ScriptsArray;
 use RockFrontend\StylesArray;
+use RockMatrix\Block;
 
 /**
  * @author Bernhard Baumrock, 05.01.2022
@@ -43,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.1.2',
+      'version' => '1.2.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -154,6 +155,14 @@ class RockFrontend extends WireData implements Module {
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
 
+    // setup options
+    $opt = $this->wire(new WireData()); /** @var WireData $opt */
+    $opt->setArray([
+      'addTop' => false,
+      'addBottom' => false,
+    ]);
+    $opt->setArray($options);
+
     // icons
     $icons = [];
     if($page AND $page->editable()) {
@@ -166,6 +175,7 @@ class RockFrontend extends WireData implements Module {
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
     }
+
     if($this->wire->user->isSuperuser()) {
       $path = $this->getTplPath();
       $tracy = $this->wire->config->tracy;
@@ -194,8 +204,16 @@ class RockFrontend extends WireData implements Module {
     }
     if(!count($icons)) return;
 
+    // setup links for add buttons
+    if($page instanceof Block) {
+      $opt->addTop = $page->addContentBlockUrl(false);
+      $opt->addBottom = $page->addContentBlockUrl(true);
+    }
+
     $str = json_encode((object)[
       'icons' => $icons,
+      'addTop' => $opt->addTop,
+      'addBottom' => $opt->addBottom,
     ]);
     return " alfred='$str'";
   }

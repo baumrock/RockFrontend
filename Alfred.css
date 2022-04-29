@@ -1,35 +1,69 @@
+.pw-edit-buttons {
+  z-index: 99;
+}
 .alfred:hover {
   outline: 4px groove #ececec;
 }
 .alfred {
   position: relative;
 }
-.alfred .icons {
+.alfred .icons,
+.alfred .add-top,
+.alfred .add-bottom {
   display: none;
   position: absolute;
-  top: 5px;
-  right: 3px;
+  height: 30px;
+  pointer-events: none;
 }
-.alfred .icons img {
+.alfred .icons img,
+.alfred .add-top img,
+.alfred .add-bottom img {
   display: inline-block;
   width: 16px;
   height: 16px;
 }
-.alfred .icons .icon {
+.alfred .icons .icon,
+.alfred .add-top .icon,
+.alfred .add-bottom .icon {
+  pointer-events: all;
   border-radius: 0;
   background-color: white;
   color: black !important;
   text-transform: none;
-  padding: 5px 10px;
+  padding: 7px 10px;
   outline: 3px solid #ececec;
 }
-.alfred .icons .icon .label {
+.alfred .icons .icon .label,
+.alfred .add-top .icon .label,
+.alfred .add-bottom .icon .label {
   transition: max-width 1s ease, color 1s ease;
   display: inline-block;
   color: white;
   margin-left: 5px;
   max-width: 0;
 }
+.alfred .add-top {
+  top: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.alfred .add-bottom {
+  bottom: 1px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.alfred .icons {
+  top: 6px;
+  right: 3px;
+}
 .alfred:hover > .icons {
+  display: inline-block;
+}
+.alfred:hover > .add-top {
+  display: inline-block;
+}
+.alfred:hover > .add-bottom {
   display: inline-block;
 }

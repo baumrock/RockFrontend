@@ -3,6 +3,11 @@
 // we use groove outline style to make the outline visible on every possible bg
 @outline: 4px groove @grey;
 
+// pw-frontend-editing tweaks
+.pw-edit-buttons {
+  z-index: 99;
+}
+
 // block hover
 .alfred:hover {
   outline: @outline;
@@ -11,22 +16,24 @@
 // the alfred class is added by JS on init()
 .alfred {
   position: relative;
-  .icons {
+
+  .icons,.add-top,.add-bottom {
     display: none;
     position: absolute;
-    top: 5px;
-    right: 3px;
+    height: 30px;
+    pointer-events: none;
     img {
       display: inline-block;
       width: 16px;
       height: 16px;
     }
     .icon {
+      pointer-events: all;
       border-radius: 0;
       background-color: white;
       color: black !important;
       text-transform: none;
-      padding: 5px 10px;
+      padding: 7px 10px;
       outline: 3px solid @grey;
       .label {
         transition: max-width 1s ease, color 1s ease;
@@ -37,7 +44,28 @@
       }
     }
   }
+
+  .add-top {
+    top: 6px;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+  .add-bottom {
+    bottom: 1px;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+
+  .icons {
+    top: 6px;
+    right: 3px;
+  }
+
   &:hover {
     > .icons { display: inline-block; }
+    > .add-top { display: inline-block; }
+    > .add-bottom { display: inline-block; }
   }
 }
