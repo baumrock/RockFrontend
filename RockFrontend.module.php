@@ -26,7 +26,7 @@ class RockFrontend extends WireData implements Module {
   public $home;
 
   /** @var bool */
-  private $isAlfred = false;
+  private $hasAlfred = false;
 
   /** @var Engine */
   private $latte;
@@ -99,7 +99,7 @@ class RockFrontend extends WireData implements Module {
    * Add a fake edit tag to the page so that PageFrontEdit loads all assets
    */
   public function addEditTag(HookEvent $event) {
-    if(!$this->isAlfred) return;
+    if(!$this->hasAlfred) return;
     $html = $event->return;
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
@@ -145,14 +145,14 @@ class RockFrontend extends WireData implements Module {
   }
 
   /**
-   * Show edit-info on hover
+   * ALFRED - A Lovely FRontend EDitor
    * @return string
    */
-  public function alfred($page = null) {
+  public function alfred($page = null, $options = []) {
     if(!$this->wire->user->isLoggedin()) return;
     // set flag to show that at least one alfred tag is on the page
     // this flag is used to load the PW frontend editing assets
-    $this->isAlfred = true;
+    $this->hasAlfred = true;
 
     // icons
     $icons = [];
