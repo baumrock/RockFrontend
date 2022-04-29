@@ -18,7 +18,8 @@
           +"' "
           +(icon.tooltip ? " title='" + icon.tooltip + "'" : '')
           +"class='icon "+icon.class+"'"
-          +" data-barba-prevent "+icon.suffix+">"
+          +(icon.confirm ? " data-confirm='"+icon.confirm+"'" : '')
+          +" data-barba-prevent "+(icon.suffix||'')+">"
         +"<img src='/site/modules/RockFrontend/icons/"+icon.icon+".svg'></span>"
         +"</a>";
     });
@@ -54,6 +55,7 @@
 
   Alfred.prototype.ready = function(callback) {
     document.addEventListener('DOMContentLoaded', function() {
+      // load jquery
       let tries = 0;
       let load = function() {
         console.log('Loading jQuery...');
@@ -64,10 +66,26 @@
         }
         $ = jQuery;
         Alfred.init();
+
+        // load vex
+        if(typeof vex == 'undefined') {
+          $('head').append('<script src="/wire/modules/Jquery/JqueryUI/vex/scripts/vex.combined.min.js"></script>');
+          $('head').append('<link rel="stylesheet" href="/wire/modules/Jquery/JqueryUI/vex/css/vex.css">');
+          $('head').append('<link rel="stylesheet" href="/wire/modules/Jquery/JqueryUI/vex/css/vex-theme-default.css">');
+          $('head').append('<script>vex.defaultOptions.className="vex-theme-default";');
+        }
+
         callback();
       }
       load();
     });
+  }
+
+  /**
+   * Reload page (keeps scroll position)
+   */
+  Alfred.prototype.reload = function() {
+    location.reload();
   }
 
   var Alfred = new Alfred();
@@ -79,7 +97,41 @@
     $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
       if(eventData.abort) return; // modal.js populates 'abort' if "x" button was clicked
       console.log('reloading...');
-      location.reload();
+      Alfred.reload();
+    });
+
+    // clicks on confirm links
+    $(document).on('click', '.icons [data-confirm]', function(e) {
+      e.preventDefault();
+      let $a = $(e.target).closest('a');
+      let confirm = $a.data('confirm');
+      let href = $a.attr('href');
+
+      // vex dialog in case of error
+      let error = function(message) {
+        vex.dialog.alert(message || 'Error sending request');
+      }
+
+      // ajax request to send
+      let sendAjax = function() {
+        $.getJSON(href).done(function(data) {
+          if(data.error) error("Error: "+data.message);
+          else Alfred.reload();
+        }).fail(error);
+      }
+
+      // on shift click we send the request directly without confirm
+      if(e.shiftKey) sendAjax();
+      else {
+        // show confirm dialog
+        vex.dialog.confirm({
+          unsafeMessage: confirm + "<div style='margin-top:10px;'><small>Tip: Hold down SHIFT to trash elements without confirmation.</small></div>",
+          callback: function (value) {
+            if(value !== true) return;
+            sendAjax();
+          }
+        });
+      }
     });
   });
 

@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.1',
+      'version' => '1.2.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -182,7 +182,7 @@ class RockFrontend extends WireData implements Module {
         'label' => $page->title,
         'tooltip' => "Trash Block #{$page->id}",
         'href' => $page->rmxUrl("/trash/?block=$page"),
-        'confirm' => 'Are you sure?',
+        'confirm' => __('Do you really want to delete this element?'),
       ];
     }
 
