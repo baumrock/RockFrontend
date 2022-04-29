@@ -160,6 +160,7 @@ class RockFrontend extends WireData implements Module {
     $opt->setArray([
       'addTop' => false,
       'addBottom' => false,
+      'trash' => true, // will set the trash icon for rockmatrix blocks
     ]);
     $opt->setArray($options);
 
@@ -173,6 +174,15 @@ class RockFrontend extends WireData implements Module {
         'href' => $page->editUrl(),
         'class' => 'pw-modal',
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
+      ];
+    }
+    if($opt->trash AND $page AND $page instanceof Block AND $page->trashable()) {
+      $icons[] = (object)[
+        'icon' => 'trash-2',
+        'label' => $page->title,
+        'tooltip' => "Trash Block #{$page->id}",
+        'href' => $page->rmxUrl("/trash/?block=$page"),
+        'confirm' => 'Are you sure?',
       ];
     }
 
@@ -206,8 +216,8 @@ class RockFrontend extends WireData implements Module {
 
     // setup links for add buttons
     if($page instanceof Block) {
-      $opt->addTop = $page->addContentBlockUrl(false);
-      $opt->addBottom = $page->addContentBlockUrl(true);
+      $opt->addTop = $page->rmxUrl("/add/?block=$page&above=1");
+      $opt->addBottom = $page->rmxUrl("/add/?block=$page");
     }
 
     $str = json_encode((object)[
