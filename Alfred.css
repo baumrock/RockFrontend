@@ -19,8 +19,9 @@
 .alfred .add-top img,
 .alfred .add-bottom img {
   display: inline-block;
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
+  padding: 0 !important;
 }
 .alfred .icons .icon,
 .alfred .add-top .icon,
