@@ -14,6 +14,16 @@
   z-index: 1;
 }
 
+.rf-icon {
+  pointer-events: all;
+  border-radius: 0;
+  background-color: white;
+  color: black !important;
+  text-transform: none;
+  padding: 7px 10px;
+  outline: 3px solid @grey !important; // important fixes hover issue
+}
+
 // the alfred class is added by JS on init()
 .alfred {
   position: relative;
@@ -30,20 +40,7 @@
       padding: 0 !important;
     }
     .icon {
-      pointer-events: all;
-      border-radius: 0;
-      background-color: white;
-      color: black !important;
-      text-transform: none;
-      padding: 7px 10px;
-      outline: 3px solid @grey;
-      .label {
-        transition: max-width 1s ease, color 1s ease;
-        display: inline-block;
-        color: white;
-        margin-left: 5px;
-        max-width: 0;
-      }
+      .rf-icon;
     }
   }
 

@@ -5,6 +5,15 @@
   outline: 4px groove #ececec;
   z-index: 1;
 }
+.rf-icon {
+  pointer-events: all;
+  border-radius: 0;
+  background-color: white;
+  color: black !important;
+  text-transform: none;
+  padding: 7px 10px;
+  outline: 3px solid #ececec !important;
+}
 .alfred {
   position: relative;
 }
@@ -33,16 +42,7 @@
   color: black !important;
   text-transform: none;
   padding: 7px 10px;
-  outline: 3px solid #ececec;
-}
-.alfred .icons .icon .label,
-.alfred .add-top .icon .label,
-.alfred .add-bottom .icon .label {
-  transition: max-width 1s ease, color 1s ease;
-  display: inline-block;
-  color: white;
-  margin-left: 5px;
-  max-width: 0;
+  outline: 3px solid #ececec !important;
 }
 .alfred .add-top {
   top: 6px;

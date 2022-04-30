@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.3',
+      'version' => '1.2.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -399,6 +399,30 @@ class RockFrontend extends WireData implements Module {
     if($this->wire->user->isSuperuser()) return;
     $form = $event->return;
     $form->remove(self::field_layout);
+  }
+
+  /**
+   * Render icon link
+   * @return string
+   */
+  public function iconLink($icon, $href, $options = []) {
+    $opt = $this->wire(new WireData()); /** @var WireData $opt */
+    $opt->setArray([
+      'class' => 'rf-icon pw-modal',
+      'wrapperClass' => '',
+      'attrs' => 'data-autoclose data-reload data-barba-prevent
+        data-buttons="button.ui-button[type=submit]"',
+      'title' => false,
+      'style' => 'text-align: center',
+    ]);
+    $opt->setArray($options);
+    $url = rtrim($this->wire->config->urls($this), "/");
+    $title = $opt->title ? "title='{$opt->title}'" : "";
+    return "<div class='{$opt->wrapperClass}' style='{$opt->style}'>
+      <a href='$href' $title class='{$opt->class}' {$opt->attrs}>
+        <img src='$url/icons/$icon.svg'>
+      </a>
+    </div>";
   }
 
   /**
