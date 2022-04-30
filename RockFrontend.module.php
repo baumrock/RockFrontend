@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.4',
+      'version' => '1.2.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -88,6 +88,7 @@ class RockFrontend extends WireData implements Module {
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
       $this->scripts('head')->add($this->path."Alfred.js");
       $this->styles('head')->add($this->path."Alfred.css");
+      include __DIR__ . "/Functions.php";
     }
 
     // hooks
