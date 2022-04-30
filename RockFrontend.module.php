@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.2',
+      'version' => '1.2.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -176,14 +176,24 @@ class RockFrontend extends WireData implements Module {
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
     }
-    if($opt->trash AND $page AND $page instanceof Block AND $page->trashable()) {
+    if($page AND $page instanceof Block) {
       $icons[] = (object)[
-        'icon' => 'trash-2',
+        'icon' => 'move',
         'label' => $page->title,
-        'tooltip' => "Trash Block #{$page->id}",
-        'href' => $page->rmxUrl("/trash/?block=$page"),
-        'confirm' => __('Do you really want to delete this element?'),
+        'tooltip' => "Move Block #{$page->id}",
+        'class' => 'pw-modal',
+        'href' => $page->getMatrixPage()->editUrl."&field=".$page->getMatrixField()."&moveblock=$page",
+        'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
+      if($opt->trash AND $page->trashable()) {
+        $icons[] = (object)[
+          'icon' => 'trash-2',
+          'label' => $page->title,
+          'tooltip' => "Trash Block #{$page->id}",
+          'href' => $page->rmxUrl("/trash/?block=$page"),
+          'confirm' => __('Do you really want to delete this element?'),
+        ];
+      }
     }
 
     if($this->wire->user->isSuperuser()) {
