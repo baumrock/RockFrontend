@@ -45,13 +45,13 @@
   outline: 3px solid #ececec !important;
 }
 .alfred .add-top {
-  top: 6px;
+  top: -13px;
   left: 0;
   right: 0;
   text-align: center;
 }
 .alfred .add-bottom {
-  bottom: 1px;
+  bottom: -17px;
   left: 0;
   right: 0;
   text-align: center;
