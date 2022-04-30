@@ -3,6 +3,7 @@
 }
 .alfred:hover {
   outline: 4px groove #ececec;
+  z-index: 1;
 }
 .alfred {
   position: relative;
