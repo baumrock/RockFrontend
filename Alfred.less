@@ -14,7 +14,8 @@
   z-index: 1;
 }
 
-.rf-icon {
+// mixin for icons
+.mixin-icon {
   pointer-events: all;
   border-radius: 0;
   background-color: white;
@@ -40,7 +41,7 @@
       padding: 0 !important;
     }
     .icon {
-      .rf-icon;
+      .mixin-icon;
     }
   }
 
@@ -60,6 +61,13 @@
   .icons {
     top: 6px;
     right: 3px;
+  }
+
+  &.rmx-widget {
+    &:hover { outline: 4px groove orange; }
+    .icon {
+      outline: 3px solid orange !important;
+    }
   }
 
   &:hover {
