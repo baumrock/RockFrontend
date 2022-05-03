@@ -455,6 +455,16 @@ class RockFrontend extends WireData implements Module {
   }
 
   /**
+   * Is the given page active in the menu?
+   * @return bool
+   */
+  public function isActive($menuItem, $page = null) {
+    $page = $page ?: $this->wire->page;
+    $active = $page->parents()->add($page);
+    return $active->has($menuItem);
+  }
+
+  /**
    * Return layout suggestions
    */
   public function layoutSuggestions(HookEvent $event) {

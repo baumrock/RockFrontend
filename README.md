@@ -143,3 +143,31 @@ You can use the `render()` method to write SVG markup directly to your template 
 // php
 echo $rockfrontend->render('img/icon.svg');
 ```
+
+## Menus
+
+RockFrontend comes with a handy method `isActive()` to keep your menu markup clean. Using `latte` you'll get super simple markup without if-else-hell:
+
+```html
+<nav id='tm-menu' class='tm-boxed-padding' uk-navbar>
+  <div class="uk-navbar-center uk-visible@m">
+    <ul class="uk-navbar-nav">
+      <li n:foreach="$home->children() as $item">
+        <a href="{$item->url}"
+          n:class="$rockfrontend->isActive($item) ? 'uk-active'"
+        >
+          {$item->title}
+        </a>
+        <div class="uk-navbar-dropdown" n:if="$item->numChildren()">
+          <ul class="uk-nav uk-navbar-dropdown-nav"
+            n:inner-foreach="$item->children() as $child"
+          >
+            <li n:class="$rockfrontend->isActive($child) ? 'uk-active'">
+              <a href="{$child->url}">{$child->title}</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
