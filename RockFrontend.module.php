@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.6',
+      'version' => '1.2.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -178,20 +178,25 @@ class RockFrontend extends WireData implements Module {
       ];
     }
     if($page AND $page instanceof Block) {
+      // if the _block context is set for this block we use it as block
+      // this is to support the concept of "widgets" where widgets render global blocks.
+      // when trashing such a block we want to trash the reference widget and not the global block itself!
+      $block = $page;
+      $widget = $page->_widget ?: $page;
       $icons[] = (object)[
         'icon' => 'move',
-        'label' => $page->title,
-        'tooltip' => "Move Block #{$page->id}",
+        'label' => $block->title,
+        'tooltip' => "Move Block #{$widget->id}",
         'class' => 'pw-modal',
-        'href' => $page->getMatrixPage()->editUrl."&field=".$page->getMatrixField()."&moveblock=$page",
+        'href' => $widget->getMatrixPage()->editUrl."&field=".$widget->getMatrixField()."&moveblock=$widget",
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
       if($opt->trash AND $page->trashable()) {
         $icons[] = (object)[
           'icon' => 'trash-2',
           'label' => $page->title,
-          'tooltip' => "Trash Block #{$page->id}",
-          'href' => $page->rmxUrl("/trash/?block=$page"),
+          'tooltip' => "Trash Block #{$widget->id}",
+          'href' => $widget->rmxUrl("/trash/?block=$widget"),
           'confirm' => __('Do you really want to delete this element?'),
         ];
       }
@@ -227,8 +232,12 @@ class RockFrontend extends WireData implements Module {
 
     // setup links for add buttons
     if($page instanceof Block) {
-      $opt->addTop = $page->rmxUrl("/add/?block=$page&above=1");
-      $opt->addBottom = $page->rmxUrl("/add/?block=$page");
+      // see explanation about widget above
+      $block = $page;
+      $widget = $page->_widget ?: $page;
+
+      $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
+      $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
     }
 
     $str = json_encode((object)[
