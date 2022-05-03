@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.12',
+      'version' => '1.3.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -85,7 +85,7 @@ class RockFrontend extends WireData implements Module {
     $this->layoutFolders->add($this->config->paths->assets);
 
     // Alfred
-    include __DIR__ . "/Functions.php";
+    require_once __DIR__ . "/Functions.php";
     $this->createPermission(self::permission_alfred,
       "Is allowed to use ALFRED frontend editing");
     $this->createCSS();
