@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.9',
+      'version' => '1.2.10',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -62,7 +62,10 @@ class RockFrontend extends WireData implements Module {
   public function init() {
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
+
+    // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
+    $this->wire('home', $this->home);
 
     // watch this file and run "migrate" on change or refresh
     if($rm = $this->rm()) $rm->watch($this, 0.01);
@@ -425,11 +428,11 @@ class RockFrontend extends WireData implements Module {
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
       'class' => 'rf-icon pw-modal',
-      'wrapperClass' => '',
+      'wrapClass' => '',
       'attrs' => 'data-autoclose data-reload data-barba-prevent
         data-buttons="button.ui-button[type=submit]"',
       'title' => false,
-      'style' => 'text-align: center',
+      'style' => 'text-align: center; margin: 20px 0;',
     ]);
     $opt->setArray($options);
     $url = rtrim($this->wire->config->urls($this), "/");
