@@ -9,13 +9,13 @@
 }
 
 // block hover
-.alfred:hover {
+body:not(.uk-offcanvas-container) .alfred:hover {
   outline: @outline;
   z-index: 1;
 }
 
 // mixin for icons
-.mixin-icon {
+.alfred-icon {
   pointer-events: all;
   border-radius: 0;
   background-color: white;
@@ -41,7 +41,7 @@
       padding: 0 !important;
     }
     .icon {
-      .mixin-icon;
+      .alfred-icon;
     }
   }
 
@@ -64,7 +64,7 @@
   }
 
   &.rmx-widget {
-    &:hover { outline: 4px groove orange; }
+    &:hover { outline: 4px groove orange !important; }
     .icon {
       outline: 3px solid orange !important;
     }

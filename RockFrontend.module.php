@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.10',
+      'version' => '1.2.11',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -427,7 +427,7 @@ class RockFrontend extends WireData implements Module {
   public function iconLink($icon, $href, $options = []) {
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
-      'class' => 'rf-icon pw-modal',
+      'class' => 'alfred-icon pw-modal',
       'wrapClass' => '',
       'attrs' => 'data-autoclose data-reload data-barba-prevent
         data-buttons="button.ui-button[type=submit]"',

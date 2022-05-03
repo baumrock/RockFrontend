@@ -1,11 +1,11 @@
 .pw-edit-buttons {
   z-index: 99;
 }
-.alfred:hover {
+body:not(.uk-offcanvas-container) .alfred:hover {
   outline: 4px groove #ececec;
   z-index: 1;
 }
-.mixin-icon {
+.alfred-icon {
   pointer-events: all;
   border-radius: 0;
   background-color: white;
@@ -61,7 +61,7 @@
   right: 3px;
 }
 .alfred.rmx-widget:hover {
-  outline: 4px groove orange;
+  outline: 4px groove orange !important;
 }
 .alfred.rmx-widget .icon {
   outline: 3px solid orange !important;

@@ -1,0 +1,63 @@
+/**
+ * This is a customisation of the uikit offcanvas component
+ * Usage:
+ * 1) @import this file in your less theme
+ * 2) Add class "rf-offcanvas" to your uk-offcanvas-bar element
+ * 3) Customise @rf-offcanvas-width to your needs
+ * See https://github.com/uikit/uikit/issues/4302#issuecomment-830037705
+ */
+@rf-offcanvas-width: 500px;
+
+/* bar width */
+.uk-offcanvas-bar.rf-offcanvas {
+  left: -@rf-offcanvas-width;
+  width: @rf-offcanvas-width;
+  max-width: 100vw;
+}
+@media (min-width: @breakpoint-medium) {
+  .uk-offcanvas-bar.rf-offcanvas {
+      left: -@rf-offcanvas-width;
+      width: @rf-offcanvas-width;
+  }
+}
+.uk-offcanvas-flip .uk-offcanvas-bar.rf-offcanvas {
+  left: auto;
+  right: -@rf-offcanvas-width;
+}
+@media (min-width: @breakpoint-medium) {
+  .uk-offcanvas-flip .uk-offcanvas-bar.rf-offcanvas { right: -@rf-offcanvas-width; }
+}
+
+/* Open */
+.uk-open > .uk-offcanvas-bar.rf-offcanvas { left: 0; }
+.uk-offcanvas-flip .uk-open > .uk-offcanvas-bar.rf-offcanvas {
+  left: auto;
+  right: 0;
+}
+
+/* reveal */
+.uk-offcanvas-reveal .uk-offcanvas-bar.rf-offcanvas {
+  left: 0;
+}
+.uk-offcanvas-flip .uk-offcanvas-reveal .uk-offcanvas-bar.rf-offcanvas {
+  left: auto;
+  right: 0;
+}
+.uk-open > .uk-offcanvas-reveal { width: @rf-offcanvas-width; }
+@media (min-width: @breakpoint-medium) {
+  .uk-open > .uk-offcanvas-reveal { width: @rf-offcanvas-width; }
+}
+.uk-offcanvas-flip .uk-offcanvas-reveal {
+  right: 0;
+  left: auto;
+}
+
+/*
+* Activate slide-out animation
+*/
+:not(.uk-offcanvas-flip).uk-offcanvas-container-animation { left: @rf-offcanvas-width; }
+.uk-offcanvas-flip.uk-offcanvas-container-animation { left: -@rf-offcanvas-width; }
+@media (min-width: @breakpoint-medium) {
+  :not(.uk-offcanvas-flip).uk-offcanvas-container-animation { left: @rf-offcanvas-width; }
+  .uk-offcanvas-flip.uk-offcanvas-container-animation { left: -@rf-offcanvas-width; }
+}
