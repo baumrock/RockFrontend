@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.7',
+      'version' => '1.2.8',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -220,6 +220,7 @@ class RockFrontend extends WireData implements Module {
       // style edit link
       $less = substr($path, 0, -4).".less";
       if(is_file($less)) {
+        $less = str_replace($this->wire->config->paths->root, $root, $less);
         $icons[] = (object)[
           'icon' => 'eye',
           'label' => $less,
