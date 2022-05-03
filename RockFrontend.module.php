@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.2.8',
+      'version' => '1.2.9',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -155,6 +155,7 @@ class RockFrontend extends WireData implements Module {
     // set flag to show that at least one alfred tag is on the page
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
+    $page = $page ? $this->wire->pages->get((string)$page) : false;
 
     // setup options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
@@ -162,8 +163,12 @@ class RockFrontend extends WireData implements Module {
       'addTop' => false,
       'addBottom' => false,
       'trash' => true, // will set the trash icon for rockmatrix blocks
+      'fields' => '', // fields to edit
     ]);
     $opt->setArray($options);
+
+    // prepare fields suffix
+    $fields = $opt->fields ? "&fields=".$opt->fields : '';
 
     // icons
     $icons = [];
@@ -172,7 +177,7 @@ class RockFrontend extends WireData implements Module {
         'icon' => 'edit',
         'label' => $page->title,
         'tooltip' => "Edit Block #{$page->id}",
-        'href' => $page->editUrl(),
+        'href' => $page->editUrl().$fields,
         'class' => 'pw-modal',
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
