@@ -60,7 +60,7 @@
       let load = function() {
         console.log('Loading jQuery...');
         if(typeof jQuery == 'undefined') {
-          if(++tries<=10) setTimeout(load, 100);
+          if(++tries<=20) setTimeout(load, 500);
           else console.log("jQuery not found");
           return;
         }
