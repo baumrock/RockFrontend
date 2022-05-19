@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.3.1',
+      'version' => '1.3.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -456,7 +456,7 @@ class RockFrontend extends WireData implements Module {
     $title = $opt->title ? "title='{$opt->title}'" : "";
     return "<div class='{$opt->wrapperClass}' style='{$opt->style}'>
       <a href='$href' $title class='{$opt->class}' {$opt->attrs}>
-        <img src='$url/icons/$icon.svg'>
+        <img src='$url/icons/$icon.svg' style='display:inline'>
       </a>
     </div>";
   }
