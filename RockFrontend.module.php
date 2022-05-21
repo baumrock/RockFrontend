@@ -508,10 +508,6 @@ class RockFrontend extends WireData implements Module {
         ],
       ],
     ]);
-    foreach($this->wire->templates as $tpl) {
-      if($tpl->flags) continue;
-      $rm->addFieldToTemplate(self::field_layout, $tpl);
-    }
   }
 
   /**
