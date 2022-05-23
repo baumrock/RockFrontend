@@ -36,7 +36,7 @@ class AssetsArray extends \ProcessWire\WireArray {
   /**
    * @return self
    */
-  public function addIf($condition, $file, $suffix = '') {
+  public function addIf($file, $condition, $suffix = '') {
     if($condition) parent::add(new Asset($file, $suffix));
     return $this;
   }
