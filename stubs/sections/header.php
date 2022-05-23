@@ -1,4 +1,4 @@
-<div style='padding:40px;border:2px solid red;' <?= $rockfrontend->alfred($page) ?>>
+<div style='padding:40px;border:2px solid red;' <?= alfred($page) ?>>
   <?= __FILE__ ?>
   <p class='note'>
     Try hovering over this block. You should see icons on the top right corner to edit the current page.<br>
