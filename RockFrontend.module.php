@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.5.0',
+      'version' => '1.5.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -160,11 +160,18 @@ class RockFrontend extends WireData implements Module {
     $this->hasAlfred = true;
     $page = $page ? $this->wire->pages->get((string)$page) : false;
 
+    // is given page a widget block stored in field rockmatrix_widgets?
+    $isWidget = false;
+    if($page instanceof Block AND $page->isWidget()) $isWidget = true;
+
     // setup options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
       'addTop' => false,
       'addBottom' => false,
+      'move' => $isWidget ? false : true,
+      'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
+      'widgetStyle' => $isWidget, // make it orange
       'trash' => true, // will set the trash icon for rockmatrix blocks
       'fields' => '', // fields to edit
     ]);
@@ -191,14 +198,16 @@ class RockFrontend extends WireData implements Module {
       // when trashing such a block we want to trash the reference widget and not the global block itself!
       $block = $page;
       $widget = $page->_widget ?: $page;
-      $icons[] = (object)[
-        'icon' => 'move',
-        'label' => $block->title,
-        'tooltip' => "Move Block #{$widget->id}",
-        'class' => 'pw-modal',
-        'href' => $widget->getMatrixPage()->editUrl."&field=".$widget->getMatrixField()."&moveblock=$widget",
-        'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
-      ];
+      if($opt->move) {
+        $icons[] = (object)[
+          'icon' => 'move',
+          'label' => $block->title,
+          'tooltip' => "Move Block #{$widget->id}",
+          'class' => 'pw-modal',
+          'href' => $widget->getMatrixPage()->editUrl."&field=".$widget->getMatrixField()."&moveblock=$widget",
+          'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
+        ];
+      }
       if($opt->trash AND $page->trashable()) {
         $icons[] = (object)[
           'icon' => 'trash-2',
@@ -245,14 +254,15 @@ class RockFrontend extends WireData implements Module {
       $block = $page;
       $widget = $page->_widget ?: $page;
 
-      $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
-      $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+      if(!$isWidget) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
+      if(!$isWidget) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
     }
 
     $str = json_encode((object)[
       'icons' => $icons,
       'addTop' => $opt->addTop,
       'addBottom' => $opt->addBottom,
+      'widgetStyle' => $opt->widgetStyle,
     ]);
     return " alfred='$str'";
   }
