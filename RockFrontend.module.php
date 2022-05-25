@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.5.1',
+      'version' => '1.5.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -269,6 +269,7 @@ class RockFrontend extends WireData implements Module {
 
   public function editLinks($page = null) {
     if(!$page) $page = $this->wire->page;
+    if(!$page->editable()) return;
     $pages = $this->wire->pages;
     return "
       <li>
