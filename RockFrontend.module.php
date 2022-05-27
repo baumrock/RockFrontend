@@ -27,7 +27,7 @@ class RockFrontend extends WireData implements Module {
   public $home;
 
   /** @var bool */
-  private $hasAlfred = false;
+  public $hasAlfred = false;
 
   /** @var Engine */
   private $latte;
@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.5.2',
+      'version' => '1.5.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,

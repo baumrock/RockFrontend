@@ -68,7 +68,7 @@
         $ = jQuery;
         Alfred.init();
 
-        // load vex
+        // load vex for delete block confirm dialog
         if(typeof vex == 'undefined') {
           $('head').append('<script src="/wire/modules/Jquery/JqueryUI/vex/scripts/vex.combined.min.js"></script>');
           $('head').append('<link rel="stylesheet" href="/wire/modules/Jquery/JqueryUI/vex/css/vex.css">');
