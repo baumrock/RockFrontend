@@ -15,7 +15,12 @@ class Asset extends WireData {
     $rockfrontend = $this->wire->modules->get('RockFrontend');
     $this->path = $rockfrontend->getFile($file, true);
     $this->url = $rockfrontend->url($file);
-    $this->m = is_file($this->path) ? filemtime($this->path) : null;
+
+    // inroot check prevents open basedir errors on files that are not found
+    // but kept as url to get a 404 in the devtools network tab
+    $inRoot = $this->wire->files->fileInPath($this->path, $this->wire->config->paths->root);
+    $this->m = $inRoot AND is_file($this->path) ? filemtime($this->path) : null;
+
     $this->suffix = $suffix;
     $this->ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
   }

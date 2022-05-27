@@ -353,7 +353,8 @@ class RockFrontend extends WireData implements Module {
     // if file exists return it
     // this will also find files relative to /site/templates!
     // TODO maybe prevent loading of relative paths outside assets?
-    if(is_file($file)) return $file;
+    $inRoot = $this->wire->files->fileInPath($file, $this->wire->config->paths->root);
+    if($inRoot AND is_file($file)) return $file;
 
     // look for the file specified folders
     foreach($this->folders as $folder) {
@@ -392,7 +393,12 @@ class RockFrontend extends WireData implements Module {
 
     // if the path is already absolute and exists we return it
     // we dont return relative paths!
-    if(strpos($path, '/')===0 AND is_dir($path)) return rtrim($path,'/').'/';
+    // we also make sure that the path is somewhere within the pw root
+    // to prevent oben basedir restriction warnings
+    $inRoot = strpos($path, $this->wire->config->paths->root) === 0;
+    if(strpos($path, '/')===0 AND $inRoot AND is_dir($path)) {
+      return rtrim($path,'/').'/';
+    }
 
     foreach($this->folders as $f) {
       $dir = $f.ltrim($path, '/');
@@ -716,7 +722,8 @@ class RockFrontend extends WireData implements Module {
   public function url($path, $cacheBuster = false) {
     $path = $this->getFile($path, true);
     $config = $this->wire->config;
-    $m = (is_file($path) AND $cacheBuster) ? "?m=".filemtime($path) : '';
+    $inRoot = $this->wire->files->fileInPath($path, $config->paths->root);
+    $m = ($inRoot AND is_file($path) AND $cacheBuster) ? "?m=".filemtime($path) : '';
     return str_replace($config->paths->root, $config->urls->root, $path.$m);
   }
 
