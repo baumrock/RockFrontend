@@ -35,6 +35,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   height: 30px !important;
   padding: 0;
   margin: 0;
+  vertical-align: top;
 }
 .alfred .icons a.icon,
 .alfred .add-top a.icon,
@@ -72,12 +73,12 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 .alfred.rmx-widget .icon {
   border: 3px solid orange !important;
 }
-.alfred > .icons {
+.alfred:hover > .icons {
   display: inline-block;
 }
-.alfred > .add-top {
+.alfred:hover > .add-top {
   display: inline-block;
 }
-.alfred > .add-bottom {
+.alfred:hover > .add-bottom {
   display: inline-block;
 }
