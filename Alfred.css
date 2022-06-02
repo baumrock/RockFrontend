@@ -64,7 +64,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   text-align: center;
 }
 .alfred .icons {
-  top: 0;
+  top: -1px;
   right: 0;
 }
 .alfred.rmx-widget:hover {

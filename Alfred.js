@@ -37,11 +37,15 @@
 
   Alfred.prototype.initItem = function(el) {
     $(el).addClass('alfred');
-    let config = JSON.parse($(el).attr('alfred'));
-    this.addIcons(el, config.icons);
-    if(config.widgetStyle) $(el).addClass('rmx-widget');
-    if(config.addTop) $(el).append(this.plus('top', config.addTop));
-    if(config.addBottom) $(el).append(this.plus('bottom', config.addBottom));
+    try {
+      let config = JSON.parse($(el).attr('alfred'));
+      this.addIcons(el, config.icons);
+      if(config.widgetStyle) $(el).addClass('rmx-widget');
+      if(config.addTop) $(el).append(this.plus('top', config.addTop));
+      if(config.addBottom) $(el).append(this.plus('bottom', config.addBottom));
+    } catch (error) {
+      alert('invalid json in alfred - dont forget |noescape filter when working with latte files')
+    }
   }
 
   Alfred.prototype.plus = function(type, href) {
