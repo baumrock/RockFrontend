@@ -5,6 +5,8 @@ use ProcessWire\WireData;
 
 class StylesArray extends AssetsArray {
 
+  const cacheName = 'rockfrontend-stylesarray-cache';
+
   /**
    * Add all files of folder to assets array
    * @return self
@@ -32,6 +34,8 @@ class StylesArray extends AssetsArray {
     // this makes it possible to overwrite styles via plain CSS later
     /** @var Less $less */
     $less = $this->wire->modules->get('Less');
+    $lessCache = $this->wire->cache->get(self::cacheName);
+    $lessCurrent = ''; // string to store file info
     $m = 0;
     foreach($this as $asset) {
       if($asset->ext !== 'less') continue;
@@ -42,13 +46,14 @@ class StylesArray extends AssetsArray {
       }
       $less->addFile($asset->path);
       if($asset->m > $m) $m = $asset->m;
+      $lessCurrent .= $asset->path."|".$asset->m."--";
     }
     if($less) {
       $cssPath = $this->wire->config->paths->root.ltrim($opt->cssDir, "/");
       $cssFile = $cssPath.$opt->cssName.".css";
       $recompile = false;
       if(!is_file($cssFile)) $recompile = true;
-      elseif(filemtime($cssFile) < $m) $recompile = true;
+      elseif($lessCurrent !== $lessCache) $recompile = true;
       // create css file
       $m = "?m=$m";
       $url = str_replace(
@@ -59,6 +64,7 @@ class StylesArray extends AssetsArray {
       if($recompile) {
         if(!is_dir($cssPath)) $this->wire->files->mkdir($cssPath);
         $less->saveCss($cssFile);
+        $this->wire->cache->save(self::cacheName, $lessCurrent);
         $this->log("Recompiled RockFrontend $url");
       }
       $out .= "$indent<link rel='stylesheet' href='{$url}$m'>\n";
