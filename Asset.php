@@ -19,7 +19,7 @@ class Asset extends WireData {
     // inroot check prevents open basedir errors on files that are not found
     // but kept as url to get a 404 in the devtools network tab
     $inRoot = $this->wire->files->fileInPath($this->path, $this->wire->config->paths->root);
-    $this->m = $inRoot AND is_file($this->path) ? filemtime($this->path) : null;
+    $this->m = ($inRoot AND is_file($this->path)) ? filemtime($this->path) : null;
 
     $this->suffix = $suffix;
     $this->ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
