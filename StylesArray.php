@@ -24,6 +24,7 @@ class StylesArray extends AssetsArray {
       'indent' => '',
       'cssDir' => "/site/templates/bundle/",
       'cssName' => $this->name,
+      'sourcemaps' => $this->wire->config->debug,
     ]);
     $opt->setArray($options);
 
@@ -63,6 +64,9 @@ class StylesArray extends AssetsArray {
       );
       if($recompile) {
         if(!is_dir($cssPath)) $this->wire->files->mkdir($cssPath);
+        $less->setOptions([
+          'sourceMap' => $opt->sourcemaps,
+        ]);
         $less->saveCss($cssFile);
         $this->wire->cache->save(self::cacheName, $lessCurrent);
         $this->log("Recompiled RockFrontend $url");
