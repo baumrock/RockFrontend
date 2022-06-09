@@ -159,10 +159,11 @@ RockFrontend comes with a handy method `isActive()` to keep your menu markup cle
           {$item->title}
         </a>
         <div class="uk-navbar-dropdown" n:if="$item->numChildren()">
-          <ul class="uk-nav uk-navbar-dropdown-nav"
-            n:inner-foreach="$item->children() as $child"
-          >
-            <li n:class="$rockfrontend->isActive($child) ? 'uk-active'">
+          <ul class="uk-nav uk-navbar-dropdown-nav">
+            <li
+              n:foreach="$item->children() as $child"
+              n:class="$rockfrontend->isActive($child) ? 'uk-active'"
+            >
               <a href="{$child->url}">{$child->title}</a>
             </li>
           </ul>
