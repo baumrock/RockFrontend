@@ -2,6 +2,7 @@
 
 use Latte\Engine;
 use RockFrontend\ScriptsArray;
+use RockFrontend\SSE;
 use RockFrontend\StylesArray;
 use RockMatrix\Block;
 
@@ -44,7 +45,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.6.5',
+      'version' => '1.7.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -92,6 +93,9 @@ class RockFrontend extends WireData implements Module {
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
       $this->scripts('head')->add($this->path."Alfred.js");
       $this->styles('head')->add($this->path."Alfred.css");
+    }
+    if($this->liveReload()) {
+      $this->scripts('head')->add($this->path."live-reload.js");
     }
 
     // hooks
@@ -503,6 +507,21 @@ class RockFrontend extends WireData implements Module {
    */
   public function layoutSuggestions(HookEvent $event) {
     return $this->findSuggestFiles($event->q);
+  }
+
+  /**
+   * Is live reloading enabled?
+   *
+   * As of 2022-06-13 live reloading is enabled for superusers if the file
+   * live-reload.php exists in the root directory. This behaviour might change
+   * in the near future.
+   *
+   * @return bool
+   */
+  private function liveReload() {
+    if(!$this->wire->user->isSuperuser()) return false;
+    if(!is_file($this->wire->config->paths->root."live-reload.php")) return false;
+    return true;
   }
 
   public function migrate() {

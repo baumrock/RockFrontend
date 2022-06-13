@@ -4,6 +4,15 @@
 
 No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
 
+## Browser Live Reloading
+
+You'll get instant live reloading of your browser whenever a file changed. Just create the file `see.php` in your PW root directory:
+
+```php
+<?php
+include(__DIR__.'/site/modules/RockFrontend/SSE.php');
+```
+
 ## LATTE Templating Engine
 
 RockFrontend supports the `latte` templating engine by Nette (see https://latte.nette.org/en/syntax).
