@@ -56,7 +56,7 @@ class LiveReload {
    * Watch the system for changed files
    */
   public function watch() {
-    if(!$this->config->debug) die('no access');
+    if(!$this->config->livereload) die('no access');
     header("Cache-Control: no-cache");
     header("Content-Type: text/event-stream");
     $start = date("Y-m-d H:i:s");
