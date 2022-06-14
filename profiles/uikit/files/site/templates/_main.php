@@ -44,6 +44,7 @@ $body = $rockfrontend->renderLayout($page);
   echo $rockfrontend->scripts('head')
     // when logged in rockfrontend will inject Alfred.js here!
     // don't remove this rendering block even if you don't add custom scripts
+    ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/js/uikit.min.js')
     ->render();
   ?>
 </head>
