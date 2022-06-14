@@ -113,7 +113,7 @@ While you can always add custom `<script>` or `<link>` tags to your site's marku
 ```php
 echo $rockfrontend->scripts('head')
   ->add('/path/to/your/script.js')
-  ->addIf($rockfrontend->foo, '/path/to/foo.js')
+  ->addIf('/path/to/foo.js', $rockfrontend->yourflag)
   ->render();
 echo $rockfrontend->styles('head')
   ->add(...)

@@ -13,7 +13,7 @@ use RockMatrix\Block;
  *
  * @method string render($filename, array $vars = array(), array $options = array())
  */
-class RockFrontend extends WireData implements Module {
+class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   const tags = "RockFrontend";
   const prefix = "rockfrontend_";
@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.7.1',
+      'version' => '1.8.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -70,9 +70,6 @@ class RockFrontend extends WireData implements Module {
 
     // watch this file and run "migrate" on change or refresh
     if($rm = $this->rm()) $rm->watch($this, 0.01);
-
-    // copy stubs files
-    $this->copyStubs();
 
     // setup folders that are scanned for files
     $this->folders = $this->wire(new WireArray());
@@ -113,17 +110,6 @@ class RockFrontend extends WireData implements Module {
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
     $event->return = $html;
-  }
-
-  /**
-   * Copy skeleton files to /site/templates
-   * @return void
-   */
-  public function copyStubs() {
-    $path = $this->wire->config->paths->templates;
-    if(is_dir($path."layouts")) return;
-    if(is_dir($path."sections")) return;
-    $this->wire->files->copy($this->path."stubs", $path);
   }
 
   /**
@@ -532,6 +518,34 @@ class RockFrontend extends WireData implements Module {
   }
 
   /**
+   * Copy profile files to PW root
+   * @return void
+   */
+  private function profileExecute() {
+    $profile = $this->wire->input->post('profile', 'filename');
+    foreach($this->profiles() as $path=>$label) {
+      if($label !== $profile) continue;
+      $this->wire->files->copy("$path/files", $this->wire->config->paths->root);
+      $this->wire->message("Copied profile $label to PW");
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get array of available profiles
+   * @return array
+   */
+  private function profiles() {
+    $profiles = [];
+    $path = Paths::normalizeSeparators(__DIR__."/profiles");
+    foreach(array_diff(scandir($path), ['.','..']) as $label) {
+      $profiles["$path/$label"] = $label;
+    }
+    return $profiles;
+  }
+
+  /**
    * Render file
    *
    * If path is provided as array then the first path that returns
@@ -734,6 +748,34 @@ class RockFrontend extends WireData implements Module {
   public function ___install() {
     $this->init();
     $this->migrate();
+  }
+
+  /**
+  * Config inputfields
+  * @param InputfieldWrapper $inputfields
+  */
+  public function getModuleConfigInputfields($inputfields) {
+
+    $help = new InputfieldMarkup();
+    $help->label = 'Available Profiles';
+    $inputfields->add($help);
+
+    $this->profileExecute();
+    $f = new InputfieldSelect();
+    $f->label = "Install Profile";
+    $f->description = "**WARNING** This will overwrite existing files - make sure to have backups or use GIT vor version controlling your project!";
+    $f->name = 'profile';
+    $help->value = '<style>h2 {margin:0}</style>';
+    foreach($this->profiles() as $path => $label) {
+      $help->value .= $this->wire->sanitizer->entitiesMarkdown(
+        file_get_contents("$path/readme.md"),
+        true
+      );
+      $f->addOption($label, $label);
+    }
+    $inputfields->add($f);
+
+    return $inputfields;
   }
 
 }
