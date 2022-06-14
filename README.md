@@ -10,7 +10,7 @@ You'll get instant live reloading of your browser whenever a file changed. Just 
 
 ```php
 <?php
-include(__DIR__.'/site/modules/RockFrontend/SSE.php');
+include __DIR__.'/site/modules/RockFrontend/SSE.php';
 ```
 
 ## LATTE Templating Engine
