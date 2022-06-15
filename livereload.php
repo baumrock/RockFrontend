@@ -64,7 +64,7 @@ class LiveReload {
       $this->sse($this->getChanges($start));
       while(ob_get_level() > 0) ob_end_flush();
       if(connection_aborted()) break;
-      sleep(1);
+      sleep($this->config->livereload);
     }
   }
 

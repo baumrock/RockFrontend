@@ -6,7 +6,5 @@ evtSource.onmessage = function(event) {
     // check if we are in the admin and have unsaved changes
     let changes = document.querySelectorAll('.InputfieldStateChanged').length;
     if(!changes) document.location.reload(true);
-    else console.log('changes on page prevent reload');
   }
-  else console.log('rockfrontend live reload - no change');
 }
