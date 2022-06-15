@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.1',
+      'version' => '1.8.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -99,6 +99,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHookAfter("Page::render", $this, "addEditTag");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
+    $this->addHookAfter("Pages::saved", $this, "addPageSavedTimestamp");
   }
 
   /**
@@ -113,30 +114,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /**
-   * Create CSS from LESS file
+   * Update page saved timestamp
    * @return void
    */
-  public function createCSS() {
-    if(!$this->wire->user->isSuperuser()) return;
-    $css = $this->path."Alfred.css";
-    $lessFile = $this->path."Alfred.less";
-    if(filemtime($css) > filemtime($lessFile)) return;
-    if(!$less = $this->wire->modules->get("Less")) return;
-    /** @var Less $less */
-    $less->addFile($lessFile);
-    $less->saveCSS($css);
-    $this->message("Created $css from $lessFile");
-  }
-
-  /**
-   * Create permission
-   * @return void
-   */
-  public function createPermission($name, $title) {
-    $p = $this->wire->permissions->get($name);
-    if($p AND $p->id) return;
-    $p = $this->wire->permissions->add($name);
-    $p->setAndSave('title', $title);
+  public function addPageSavedTimestamp() {
+    $dir = $this->wire->config->paths->assets."RockFrontend";
+    $this->wire->files->mkdir($dir, true);
+    $this->wire->files->filePutContents("$dir/pagesaved.txt", time());
   }
 
   /**
@@ -255,6 +239,33 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'widgetStyle' => $opt->widgetStyle,
     ]);
     return " alfred='$str'";
+  }
+
+  /**
+   * Create CSS from LESS file
+   * @return void
+   */
+  public function createCSS() {
+    if(!$this->wire->user->isSuperuser()) return;
+    $css = $this->path."Alfred.css";
+    $lessFile = $this->path."Alfred.less";
+    if(filemtime($css) > filemtime($lessFile)) return;
+    if(!$less = $this->wire->modules->get("Less")) return;
+    /** @var Less $less */
+    $less->addFile($lessFile);
+    $less->saveCSS($css);
+    $this->message("Created $css from $lessFile");
+  }
+
+  /**
+   * Create permission
+   * @return void
+   */
+  public function createPermission($name, $title) {
+    $p = $this->wire->permissions->get($name);
+    if($p AND $p->id) return;
+    $p = $this->wire->permissions->add($name);
+    $p->setAndSave('title', $title);
   }
 
   public function editLinks($page = null) {
