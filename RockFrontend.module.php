@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.3',
+      'version' => '1.8.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -104,7 +104,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($this->wire->config->livereload) {
       if($this->wire->page->template == 'admin') {
         $url = $this->wire->config->urls($this);
-        $this->wire->config->scripts->add($url."livereload.js");
+        $m = filemtime($this->path."livereload.js");
+        $this->wire->config->scripts->add($url."livereload.js?m=$m");
       }
       else {
         $this->scripts('head')->add($this->path."livereload.js");
