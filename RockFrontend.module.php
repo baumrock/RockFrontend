@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.4',
+      'version' => '1.8.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -128,7 +128,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Update page saved timestamp
    * @return void
    */
-  public function addPageSavedTimestamp() {
+  public function addPageSavedTimestamp(HookEvent $event) {
+    // dont update timestamp when a rockmatrix block is created
+    // this would conflict with the live reload feature
+    $page = $event->arguments(0);
+    if($page instanceof Block) return;
+
     $dir = $this->wire->config->paths->assets."RockFrontend";
     $this->wire->files->mkdir($dir, true);
     $this->wire->files->filePutContents("$dir/pagesaved.txt", time());
