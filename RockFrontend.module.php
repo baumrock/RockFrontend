@@ -2,7 +2,6 @@
 
 use Latte\Engine;
 use RockFrontend\ScriptsArray;
-use RockFrontend\SSE;
 use RockFrontend\StylesArray;
 use RockMatrix\Block;
 
@@ -45,7 +44,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.2',
+      'version' => '1.8.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -91,15 +90,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $this->scripts('head')->add($this->path."Alfred.js");
       $this->styles('head')->add($this->path."Alfred.css");
     }
-    if($this->wire->config->livereload) {
-      $this->scripts('head')->add($this->path."livereload.js");
-    }
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHookAfter("Page::render", $this, "addEditTag");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
     $this->addHookAfter("Pages::saved", $this, "addPageSavedTimestamp");
+  }
+
+  public function ready() {
+    // live reloading feature
+    // TODO: only livereload if enabled (via cookie)
+    if($this->wire->config->livereload) {
+      if($this->wire->page->template == 'admin') {
+        $url = $this->wire->config->urls($this);
+        $this->wire->config->scripts->add($url."livereload.js");
+      }
+      else {
+        $this->scripts('head')->add($this->path."livereload.js");
+      }
+    }
   }
 
   /**
