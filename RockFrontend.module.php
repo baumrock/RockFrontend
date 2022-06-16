@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.6',
+      'version' => '1.8.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -129,10 +129,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * @return void
    */
   public function addPageSavedTimestamp(HookEvent $event) {
-    // dont update timestamp when a rockmatrix block is created
-    // this would conflict with the live reload feature
     $page = $event->arguments(0);
+
+    // we dont trigger the reload for rockmatrix blocks
+    // this is to prevent reload when editing a block via ALFRED
+    // --> this ensures that the page is not reloaded if the frontend
+    // save has had some errors (eg an empty required field)
     if($page instanceof Block) return;
+
+    // dont trigger the reload on ajax requests
+    // this prevents it from firing on inline editing on the frontend
+    if($this->wire->config->ajax) return;
 
     $dir = $this->wire->config->paths->assets."RockFrontend";
     $this->wire->files->mkdir($dir, true);

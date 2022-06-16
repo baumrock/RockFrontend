@@ -1,4 +1,5 @@
 // live reloading via SSE
+console.log('RockFrontend livereload is listening for file changes...');
 const evtSource = new EventSource('/livereload.php', { withCredentials: true } );
 evtSource.onmessage = function(event) {
   let changes = JSON.parse(event.data);

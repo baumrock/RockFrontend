@@ -97,7 +97,7 @@
 
   // actions to do when alfred and jquery are ready
   Alfred.ready(function() {
-    console.log('Alfred is ready');
+    console.log('ALFRED is ready :)');
 
     $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
       if(eventData.abort) return; // modal.js populates 'abort' if "x" button was clicked
