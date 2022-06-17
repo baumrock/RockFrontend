@@ -8,4 +8,5 @@ evtSource.onmessage = function(event) {
     let changes = document.querySelectorAll('.InputfieldStateChanged').length;
     if(!changes) document.location.reload(true);
   }
+  else console.log('no change');
 }
