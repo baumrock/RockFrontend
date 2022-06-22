@@ -44,7 +44,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.8',
+      'version' => '1.8.9',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -122,6 +122,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
     $event->return = $html;
+  }
+
+  /**
+   * Return link to add a new page under given parent
+   * @return string
+   */
+  public function addPageLink($parent) {
+    $admin = $this->wire->pages->get(2)->url;
+    return $admin."page/add/?parent_id=$parent";
   }
 
   /**
@@ -366,26 +375,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
     // we always add a slash to the file
     // this is to ensure that relative paths are not found by is_file() below
-    $file = "/".ltrim($file, "/");
+    // $file = "/".ltrim($file, "/");
 
     // if no extension was provided try php or latte extension
     if(!pathinfo($file, PATHINFO_EXTENSION)) {
-      if($f = $this->getFile("$file.php", $forcePath)) return $f;
-      if($f = $this->getFile("$file.latte", $forcePath)) return $f;
+      if($f = $this->getFile("$file.php", $forcePath)) return realpath($f);
+      if($f = $this->getFile("$file.latte", $forcePath)) return realpath($f);
     }
 
     // if file exists return it
     // this will also find files relative to /site/templates!
     // TODO maybe prevent loading of relative paths outside assets?
     $inRoot = $this->wire->files->fileInPath($file, $this->wire->config->paths->root);
-    if($inRoot AND is_file($file)) return $file;
+    if($inRoot AND is_file($file)) return realpath($file);
 
-    // look for the file specified folders
+    // look for the file in specified folders
     foreach($this->folders as $folder) {
       $folder = Paths::normalizeSeparators($folder);
       $folder = rtrim($folder,"/")."/";
       $path = $folder.ltrim($file,"/");
-      if(is_file($path)) return $path;
+      if(is_file($path)) return realpath($path);
     }
 
     // no file found
@@ -418,7 +427,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // if the path is already absolute and exists we return it
     // we dont return relative paths!
     // we also make sure that the path is somewhere within the pw root
-    // to prevent oben basedir restriction warnings
+    // to prevent open basedir restriction warnings
     $inRoot = strpos($path, $this->wire->config->paths->root) === 0;
     if(strpos($path, '/')===0 AND $inRoot AND is_dir($path)) {
       return rtrim($path,'/').'/';

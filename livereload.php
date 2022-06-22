@@ -15,6 +15,10 @@ class LiveReload {
     $this->config = $this->loadConfig();
     $this->exclude = $exclude ?: [
       'site/assets/cache/*',
+      'site/assets/logs/*',
+
+      // ignore files to make sure we dont reload the backend after file upload
+      'site/assets/files/*',
     ];
     $this->dir = $dir;
   }
