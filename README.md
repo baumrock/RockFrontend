@@ -4,6 +4,10 @@
 
 No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
 
+## MVC?
+
+RockFrontend does not force you to use an MVC architecture, though I'm always using one. It's as simple as adding one file with very little code using the [brilliant core feature "custom page classes"](https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes).
+
 ## Browser Live Reloading
 
 You'll get instant live reloading of your browser whenever a file changed. Just create the file `see.php` in your PW root directory:
