@@ -15,7 +15,7 @@ include __DIR__.'/site/modules/RockFrontend/SSE.php';
 
 ## LATTE Templating Engine
 
-RockFrontend supports (but does not require) the `latte` templating engine by Nette (see https://latte.nette.org/en/syntax).
+RockFrontend supports (but does not require) the `latte` templating engine by Nette (see https://latte.nette.org/en/syntax). To use latte you need to install it (you only have to do that once):
 
 ```
 cd /path/to/your/pw/root
