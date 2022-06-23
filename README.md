@@ -1,5 +1,9 @@
 # RockFrontend
 
+## Quickstart
+
+If you are using RockFrontend for the very first time it is recommended that you install one of the available profiles via the module's config screen.
+
 ## Does RockFrontend force me to use a CSS Frontend Framework?
 
 No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
@@ -10,11 +14,13 @@ RockFrontend does not force you to use an MVC architecture, though I'm always us
 
 ## Browser Live Reloading
 
-You'll get instant live reloading of your browser whenever a file changed. Just create the file `see.php` in your PW root directory:
+If you installed the UIkit profile you'll already have the file `livereload.php` present in your PW root directory. Then all you have to do to enable live reloading (for frontend and backend development) in your local config file:
 
-```php
-<?php
-include __DIR__.'/site/modules/RockFrontend/SSE.php';
+ATTENTION: Make sure that this setting is only applied for local development! See https://bit.ly/3xVgtvA how you can setup different configs for dev/staging/production.
+
+```
+// make RockFrontend watch for changes every second
+$config->livereload = 1;
 ```
 
 ## LATTE Templating Engine

@@ -806,7 +806,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->profileExecute();
     $f = new InputfieldSelect();
     $f->label = "Install Profile";
-    $f->description = "**WARNING** This will overwrite existing files - make sure to have backups or use GIT vor version controlling your project!";
+    $f->description = "**WARNING** This will overwrite existing files - make sure to have backups or use GIT for version controlling your project!";
     $f->name = 'profile';
     $help->value = '<style>h2 {margin:0}</style>';
     foreach($this->profiles() as $path => $label) {
