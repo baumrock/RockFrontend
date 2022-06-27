@@ -1,6 +1,7 @@
 <?php namespace ProcessWire;
 
 use Latte\Engine;
+use RockFrontend\LiveReload;
 use RockFrontend\ScriptsArray;
 use RockFrontend\StylesArray;
 use RockMatrix\Block;
@@ -44,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.9',
+      'version' => '1.8.10',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -536,6 +537,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function layoutSuggestions(HookEvent $event) {
     return $this->findSuggestFiles($event->q);
+  }
+
+  /**
+   * Return instance of livereload (for debugging)
+   * @return LiveReload
+   */
+  public function livereload() {
+    $nowatch = true;
+    include __DIR__.'/livereload.php';
+    return $reload;
   }
 
   public function migrate() {

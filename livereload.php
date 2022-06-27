@@ -74,4 +74,4 @@ class LiveReload {
 
 }
 $reload = new LiveReload(isset($exclude) ? $exclude : null);
-$reload->watch();
+if(!isset($nowatch)) $reload->watch();
