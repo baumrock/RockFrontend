@@ -1,0 +1,5 @@
+{
+    "require": {
+        "latte/latte": "^3.0"
+    }
+}
