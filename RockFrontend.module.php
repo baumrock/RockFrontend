@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.8.11',
+      'version' => '1.9.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -96,7 +96,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHookAfter("Page::render", $this, "addEditTag");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
-    $this->addHookAfter("Pages::saved", $this, "addPageSavedTimestamp");
   }
 
   public function ready() {
@@ -132,28 +131,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function addPageLink($parent) {
     $admin = $this->wire->pages->get(2)->url;
     return $admin."page/add/?parent_id=$parent";
-  }
-
-  /**
-   * Update page saved timestamp
-   * @return void
-   */
-  public function addPageSavedTimestamp(HookEvent $event) {
-    $page = $event->arguments(0);
-
-    // we dont trigger the reload for rockmatrix blocks
-    // this is to prevent reload when editing a block via ALFRED
-    // --> this ensures that the page is not reloaded if the frontend
-    // save has had some errors (eg an empty required field)
-    if($page instanceof Block) return;
-
-    // dont trigger the reload on ajax requests
-    // this prevents it from firing on inline editing on the frontend
-    if($this->wire->config->ajax) return;
-
-    $dir = $this->wire->config->paths->assets."RockFrontend";
-    $this->wire->files->mkdir($dir, true);
-    $this->wire->files->filePutContents("$dir/pagesaved.txt", time());
   }
 
   /**
