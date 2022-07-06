@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.0',
+      'version' => '1.9.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -630,7 +630,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $file = $this->getFile($path);
     if(!$file) return;
 
-    if(pathinfo($file, PATHINFO_EXTENSION) === 'latte') {
+    if(pathinfo($file, PATHINFO_EXTENSION) === 'svg') {
+      return $this->svg($file);
+    }
+    elseif(pathinfo($file, PATHINFO_EXTENSION) === 'latte') {
       $latte = $this->latte;
       if(!$latte) {
         try {
@@ -754,6 +757,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function styleTag($path, $cacheBuster = false) {
     $href = $this->url($path, $cacheBuster);
     return "<link href='$href' rel='stylesheet'>";
+  }
+
+  /**
+   * Render svg file
+   * @return string
+   */
+  public function svg($filename) {
+    if(!is_file($filename)) return;
+    // we use file_get_contents because $files->render can cause parse errors
+    // see https://wordpress.stackexchange.com/a/256445
+    return file_get_contents($filename);
   }
 
   /**
