@@ -1,7 +1,7 @@
-<div style='padding:40px;border:2px solid red;' {alfred($page)|noescape}>
+<header style='padding:40px;border:2px solid red;' {alfred($page)|noescape}>
   ## header.latte ##
   <p class='note'>
     Try hovering over this block. You should see icons on the top right corner to edit the current page.<br>
     <strong n:if="$user->isLoggedin()">You are logged in - hover this block</strong>
     <strong n:if="!$user->isLoggedin()">You are not logged in so you will not see ALFRED</strong>
-</div>
+</header>

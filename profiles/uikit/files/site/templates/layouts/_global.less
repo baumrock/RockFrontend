@@ -7,19 +7,24 @@ body {
   word-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
-}
 
-/**
- * sticky footer at the bottom of the page
- * https://stackoverflow.com/a/20352949
- */
-.tm-grid-cols {
-  display: grid;
-  grid-template-columns: auto minmax(auto, 1600px) auto;
-}
-.tm-grid-rows {
-  min-height: 100vh;
-  margin: 0;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  /**
+  * sticky footer at the bottom of the page
+  */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  main { flex-grow: 1; }
+
+  /**
+  * boxed layout
+  * apply class tmg-boxed to <header>, <main> and <footer>
+  */
+  .tmg-boxed {
+    width: 800px;
+    max-width: 100vw;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
 }
