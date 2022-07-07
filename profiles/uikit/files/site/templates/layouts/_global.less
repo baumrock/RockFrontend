@@ -7,24 +7,24 @@ body {
   word-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
+}
 
-  /**
-  * sticky footer at the bottom of the page
-  */
+/**
+ * grow <main> so that footer is sticky at the bottom of the page
+ */
+.tmg-main-grow {
   display: flex;
   flex-direction: column;
   height: 100vh;
   main { flex-grow: 1; }
+}
 
-  /**
-  * boxed layout
-  * apply class tmg-boxed to <header>, <main> and <footer>
-  */
-  .tmg-boxed {
-    width: 800px;
-    max-width: 100vw;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
+/**
+ * boxed layout
+ */
+.tmg-boxed {
+  width: 800px;
+  max-width: 100vw;
+  margin-left: auto;
+  margin-right: auto;
 }
