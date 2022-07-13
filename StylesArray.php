@@ -38,6 +38,7 @@ class StylesArray extends AssetsArray {
     $lessCache = $this->wire->cache->get(self::cacheName);
     $lessCurrent = ''; // string to store file info
     $m = 0;
+    $filesCnt = 0;
     foreach($this as $asset) {
       if($asset->ext !== 'less') continue;
       if(!$less) {
@@ -46,10 +47,11 @@ class StylesArray extends AssetsArray {
         continue;
       }
       $less->addFile($asset->path);
+      $filesCnt++;
       if($asset->m > $m) $m = $asset->m;
       $lessCurrent .= $asset->path."|".$asset->m."--";
     }
-    if($less) {
+    if($less AND $filesCnt) {
       $cssPath = $this->wire->config->paths->root.ltrim($opt->cssDir, "/");
       $cssFile = $cssPath.$opt->cssName.".css";
       $recompile = false;
