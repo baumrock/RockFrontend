@@ -80,7 +80,13 @@ class StylesArray extends AssetsArray {
     foreach($this as $asset) {
       if($asset->ext === 'less') continue;
       $m = $asset->m ? "?m=".$asset->m : "";
-      $out .= "$indent<link rel='stylesheet' href='{$asset->url}$m'{$asset->suffix}>\n";
+
+      // add rel=stylesheet if no other relation is set
+      $suffix = " ".$asset->suffix;
+      $rel = " rel='stylesheet'";
+      if(strpos($suffix, " rel=")===false) $suffix .= $rel;
+
+      $out .= "$indent<link href='{$asset->url}$m' $suffix>\n";
       $indent = '  ';
     }
     return $out;
