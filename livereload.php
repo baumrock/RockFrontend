@@ -13,13 +13,16 @@ class LiveReload {
   public function __construct($exclude = null, $dir = 'site') {
     $this->rootPath = realpath(__DIR__.'/../../../');
     $this->config = $this->loadConfig();
-    $this->exclude = $exclude ?: [
+
+    // merge default excluded files with user input
+    $this->exclude = array_merge([
       'site/assets/cache/*',
       'site/assets/logs/*',
 
       // ignore files to make sure we dont reload the backend after file upload
       'site/assets/files/*',
-    ];
+    ], $exclude ?: []);
+
     $this->dir = $dir;
   }
 
