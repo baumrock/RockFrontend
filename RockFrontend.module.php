@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.3',
+      'version' => '1.9.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -649,6 +649,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     }
     $options = $opt->getArray();
     return $this->wire->files->render($file, $vars, $options);
+  }
+
+  /**
+   * Proxy to render method if condition is met
+   *
+   * Usage:
+   * echo $rf->renderIf("/sections/foo.latte", "template=foo");
+   *
+   * @param string|array $path
+   * @param mixed $condition
+   * @param array $vars
+   * @param array $options
+   * @return string
+   */
+  public function renderIf($path, $condition, $vars = null, $options = []) {
+    $render = $condition;
+    if(is_string($condition)) {
+      // condition is a string so we assume it is a page selector
+      $render = $this->wire->page->matches($condition);
+    }
+    if($render) return $this->render($path, $vars, $options);
+    return '';
   }
 
   /**
