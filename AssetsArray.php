@@ -19,9 +19,12 @@ class AssetsArray extends \ProcessWire\WireArray {
 
   /**
    * Add all files of folder to assets array
+   *
+   * Depth is 2 to make it work with RockMatrix by default.
+   *
    * @return self
    */
-  public function addAll($path, $suffix = '', $levels = 1, $ext = ['js']) {
+  public function addAll($path, $suffix = '', $levels = 2, $ext = ['js']) {
     /** @var RockFrontend $rf */
     $rf = $this->wire('modules')->get('RockFrontend');
     $path = $rf->getPath($path);

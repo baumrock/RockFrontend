@@ -9,9 +9,12 @@ class StylesArray extends AssetsArray {
 
   /**
    * Add all files of folder to assets array
+   *
+   * Depth is 2 to make it work with RockMatrix by default.
+   *
    * @return self
    */
-  public function addAll($path, $suffix = '', $levels = 1, $ext = ['css','less']) {
+  public function addAll($path, $suffix = '', $levels = 2, $ext = ['css','less']) {
     return parent::addAll($path, $suffix, $levels, $ext);
   }
 
