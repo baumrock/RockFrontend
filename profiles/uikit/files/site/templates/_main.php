@@ -17,7 +17,9 @@ $body = $rockfrontend->renderLayout($page);
     // if you want to use alfred don't rename the name of this styles() call
 
     // add uikit theme from wire folder
-    // this is just for demonstration! RockFrontend does NOT depend on UIkit!
+    // this is just for demonstration and should not be used on production!
+    // Better download UIkit yourself to ensure that PW upgrades do not break your frontend!
+    // RockFrontend does NOT depend on UIkit!
     // by default this will place the resulting css file in /site/templates
     // but you can custimize that (see blow in render method call)
     ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/src/less/uikit.theme.less')
