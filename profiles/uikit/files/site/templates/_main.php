@@ -31,7 +31,7 @@ $body = $rockfrontend->renderLayout($page);
     ->addAll('layouts')
 
     // add all style files of RockMatrix blocks (2 levels deep)
-    ->addAll('/site/assets/RockMatrix', null, 2)
+    ->addAll('/site/assets/RockMatrix')
 
     // of course you can include
     ->add('/site/templates/bundle/main.css')
