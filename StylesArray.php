@@ -45,7 +45,7 @@ class StylesArray extends AssetsArray {
     foreach($this as $asset) {
       if($asset->ext !== 'less') continue;
       if(!$less) {
-        $out .= "$indent<!-- install Less module for parsing {$asset->url} -->\n";
+        $out .= "$indent<script>alert('install Less module for parsing {$asset->url}')</script>\n";
         $indent = '  ';
         continue;
       }
