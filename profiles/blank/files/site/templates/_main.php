@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <?php
-  echo $rockfrontend->styles('head')
+  echo $rockfrontend->styles()
     ->addAll('sections')
     ->render();
   echo $rockfrontend->scripts('head')

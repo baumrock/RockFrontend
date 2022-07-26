@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.7',
+      'version' => '1.9.8',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -89,7 +89,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->createCSS();
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
       $this->scripts('head')->add($this->path."Alfred.js");
-      $this->styles('head')->add($this->path."Alfred.css");
+      $this->styles()->add($this->path."Alfred.css");
     }
 
     // hooks
@@ -130,7 +130,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         // if not we inject them at the end of the <head>
         $assets = '';
         if(!strpos($html, StylesArray::comment)) {
-          $assets .= $rockfrontend->styles('head')->render();
+          $assets .= $rockfrontend->styles()->render();
         }
         if(!strpos($html, ScriptsArray::comment)) {
           $assets .= $rockfrontend->scripts('head')->render();
@@ -813,7 +813,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    *
    * @return ScriptsArray
    */
-  public function scripts($name = null) {
+  public function scripts($name = 'head') {
     if(!$this->scripts) $this->scripts = new WireData();
     require_once($this->path."Asset.php");
     require_once($this->path."AssetsArray.php");
@@ -839,15 +839,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * $rockfrontend->styles()->add(...)->add(...)->render();
    *
    * // file1.php
-   * $rockfrontend->styles('head')->add(...);
+   * $rockfrontend->styles()->add(...);
    * // file2.php
-   * $rockfrontend->styles('head')->add(...);
+   * $rockfrontend->styles()->add(...);
    * // _main.php
-   * $rockfrontend->styles('head')->render();
+   * $rockfrontend->styles()->render();
    *
    * @return StylesArray
    */
-  public function styles($name = null) {
+  public function styles($name = 'head') {
     if(!$this->styles) $this->styles = new WireData();
     require_once($this->path."Asset.php");
     require_once($this->path."AssetsArray.php");

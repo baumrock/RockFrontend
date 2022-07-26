@@ -44,6 +44,17 @@ class AssetsArray extends \ProcessWire\WireArray {
     return $this;
   }
 
+  /**
+   * Magic toString Method
+   * We return an empty string in case an AssetsArray is requested as string
+   * This is to make it possible to add scripts and styles from within latte files
+   * {$rockfrontend->styles()->add(...)}
+   * Without this magic method that would output something like "array|array"
+   */
+  public function __toString() {
+    return '';
+  }
+
   public function __debugInfo() {
     return array_merge([
       'name' => $this->name,
