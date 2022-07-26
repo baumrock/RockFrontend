@@ -48,7 +48,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.6',
+      'version' => '1.9.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -823,10 +823,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   /**
    * Add translation strings to translations array
+   *
+   * Usage to set translations:
+   * $rockfrontend->x([
+   *   'submit' => __('Submit form'),
+   *   'form_success' => __('Thank you for your message!'),
+   * ]);
+   *
+   * Usage to get translations:
+   * $rockfrontend->x('form_success');
+   *
    * @return array
    */
-  public function x(array $translations) {
-    return $this->translations = array_merge($this->translations, $translations);
+  public function x($translations) {
+    if(is_array($translations)) {
+      return $this->translations = array_merge($this->translations, $translations);
+    }
+    return $this->getTranslation($translations);
   }
 
   public function ___install() {
