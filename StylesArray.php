@@ -6,6 +6,7 @@ use ProcessWire\WireData;
 class StylesArray extends AssetsArray {
 
   const cacheName = 'rockfrontend-stylesarray-cache';
+  const comment = '<!--rockfrontend-styles-head-->';
 
   /**
    * Add all files of folder to assets array
@@ -31,7 +32,7 @@ class StylesArray extends AssetsArray {
     ]);
     $opt->setArray($options);
 
-    $out = '';
+    $out = self::comment;
     $indent = $opt->indent;
 
     // if there are any less files we render them at the beginning
