@@ -18,7 +18,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   const prefix = "rockfrontend_";
   const tagsUrl = "/rockfrontend-layout-suggestions/{q}";
   const permission_alfred = "rockfrontend-alfred";
-  const livereloadCacheName = "rockfrontend-livereload";
+  const livereloadCacheName = "rockfrontend_livereload"; // also in livereload.php
 
   const field_layout = self::prefix."layout";
 
@@ -45,7 +45,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.6',
+      'version' => '1.9.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -116,6 +116,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         // no <head> tag --> early exit
         if(!strpos($html, "</head>")) return;
 
+        // add livereload secret
+        if($this->wire->config->livereload) {
+          $secret = $this->getLivereloadSecret();
+          $html = str_replace(
+            "</head>",
+            "<script>let rf_livereload_secret = '$secret'</script></head>",
+            $html
+          );
+        }
+
         // check if assets have already been added
         // if not we inject them at the end of the <head>
         $assets = '';
@@ -137,6 +147,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         $event->return = $html;
       }
     );
+  }
+
+  private function addLiveReloadScript() {
+    // add script to the backend
+    if($this->wire->page->template == 'admin') {
+      $process = $this->wire->page->process;
+
+      // on some pages in the backend live reloading can cause problems
+      // or is just not helpful so we exclude it
+      if($process == "ProcessModule") return;
+      if($process == "ProcessPageList") return;
+
+      $url = $this->wire->config->urls($this);
+      $m = filemtime($this->path."livereload.js");
+      $this->wire->config->scripts->add($url."livereload.js?m=$m");
+    }
+    // add script to the frontend
+    else {
+      $this->scripts('head')->add($this->path."livereload.js");
+    }
   }
 
   /**
@@ -412,6 +442,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /**
+   * Request live reload secret or create a new one
+   * @return string
+   */
+  public function getLivereloadSecret() {
+    $cachefile = $this->wire->config->paths->cache.self::livereloadCacheName.".txt";
+    return $this->wire->cache->get(
+      self::livereloadCacheName,
+      60*60,
+      function() use($cachefile) {
+        $secret = (new WireRandom())->alphanumeric(0, [
+          'minLength' => 40,
+          'maxLength' => 60,
+        ]);
+        $this->wire->files->filePutContents($cachefile, $secret);
+        return $secret;
+      }
+    );
+  }
+
+  /**
    * Find path in rockfrontend folders
    * Returns path with trailing slash
    * @return string|false
@@ -540,19 +590,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // early exit if live reload is disabled
     if(!$this->wire->config->livereload) return;
 
-    // create a random string every 60 minutes or on modules refresh
-    // if the get parameter does not match the request is blocked
-    $this->addHookAfter("Modules::refresh", function($event) {
+    // reset the livereload secret on every modules refresh
+    $cachefile = $this->wire->config->paths->cache.self::livereloadCacheName.".txt";
+    $this->addHookAfter("Modules::refresh", function() use($cachefile) {
+      if(is_file($cachefile)) $this->wire->files->unlink($cachefile);
       $this->wire->cache->save(self::livereloadCacheName, null);
     });
-    $rand = $this->wire->cache->get(self::livereloadCacheName, 60*60, function() {
-      return (new WireRandom())->alphanumeric(0, [
-        'minLength' => 40,
-        'maxLength' => 60,
-      ]);
-    });
 
-    // copy stubfile if it does not exist
+    // copy stubfile to PW root if it does not exist
     try {
       $root = $this->wire->config->paths->root;
       if(!is_file($root."livereload.php")) {
@@ -562,16 +607,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $this->log($th->getMessage());
     }
 
-    // add script to the backend
-    if($this->wire->page->template == 'admin') {
-      $url = $this->wire->config->urls($this);
-      $m = filemtime($this->path."livereload.js");
-      $this->wire->config->scripts->add($url."livereload.js?m=$m");
-    }
-    // add script to the frontend
-    else {
-      $this->scripts('head')->add($this->path."livereload.js");
-    }
+    // add live reloading script
+    $this->addLiveReloadScript();
   }
 
   public function migrate() {

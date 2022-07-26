@@ -14,6 +14,8 @@ class LiveReload {
     $this->rootPath = realpath(__DIR__.'/../../../');
     $this->config = $this->loadConfig();
 
+    if(!$this->secretMatches()) header("Location: /");
+
     // merge default excluded files with user input
     $this->exclude = array_merge([
       'site/assets/cache/*',
@@ -47,6 +49,17 @@ class LiveReload {
     }
     $config = ProcessWire::buildConfig($this->rootPath);
     return $config;
+  }
+
+  /**
+   * Check if provided secret matches the one from the cache
+   * @return bool
+   */
+  public function secretMatches() {
+    $input = (string)$_GET['secret'];
+    $cachefile = $this->config->paths->cache."rockfrontend_livereload.txt";
+    $secret = file_get_contents($cachefile);
+    return $input == $secret;
   }
 
   /**
