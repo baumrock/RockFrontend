@@ -1,7 +1,6 @@
 <?php namespace ProcessWire;
 
 use Latte\Engine;
-use RockFrontend\LiveReload;
 use RockFrontend\ScriptsArray;
 use RockFrontend\StylesArray;
 use RockMatrix\Block;
