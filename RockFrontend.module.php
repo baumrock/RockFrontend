@@ -7,7 +7,7 @@ use RockMatrix\Block;
 
 /**
  * @author Bernhard Baumrock, 05.01.2022
- * @license COMMERCIAL DO NOT DISTRIBUTE
+ * @license MIT
  * @link https://www.baumrock.com
  *
  * @method string render($filename, array $vars = array(), array $options = array())
