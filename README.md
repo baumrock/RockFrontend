@@ -116,6 +116,28 @@ $body = $rockfrontend->renderLayout($page);
 </html>
 ```
 
+### LATTE and translatable strings
+
+Unfortunately you can't use ProcessWire's translation system in LATTE files. You can either use an MVC approach and move your translatable strings into the controller file (custom page class) or you can use RockFrontend's translation helper:
+
+```php
+// define translations, eg in /site/ready.php
+/** @var RockFrontend $rf */
+$rf = $this->wire->modules->get('RockFrontend');
+$rf->x([
+  'status_loggedin' => __('You are now logged in'),
+  'status_loggedout' => __('Pleas log in'),
+  'button_logout' => __('Logout'),
+  'button_login' => __('Login'),
+]);
+```
+
+In your LATTE files you can output translations like this:
+
+```html
+<button>{$user->isLoggedin() ? x('button_logout') : x('button_login')}</button>
+```
+
 ## Adding assets to your site (JS or CSS)
 
 While you can always add custom `<script>` or `<link>` tags to your site's markup it is recommended that you use RockFrontend's `AssetsArray` feature:

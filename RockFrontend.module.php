@@ -42,10 +42,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   private $scripts;
   private $styles;
 
+  /** @var array */
+  private $translations = [];
+
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.5',
+      'version' => '1.9.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -458,6 +461,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /**
+   * Get translated key by string
+   * @return string
+   */
+  public function getTranslation($key) {
+    if(array_key_exists($key, $this->translations)) return $this->translations[$key];
+    return '';
+  }
+
+  /**
    * Hide layout field for non-superusers
    * @return void
    */
@@ -807,6 +819,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $inRoot = $this->wire->files->fileInPath($path, $config->paths->root);
     $m = ($inRoot AND is_file($path) AND $cacheBuster) ? "?m=".filemtime($path) : '';
     return str_replace($config->paths->root, $config->urls->root, $path.$m);
+  }
+
+  /**
+   * Add translation strings to translations array
+   * @return array
+   */
+  public function x(array $translations) {
+    return $this->translations = array_merge($this->translations, $translations);
   }
 
   public function ___install() {
