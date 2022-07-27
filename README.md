@@ -10,6 +10,11 @@ RockFrontend is a progressive frontend module for ProcessWire that can help you 
 
 If you are using RockFrontend for the very first time it is recommended that you install one of the available profiles via the module's config screen.
 
+## Roadmap
+
+* SEO? Favicon?
+* Cookie Banner?
+
 ## Does RockFrontend force me to use a CSS Frontend Framework?
 
 No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).

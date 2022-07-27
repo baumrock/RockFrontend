@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.10.0',
+      'version' => '1.10.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -640,6 +640,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function livereload() {
     // early exit if live reload is disabled
     if(!$this->wire->config->livereload) return;
+
+    // early exit when page is opened in modal window
+    // this is to prevent enless reloads when the parent frame is reloading
+    if($this->wire->input->get('modal')) return;
 
     // reset the livereload secret on every modules refresh
     $cachefile = $this->wire->config->paths->cache.self::livereloadCacheName.".txt";

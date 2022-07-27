@@ -12,8 +12,16 @@ setTimeout(() => {
     if(changes.length) {
       console.log(changes);
       // check if we are in the admin and have unsaved changes
-      let editing = document.querySelectorAll('.InputfieldStateChanged').length;
-      if(!editing) document.location.reload(true);
+      if(document.querySelectorAll('.InputfieldStateChanged').length) {
+        console.log('detected change - unsaved changes prevent reload');
+        return;
+      }
+      if(document.querySelectorAll('#pw-panel-shade').length) {
+        console.log('detected change - open panel prevents reload');
+        return;
+      }
+      // all fine, reload page
+      document.location.reload(true);
     }
     else console.log('no change');
   }
