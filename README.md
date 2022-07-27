@@ -1,5 +1,11 @@
 # RockFrontend
 
+RockFrontend is a progressive frontend module for ProcessWire that can help you take your frontend development to the next level.
+
+* Zero-config auto-refresh and LESS-Support (SASS also possible)
+* Better project structure to make your project scalable and future proof
+* Support for template engines - LATTE on board
+
 ## Quickstart
 
 If you are using RockFrontend for the very first time it is recommended that you install one of the available profiles via the module's config screen.
