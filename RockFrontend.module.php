@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.11',
+      'version' => '1.10.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -67,6 +67,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function init() {
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
+
+    require_once($this->path."Asset.php");
+    require_once($this->path."AssetsArray.php");
+    require_once($this->path."StylesArray.php");
+    require_once($this->path."ScriptsArray.php");
 
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
@@ -861,9 +866,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function scripts($name = 'head') {
     if(!$this->scripts) $this->scripts = new WireData();
-    require_once($this->path."Asset.php");
-    require_once($this->path."AssetsArray.php");
-    require_once($this->path."ScriptsArray.php");
     $script = $this->scripts->get($name) ?: new ScriptsArray($name);
     $this->scripts->set($name, $script);
     return $script;
@@ -895,9 +897,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function styles($name = 'head') {
     if(!$this->styles) $this->styles = new WireData();
-    require_once($this->path."Asset.php");
-    require_once($this->path."AssetsArray.php");
-    require_once($this->path."StylesArray.php");
     $style = $this->styles->get($name) ?: new StylesArray($name);
     if($name) $this->styles->set($name, $style);
     return $style;
