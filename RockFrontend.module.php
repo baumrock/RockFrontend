@@ -19,6 +19,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   const tagsUrl = "/rockfrontend-layout-suggestions/{q}";
   const permission_alfred = "rockfrontend-alfred";
   const livereloadCacheName = "rockfrontend_livereload"; // also in livereload.php
+  const cache = 'rockfrontend-uikit-versions';
 
   const field_layout = self::prefix."layout";
 
@@ -45,7 +46,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.8',
+      'version' => '1.9.9',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -112,8 +113,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       "Page::render",
       function(HookEvent $event) use($rockfrontend) {
         $html = $event->return;
-
-        // no <head> tag --> early exit
+        // early exit if html does not contain a head section
         if(!strpos($html, "</head>")) return;
 
         // add livereload secret
@@ -323,6 +323,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $p->setAndSave('title', $title);
   }
 
+  /**
+   * Download uikit
+   * @return void
+   */
+  private function downloadUikit() {
+    if(!$version = $this->wire->input->post('uikit', 'string')) return;
+    $url = "https://github.com/uikit/uikit/archive/refs/tags/$version.zip";
+    $tpl = $this->wire->config->paths->templates;
+    $tmp = (new WireTempDir());
+    (new WireHttp())->download($url, $tmp."uikit.zip");
+    $this->wire->files->unzip($tmp."uikit.zip", $tpl);
+  }
+
   public function editLinks($page = null, $list = true, $size = 32) {
     if(!$page) $page = $this->wire->page;
     if(!$page->editable()) return;
@@ -520,6 +533,27 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       if($skip === true) continue;
       else return $file;
     }
+  }
+
+  /**
+   * Get uikit versions from github
+   */
+  public function getUikitVersions() {
+    return $this->wire->cache->get(self::cache, 60*5, function() {
+      $http = new WireHttp();
+      $json = $http->get('https://api.github.com/repos/uikit/uikit/git/refs/tags');
+      $refs = json_decode($json);
+      $versions = [];
+      foreach($refs as $ref) {
+        $version = str_replace("refs/tags/", "", $ref->ref);
+        $v = $version;
+        if(strpos($version, "v.")===0) continue;
+        if(strpos($version, "v")!==0) continue;
+        $versions[$v] = $version;
+      }
+      uasort($versions, "version_compare");
+      return array_reverse($versions);
+    });
   }
 
   /**
@@ -920,6 +954,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       );
       $f->addOption($label, $label);
     }
+    $inputfields->add($f);
+
+    // download uikit
+    $this->downloadUikit();
+    $f = new InputfieldSelect();
+    $f->name = 'uikit';
+    $f->label = 'Download UIkit';
+    $f->notes = "Will be downloaded to /site/templates/";
+    foreach($this->getUikitVersions() as $k=>$v) $f->addOption($k);
     $inputfields->add($f);
 
     return $inputfields;
