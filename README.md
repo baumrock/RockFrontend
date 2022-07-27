@@ -132,7 +132,7 @@ $body = $rockfrontend->renderLayout($page);
 Unfortunately you can't use ProcessWire's translation system in LATTE files. You can either use an MVC approach and move your translatable strings into the controller file (custom page class) or you can use RockFrontend's translation helper:
 
 ```php
-// define translations, eg in /site/ready.php
+// define translations, eg in /site/init.php
 /** @var RockFrontend $rf */
 $rf = $this->wire->modules->get('RockFrontend');
 $rf->x([
