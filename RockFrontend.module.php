@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.10',
+      'version' => '1.9.11',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -136,7 +136,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           $assets .= $rockfrontend->styles()->render();
         }
         if(!strpos($html, ScriptsArray::comment)) {
-          $assets .= $rockfrontend->scripts('head')->render();
+          $assets .= $rockfrontend->scripts()->render();
         }
 
         // return replaced markup
@@ -864,8 +864,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     require_once($this->path."Asset.php");
     require_once($this->path."AssetsArray.php");
     require_once($this->path."ScriptsArray.php");
-    $script = $this->scripts->get($name) ?: new ScriptsArray($this);
-    if($name) $this->scripts->set($name, $script);
+    $script = $this->scripts->get($name) ?: new ScriptsArray($name);
+    $this->scripts->set($name, $script);
     return $script;
   }
 

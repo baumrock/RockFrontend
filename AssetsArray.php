@@ -1,9 +1,12 @@
 <?php namespace RockFrontend;
+
+use ProcessWire\Debug;
+
 class AssetsArray extends \ProcessWire\WireArray {
 
   public $name;
 
-  public function __construct($name) {
+  public function __construct(string $name) {
     $this->name = $name;
     parent::__construct();
   }

@@ -5,7 +5,7 @@ class ScriptsArray extends AssetsArray {
 
   public function render($indent = '') {
     // TODO make API version of options to support hook injected assets
-    $out = self::comment;
+    $out = $this->name == 'head' ? self::comment : '';
     foreach($this as $script) {
       $m = $script->m ? "?m=".$script->m : "";
       $out .= "$indent<script src='{$script->url}$m'{$script->suffix}></script>\n";
