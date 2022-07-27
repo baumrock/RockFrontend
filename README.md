@@ -14,14 +14,14 @@ RockFrontend does not force you to use an MVC architecture, though I'm always us
 
 ## Browser Live Reloading
 
-If you installed the UIkit profile you'll already have the file `livereload.php` present in your PW root directory. Then all you have to do to enable live reloading (for frontend and backend development) in your local config file:
-
 ATTENTION: Make sure that this setting is only applied for local development! See https://bit.ly/3xVgtvA how you can setup different configs for dev/staging/production.
 
 ```
 // make RockFrontend watch for changes every second
 $config->livereload = 1;
 ```
+
+Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position.
 
 ## LATTE Templating Engine
 
