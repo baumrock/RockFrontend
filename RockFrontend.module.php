@@ -43,10 +43,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   private $scripts;
   private $styles;
 
+  /** @var array */
+  private $translations = [];
+
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.9.9',
+      'version' => '1.9.10',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -535,6 +538,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     }
   }
 
+  /*
+   * Get translated key by string
+   * @return string
+   */
+  public function getTranslation($key) {
+    if(array_key_exists($key, $this->translations)) return $this->translations[$key];
+    return '';
+  }
+
   /**
    * Get uikit versions from github
    */
@@ -924,6 +936,27 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $inRoot = $this->wire->files->fileInPath($path, $config->paths->root);
     $m = ($inRoot AND is_file($path) AND $cacheBuster) ? "?m=".filemtime($path) : '';
     return str_replace($config->paths->root, $config->urls->root, $path.$m);
+  }
+
+  /**
+   * Add translation strings to translations array
+   *
+   * Usage to set translations:
+   * $rockfrontend->x([
+   *   'submit' => __('Submit form'),
+   *   'form_success' => __('Thank you for your message!'),
+   * ]);
+   *
+   * Usage to get translations:
+   * $rockfrontend->x('form_success');
+   *
+   * @return array
+   */
+  public function x($translations) {
+    if(is_array($translations)) {
+      return $this->translations = array_merge($this->translations, $translations);
+    }
+    return $this->getTranslation($translations);
   }
 
   public function ___install() {
