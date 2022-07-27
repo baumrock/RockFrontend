@@ -22,6 +22,8 @@ class StylesArray extends AssetsArray {
   public function render($options = []) {
     if(is_string($options)) $options = ['indent' => $options];
 
+    // TODO make API version of options to support hook injected assets
+
     // setup options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
