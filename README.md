@@ -138,15 +138,15 @@ $rf = $this->wire->modules->get('RockFrontend');
 $rf->x([
   'status_loggedin' => __('You are now logged in'),
   'status_loggedout' => __('Pleas log in'),
-  'button_logout' => __('Logout'),
-  'button_login' => __('Login'),
+  'logout' => __('Logout'),
+  'login' => __('Login'),
 ]);
 ```
 
 In your LATTE files you can output translations like this:
 
 ```html
-<button>{$user->isLoggedin() ? x('button_logout') : x('button_login')}</button>
+<button>{$user->isLoggedin() ? x('logout') : x('login')}</button>
 ```
 
 ## Adding assets to your site (JS or CSS)
