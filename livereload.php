@@ -33,9 +33,65 @@ class LiveReload {
    * @return void
    */
   public function getChanges($since) {
+    if(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+      return $this->getChangesWindows($since);
+    }
     $exclude = '';
     foreach($this->exclude as $dir) $exclude .= " -not -path '$dir'";
     exec("cd {$this->rootPath} && find {$this->dir} -type f $exclude -newermt '$since'", $out);
+    return json_encode($out);
+  }
+
+  /**
+   * For systems without UNIX "find"
+   */
+  public function getChangesWindows($since) {
+    $out = array();
+
+    // Get Path
+    $iter = new \RecursiveIteratorIterator(
+      new \RecursiveDirectoryIterator(
+        $this->rootPath."\\".$this->dir,
+        \RecursiveDirectoryIterator::SKIP_DOTS
+      ),
+      \RecursiveIteratorIterator::SELF_FIRST,
+      \RecursiveIteratorIterator::CATCH_GET_CHILD
+    );
+
+    $paths = array($this->rootPath."\\".$this->dir);
+    $maxdepth = 0;
+    // Max path depth
+    foreach($iter as $path => $dir) {
+      if($dir->isDir()) {
+        if($maxdepth < substr_count($path, '\\')) {
+          $maxdepth = substr_count($path, '\\');
+        }
+        $paths[] = $path;
+      }
+    }
+
+    $pattern = "";
+    for($i = 1; $i <= $maxdepth;$i++) $pattern .= ",".str_repeat("*/", $i);
+    $pattern = "{".$pattern."}*.*";
+
+    $items = glob($this->dir.$pattern, GLOB_BRACE);
+    array_multisort(
+      array_map('filemtime', $items),
+      SORT_NUMERIC,
+      SORT_DESC,
+      $items
+    );
+
+    foreach($items as $item) {
+      if(filemtime($item) > strtotime($since)) {
+        $foundExcludeDir = 0;
+        foreach(str_replace("\\","/",str_replace("/*","",$this->exclude)) as $a) {
+          if(stripos($item,$a) !== false) $foundExcludeDir = 1;
+        }
+        if(!$foundExcludeDir) array_push($out, $item);
+      }
+    }
+
     return json_encode($out);
   }
 
