@@ -975,6 +975,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
     $help = new InputfieldMarkup();
     $help->label = 'Available Profiles';
+    $help->collapsed(Inputfield::collapsedYes);
     $inputfields->add($help);
 
     $this->profileExecute();
