@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.11.0',
+      'version' => '1.11.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -95,7 +95,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     require_once __DIR__ . "/Functions.php";
     $this->createPermission(self::permission_alfred,
       "Is allowed to use ALFRED frontend editing");
-    $this->createCSS();
+    $this->createAlfredCSS();
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
       $this->scripts('head')->add($this->path."Alfred.js");
       $this->styles()->add($this->path."Alfred.css");
@@ -308,7 +308,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Create CSS from LESS file
    * @return void
    */
-  public function createCSS() {
+  private function createAlfredCSS() {
     if(!$this->wire->user->isSuperuser()) return;
     $css = $this->path."Alfred.css";
     $lessFile = $this->path."Alfred.less";
@@ -324,7 +324,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Create permission
    * @return void
    */
-  public function createPermission($name, $title) {
+  private function createPermission($name, $title) {
     $p = $this->wire->permissions->get($name);
     if($p AND $p->id) return;
     $p = $this->wire->permissions->add($name);
