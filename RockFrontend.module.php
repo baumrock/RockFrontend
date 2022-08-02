@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.11.2',
+      'version' => '1.11.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -787,7 +787,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /**
    * LATTE renderer
    */
-  public function renderFileLatte($file, $vars) {
+  protected function renderFileLatte($file, $vars) {
     $latte = $this->latte;
     if(!$latte) {
       try {
@@ -805,14 +805,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /**
    * SVG renderer
    */
-  public function renderFileSvg($file) {
+  protected function renderFileSvg($file) {
     return $this->svg($file);
   }
 
   /**
    * Twig renderer
    */
-  public function renderFileTwig($file, $vars) {
+  protected function renderFileTwig($file, $vars) {
     try {
       require_once $this->wire->config->paths->root.'vendor/autoload.php';
       $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
