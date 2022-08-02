@@ -34,20 +34,15 @@ $config->livereload = 1;
 
 Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position.
 
-## LATTE Templating Engine
+## Using template engines
 
-RockFrontend supports (but does not require) the `latte` templating engine by Nette (see https://latte.nette.org/en/syntax). To use latte you need to install it (you only have to do that once):
+### LATTE
 
-```
-cd /path/to/your/pw/root
-composer require latte/latte
-```
+RockFrontend ships with the LATTE template engine. I love LATTE because it is very easy to use and it has some neat little helpers that make your markup a whole lot cleaner. In contrary to other template engines that I've tried LATTE has the huge benefit that it still let's you write PHP and so you don't have to learn a new language/syntax!
 
-To render a latte file simply call `$rockfrontend->render('/your/latte/file.latte')`
+If you haven't tried LATTE yet, check out the docs: https://latte.nette.org/
 
-### Why Latte?
-
-* Latte can simplify the markup a lot (see `n:if` or `n-foreach`)
+* Latte can simplify the markup a lot (see `n:if` or `n-foreach` here: https://latte.nette.org/en/syntax)
 * Latte adds additional security (see https://latte.nette.org/en/safety-first)
 * Latte makes it possible to still use PHP expressions (see https://latte.nette.org/en/tags#toc-var-expr-expr)
 
@@ -57,9 +52,37 @@ For example you can use this statement to use Tracy's `bardump()` in your templa
 {bd($page, 'test dump')}
 ```
 
-### Is it possible to use other templating engines?
+### Twig
 
-It is easy to add support for other templating engines as well. Please submit a PR or ask for support in the support forum.
+If you want to use Twig instead of latte all you have to do is to download Twig by using composer:
+
+```sh
+cd /path/to/your/pw/root
+composer require "twig/twig:^3.0"
+```
+
+Then you can render .twig files like this:
+
+```php
+echo $rockfrontend->render("sections/header.twig");
+```
+
+### Other template engines
+
+It is very easy to add support for any other template engine as well:
+
+```php
+// put this in site/ready.php
+// it will add support for rendering files with .foo extension
+// usage: echo $rockfrontend->render("sections/demo.foo")
+$wire->addHook("RockFrontend::renderFileFoo", function($event) {
+  $file = $event->arguments(0);
+  // implement the renderer here
+  $event->return = "Rendering .foo-file $file";
+});
+```
+
+---
 
 ## Example _main.php
 

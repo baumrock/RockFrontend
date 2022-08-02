@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.10.2',
+      'version' => '1.11.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -770,25 +770,62 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $file = $this->getFile($path);
     if(!$file) return;
 
-    if(pathinfo($file, PATHINFO_EXTENSION) === 'svg') {
-      return $this->svg($file);
+    $ext = pathinfo($file, PATHINFO_EXTENSION);
+    try {
+      $method = "renderFile".ucfirst(strtolower($ext));
+      return $this->$method($file, $vars);
+    } catch (\Throwable $th) {
+      return $th->getMessage();
     }
-    elseif(pathinfo($file, PATHINFO_EXTENSION) === 'latte') {
-      $latte = $this->latte;
-      if(!$latte) {
-        try {
-          require_once $this->path."vendor/autoload.php";
-          $latte = new Engine();
-          $latte->setTempDirectory($this->wire->config->paths->cache."Latte");
-          $this->latte = $latte;
-        } catch (\Throwable $th) {
-          return $th->getMessage();
-        }
-      }
-      return $latte->renderToString($file, $vars);
-    }
+
     $options = $opt->getArray();
     return $this->wire->files->render($file, $vars, $options);
+  }
+
+  /**
+   * LATTE renderer
+   */
+  public function renderFileLatte($file, $vars) {
+    $latte = $this->latte;
+    if(!$latte) {
+      try {
+        require_once $this->path."vendor/autoload.php";
+        $latte = new Engine();
+        $latte->setTempDirectory($this->wire->config->paths->cache."Latte");
+        $this->latte = $latte;
+      } catch (\Throwable $th) {
+        return $th->getMessage();
+      }
+    }
+    return $latte->renderToString($file, $vars);
+  }
+
+  /**
+   * SVG renderer
+   */
+  public function renderFileSvg($file) {
+    return $this->svg($file);
+  }
+
+  /**
+   * Twig renderer
+   */
+  public function renderFileTwig($file, $vars) {
+    try {
+      require_once $this->wire->config->paths->root.'vendor/autoload.php';
+      $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
+      $twig = new \Twig\Environment($loader);
+      $relativePath = str_replace(
+        $this->wire->config->paths->root,
+        $this->wire->config->urls->root,
+        $file
+      );
+      $vars = array_merge((array)$this->wire('all'), $vars);
+      return $twig->render($relativePath, $vars);
+    } catch (\Throwable $th) {
+      return $th->getMessage().
+        '<br><br>Use composer require "twig/twig:^3.0" in PW root';
+    }
   }
 
   /**
