@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.11.1',
+      'version' => '1.11.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -771,6 +771,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if(!$file) return;
 
     $ext = pathinfo($file, PATHINFO_EXTENSION);
+    if($ext == 'php') {
+      $options = $opt->getArray();
+      return $this->wire->files->render($file, $vars, $options);
+    }
     try {
       $method = "renderFile".ucfirst(strtolower($ext));
       return $this->$method($file, $vars);
@@ -778,8 +782,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       return $th->getMessage();
     }
 
-    $options = $opt->getArray();
-    return $this->wire->files->render($file, $vars, $options);
   }
 
   /**
