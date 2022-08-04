@@ -1,8 +1,4 @@
-<img src=logo.svg height=100>
-
-<br>
-
-### Take your ProcessWire Frontend Development to the Next Level 🚀🚀
+# Take your ProcessWire Frontend Development to the Next Level 🚀🚀
 
 <br>
 
