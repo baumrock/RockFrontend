@@ -1,29 +1,40 @@
-# RockFrontend
+<img src=logo.svg height=100>
+
+<br>
+
+### Take your ProcessWire Frontend Development to the Next Level 🚀🚀
+
+<br>
+
+<a href="https://www.youtube.com/watch?v=7CoIj--u4ps"><img src=thumb.jpg></a>
+
+<br>
+
+# Support
+
+https://processwire.com/talk/topic/27417-rockfrontend-%F0%9F%9A%80%F0%9F%9A%80-take-your-processwire-frontend-development-to-the-next-level/
+
+# Donations
+
+<a href=https://paypal.me/baumrock><img src=donate.svg></a>
+
+😎🤗👍
+
+<img src=hr.svg>
+
+## Intro
 
 RockFrontend is a progressive frontend module for ProcessWire that can help you take your frontend development to the next level.
 
-* Zero-config auto-refresh and LESS-Support (SASS also possible)
+* Zero-config auto-refresh and LESS-Support
 * Better project structure to make your project scalable and future proof
 * Support for template engines - LATTE on board
 
-## Quickstart
+<img src=hr.svg>
 
-If you are using RockFrontend for the very first time it is recommended that you install one of the available profiles via the module's config screen.
+## Highlights
 
-## Roadmap
-
-* SEO? Favicon?
-* Cookie Banner?
-
-## Does RockFrontend force me to use a CSS Frontend Framework?
-
-No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
-
-## MVC?
-
-RockFrontend does not force you to use an MVC architecture, though I'm always using one. It's as simple as adding one file with very little code using the [brilliant core feature "custom page classes"](https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes).
-
-## Browser Live Reloading
+### Browser Live Reloading
 
 ATTENTION: Make sure that this setting is only applied for local development! See https://bit.ly/3xVgtvA how you can setup different configs for dev/staging/production.
 
@@ -33,6 +44,8 @@ $config->livereload = 1;
 ```
 
 Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position.
+
+<img src=hr.svg>
 
 ## Using template engines
 
@@ -45,6 +58,8 @@ If you haven't tried LATTE yet, check out the docs: https://latte.nette.org/
 * Latte can simplify the markup a lot (see `n:if` or `n-foreach` here: https://latte.nette.org/en/syntax)
 * Latte adds additional security (see https://latte.nette.org/en/safety-first)
 * Latte makes it possible to still use PHP expressions (see https://latte.nette.org/en/tags#toc-var-expr-expr)
+
+Also see https://processwire.com/talk/topic/27367-why-i-love-the-latte-template-engine/
 
 For example you can use this statement to use Tracy's `bardump()` in your template file:
 
@@ -82,16 +97,27 @@ $wire->addHook("RockFrontend::renderFileFoo", function($event) {
 });
 ```
 
----
+<img src=hr.svg>
 
-## Example _main.php
+## FAQ
+
+### Does RockFrontend force me to use a CSS Frontend Framework?
+
+No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course).
+
+### Does RockFrontend use an MVC pattern or force me to use one?
+
+RockFrontend does not force you to use an MVC architecture, though I'm always using one. It's as simple as adding one file with very little code using the [brilliant core feature "custom page classes"](https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes).
+
+
+<img src=hr.svg>
+
+# Example _main.php
 
 ```php
 <?php namespace ProcessWire;
 /** @var RockFrontend $rockfrontend */
-// render layout from page field or from /site/templates/layouts
 // do this above markup so that we can add scripts and styles from layout files
-$body = $rockfrontend->renderLayout($page);
 ?><!DOCTYPE html>
 <html lang="de">
 <head>
@@ -100,45 +126,15 @@ $body = $rockfrontend->renderLayout($page);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <?= $page->seo ?>
   <?php
-  echo $rockfrontend->styles()
-    // note that rockfrontend will add ALFRED
-    // to your "head" scripts when logged in
-    // if you want to use alfred don't rename the name of this styles() call
-
-    // add uikit theme from wire folder
-    // this is just for demonstration! RockFrontend does NOT depend on UIkit!
-    // by default this will place the resulting css file in /site/templates
-    // but you can custimize that (see blow in render method call)
-    ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/src/less/uikit.theme.less')
-
-    // add all css and less files that you find in /site/templates/sections
-    // this makes it possible to split your stylesheets into smaller parts
-    // eg you can have slider.php for code and slider.less for the styling
-    ->addAll('sections')
-
-    // same as above with layouts folder
-    ->addAll('layouts')
-
-    // of course you can include
-    ->add('/site/templates/bundle/main.css')
-    ->render([
-      // here you can define custom settings for the render call
-      // 'cssDir' => "/site/templates/bundle/",
-
-      // the name of the css file
-      // $this->name refers to the name provided in the styles() call
-      // in our case this would be "head" which would create the file "head.css"
-      // 'cssName' => $this->name,
-    ]);
-  echo $rockfrontend->scripts('head')
-    // when logged in rockfrontend will inject Alfred.js here!
-    // don't remove this rendering block even if you don't add custom scripts
-    ->render();
+  // your scripts will be injected here automatically
+  // see the video for details!
   ?>
 </head>
 <body>
-  <?= $body ?>
   <?php
+  // render layout from page field or from /site/templates/layouts
+  echo $rockfrontend->renderLayout($page);
+
   // this is just an example of how you could add another scripts section
   // you can safely remove this call if you don't want to add any scripts
   // at the bottom of your page body
@@ -150,7 +146,11 @@ $body = $rockfrontend->renderLayout($page);
 </html>
 ```
 
-### LATTE and translatable strings
+<img src=hr.svg>
+
+# Other notes
+
+## LATTE and translatable strings
 
 Unfortunately you can't use ProcessWire's translation system in LATTE files. You can either use an MVC approach and move your translatable strings into the controller file (custom page class) or you can use RockFrontend's translation helper:
 
@@ -177,23 +177,24 @@ In your LATTE files you can output translations like this:
 While you can always add custom `<script>` or `<link>` tags to your site's markup it is recommended that you use RockFrontend's `AssetsArray` feature:
 
 ```php
-echo $rockfrontend->scripts('head')
+$rockfrontend->scripts()
   ->add('/path/to/your/script.js')
-  ->addIf('/path/to/foo.js', $rockfrontend->yourflag)
-  ->render();
-echo $rockfrontend->styles()
+  // you can add any custom flags to your $rockfrontend variable at runtime!
+  ->addIf('/path/to/foo.js', $rockfrontend->needsFooScript)
+  ;
+$rockfrontend->styles()
   ->add(...)
   ->addIf(...)
-  ->render();
+  ;
 ```
 
 There are several reasons why this is preferable over adding custom script/style tags:
 
 * addIf() keeps your markup file cleaner than using if / echo / endif
-* render() automatically adds timestamps of files for cache busting
+* It automatically adds timestamps of files for cache busting
 * You can inject scripts/styles from within other files (eg PW modules)
 
-RockFrontend itself uses this technique to inject the styles and scripts necessary for frontend editing (Alfred). Have a look at the module's init() method!
+RockFrontend itself uses this technique to inject the styles and scripts necessary for frontend editing (ALFRED). Have a look at the module's init() method!
 
 ## Adding folders to scan for frontend files
 
@@ -247,3 +248,4 @@ RockFrontend comes with a handy method `isActive()` to keep your menu markup cle
     </ul>
   </div>
 </nav>
+```
