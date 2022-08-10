@@ -196,7 +196,7 @@ class Seo extends Wire {
      */
     public function ___getImageUrl($image, $tag): string {
       if($image instanceof Pageimages) $image = $image->first();
-      return $this->getImageInfo($image, $tag)->url;
+      return $this->imageInfo($image, $tag)->url;
     }
 
     /**
@@ -249,18 +249,18 @@ class Seo extends Wire {
       $this->setMarkup('og:image:type', '<meta property="og:image:type" content="{value}">');
       $this->setValue('og:image:type', function() {
         $img = $this->getRaw('og:image');
-        return $this->getImageInfo($img, 'og:image')->mime;
+        return $this->imageInfo($img, 'og:image')->mime;
       });
 
       $this->setMarkup('og:image:width', '<meta property="og:image:width" content="{value}">');
       $this->setValue('og:image:width', function() {
         $img = $this->getRaw('og:image');
-        return $this->getImageInfo($img, 'og:image')->width;
+        return $this->imageInfo($img, 'og:image')->width;
       });
       $this->setMarkup('og:image:height', '<meta property="og:image:height" content="{value}">');
       $this->setValue('og:image:height', function() {
         $img = $this->getRaw('og:image');
-        return $this->getImageInfo($img, 'og:image')->height;
+        return $this->imageInfo($img, 'og:image')->height;
       });
       $this->setMarkup('og:image:alt', '<meta property="og:image:alt" content="{value:95}">');
       $this->setValue('og:image:alt', function() {
@@ -268,7 +268,40 @@ class Seo extends Wire {
       });
     }
 
-    public function getImageInfo($img, $tag, $scale = true) {
+    /**
+     * Return truncated value
+     */
+    public function ___truncate($value, $length, $tag): string {
+      return $this->wire->sanitizer->getTextTools()
+        ->truncate((string)$value, [
+          'type' => 'word',
+          'maximize' => true,
+          'maxLength' => $length,
+          'visible' => true,
+          'more' => false,
+          'collapseLinesWith' => '; ',
+        ]);
+    }
+
+  /** ##### end hookable methods ##### */
+
+  /** ##### internal methods ##### */
+
+    /**
+     * Returns a WireData object instead of a plain php array
+     * That ensures that requesting non-existing properties does not throw
+     * an error.
+     */
+    protected function getValuesData($tag): WireData {
+      $values = new WireData();
+      $values->setArray($this->getValues($tag));
+      return $values;
+    }
+
+    /**
+     * Get image info of string or Pageimage
+     */
+    protected function imageInfo($img, $tag, $scale = true): WireData {
       $info = new WireData();
 
       if($img instanceof Pageimage) {
@@ -310,36 +343,6 @@ class Seo extends Wire {
 
       // bd($info->getArray(), 'info');
       return $info;
-    }
-
-    /**
-     * Return truncated value
-     */
-    public function ___truncate($value, $length, $tag): string {
-      return $this->wire->sanitizer->getTextTools()
-        ->truncate((string)$value, [
-          'type' => 'word',
-          'maximize' => true,
-          'maxLength' => $length,
-          'visible' => true,
-          'more' => false,
-          'collapseLinesWith' => '; ',
-        ]);
-    }
-
-  /** ##### end hookable methods ##### */
-
-  /** ##### internal methods ##### */
-
-    /**
-     * Returns a WireData object instead of a plain php array
-     * That ensures that requesting non-existing properties does not throw
-     * an error.
-     */
-    protected function getValuesData($tag): WireData {
-      $values = new WireData();
-      $values->setArray($this->getValues($tag));
-      return $values;
     }
 
   /** ##### end internal methods ##### */
