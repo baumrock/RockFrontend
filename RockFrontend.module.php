@@ -53,7 +53,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.0',
+      'version' => '1.13.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,

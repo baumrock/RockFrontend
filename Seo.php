@@ -125,7 +125,11 @@ class Seo extends Wire {
           // get truncated tag
           if($trunc) $value = $this->truncate($value, $trunc, $tag);
 
-          $out = str_replace($search, (string)$value, $out);
+          // sanitize value
+          $value = (string)$value;
+          $value = $this->wire->sanitizer->entities($value);
+
+          $out = str_replace($search, $value, $out);
         },
         $markup
       );
