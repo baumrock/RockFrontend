@@ -103,9 +103,10 @@ class Seo extends Wire {
     }
 
     public function render(): string {
-      $out = "<!-- RockFrontend\Seo -->\n  ";
+      $out = '';
       foreach($this->tags as $name=>$tag) {
-        $out .= $this->renderTag($name)."\n  ";
+        $markup = $this->renderTag($name);
+        if($markup) $out .= "$markup\n  ";
       }
       return $out;
     }
@@ -249,6 +250,12 @@ class Seo extends Wire {
      * https://neilpatel.com/blog/open-graph-meta-tags
      */
     public function ___setupDefaults() {
+      // branding
+      // you can remove the branding by adding ->setMarkup('branding', '')
+      // please consider donating if you do so and the module helps you
+      // https://github.com/sponsors/baumrock/ THANK YOU
+      $this->setMarkup('branding', '<!-- RockFrontend SEO by baumrock.com -->');
+
       // title
       $this->setMarkup('title', '<title>{value:60}</title>');
       $this->setMarkup('og:title', '<meta property="og:title" content="{value:95}">');
