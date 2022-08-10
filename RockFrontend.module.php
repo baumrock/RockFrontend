@@ -21,6 +21,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   const permission_alfred = "rockfrontend-alfred";
   const livereloadCacheName = "rockfrontend_livereload"; // also in livereload.php
   const cache = 'rockfrontend-uikit-versions';
+  const installedprofilekey = 'rockfrontend-installed-profile';
 
   const field_layout = self::prefix."layout";
 
@@ -53,7 +54,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.4',
+      'version' => '1.13.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -710,6 +711,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       if($label !== $profile) continue;
       $this->wire->files->copy("$path/files", $this->wire->config->paths->root);
       $this->wire->message("Copied profile $label to PW");
+      $this->wire->pages->get(1)->meta(
+        self::installedprofilekey,
+        $profile." (last installed @ ".date("Y-m-d H:i:s").")"
+      );
       return true;
     }
     return false;
@@ -1051,6 +1056,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       );
       $f->addOption($label, $label);
     }
+    $f->notes = $this->profileInstalledNote();
     $inputfields->add($f);
 
     // download uikit
@@ -1073,6 +1079,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $note .= "\nFound /site/templates/$p";
     }
     $f->notes .= $note;
+  }
+
+  public function profileInstalledNote() {
+    $note = $this->wire->pages->get(1)->meta(self::installedprofilekey);
+    if($note) return "Installed profile: $note";
   }
 
 }
