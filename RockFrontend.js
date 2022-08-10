@@ -1,6 +1,14 @@
 "use strict";
 
 /**
+ * RockFrontend JavaScript Helper
+ *
+ * To include this file into your frontend add it to the head scripts:
+ * $rockfrontend->add('/site/modules/RockFrontend/RockFrontend.js', 'defer')
+ */
+
+
+/**
  * toggle the "hidden" attribute of another element
  * Usage:
  * <a href=# rf-toggle='#foo'>toggle foo</a>

@@ -49,7 +49,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.11.3',
+      'version' => '1.12.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -91,13 +91,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->layoutFolders->add($this->config->paths->templates);
     $this->layoutFolders->add($this->config->paths->assets);
 
+    // add default styles and scripts
+    $this->styles()->addAll('sections');
+    $this->styles()->addAll('layouts');
+    $this->styles()->addAll('partials');
+    $this->styles()->addAll('/site/assets/RockMatrix');
+
     // Alfred
     require_once __DIR__ . "/Functions.php";
     $this->createPermission(self::permission_alfred,
-      "Is allowed to use ALFRED frontend editing");
+    "Is allowed to use ALFRED frontend editing");
     $this->createAlfredCSS();
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
-      $this->scripts('head')->add($this->path."Alfred.js");
+      $this->scripts()->add($this->path."Alfred.js");
       $this->styles()->add($this->path."Alfred.css");
     }
 
@@ -1040,8 +1046,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $f->notes = "Will be downloaded to /site/templates/";
     foreach($this->getUikitVersions() as $k=>$v) $f->addOption($k);
     $inputfields->add($f);
+    $this->addUikitNote($f);
 
     return $inputfields;
+  }
+
+  private function addUikitNote(InputfieldSelect $f) {
+    $note = '';
+    foreach(scandir($this->wire->config->paths->templates) as $p) {
+      if(strpos($p, "uikit-")!==0) continue;
+      $note .= "\nFound /site/templates/$p";
+    }
+    $f->notes .= $note;
   }
 
 }
