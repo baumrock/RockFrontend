@@ -34,6 +34,14 @@ class Seo extends Wire {
   /** ##### public API ##### */
 
     /**
+     * Shortcut to set description and og:description at once
+     */
+    public function description($value): self {
+      $this->setValue(['description', 'og:description'], $value);
+      return $this;
+    }
+
+    /**
      * Get markup for given tag
      */
     public function getMarkup($tag): string {
@@ -185,8 +193,7 @@ class Seo extends Wire {
      * Shortcut for setting both title and og:title
      */
     public function title($value): self {
-      $this->setValue('title', $value);
-      $this->setValue('og:title', $value);
+      $this->setValue(['title', 'og:title'], $value);
       return $this;
     }
 
@@ -235,12 +242,27 @@ class Seo extends Wire {
       return $str;
     }
 
+    /**
+     * Set default tags
+     * Recommendations from https://moz.com/learn/seo
+     * https://neilpatel.com/blog/open-graph-meta-tags
+     */
     public function ___setupDefaults() {
       // title
       $this->setMarkup('title', '<title>{value:60}</title>');
       $this->setMarkup('og:title', '<meta property="og:title" content="{value:95}">');
       $this->setValue(['title', 'og:title'], function($page) {
         return $page->title;
+      });
+
+      // description
+      $this->setMarkup('description', '<meta name="description" content="{value:160}">');
+      $this->setValue('description', function($page) {
+        return $page->get("body|title");
+      });
+      $this->setMarkup('og:description', '<meta property="og:description" content="{value:160}">');
+      $this->setValue('og:description', function($page) {
+        return $this->getRaw('description');
       });
 
       // og:image
