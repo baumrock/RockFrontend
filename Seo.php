@@ -331,6 +331,7 @@ class Seo extends Wire {
     protected function imageInfo($img, $tag, $scale = true): WireData {
       $info = new WireData();
 
+      if($img instanceof Pageimages) $img = $img->first();
       if($img instanceof Pageimage) {
         if($scale) $img = $this->getImageScaled($img, $tag);
         $path = Paths::normalizeSeparators($img->filename);
