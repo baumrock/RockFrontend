@@ -2,6 +2,7 @@
 
 use Latte\Engine;
 use RockFrontend\ScriptsArray;
+use RockFrontend\Seo;
 use RockFrontend\StylesArray;
 use RockMatrix\Block;
 
@@ -40,6 +41,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /** @var string */
   public $path;
 
+  /** @var Seo */
+  public $seo;
+
   private $scripts;
   private $styles;
 
@@ -49,7 +53,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.12.0',
+      'version' => '1.13.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -896,6 +900,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function rm() {
     return $this->wire->modules->get('RockMigrations');
+  }
+
+  /**
+   * @return Seo
+   */
+  public function seo() {
+    if($this->seo) return $this->seo;
+    require_once __DIR__."/Seo.php";
+    return $this->seo = new Seo();
   }
 
   /**
