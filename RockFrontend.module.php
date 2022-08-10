@@ -53,7 +53,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.2',
+      'version' => '1.13.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -95,12 +95,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->layoutFolders->add($this->config->paths->templates);
     $this->layoutFolders->add($this->config->paths->assets);
 
-    // add default styles and scripts
-    $this->styles()->addAll('sections');
-    $this->styles()->addAll('layouts');
-    $this->styles()->addAll('partials');
-    $this->styles()->addAll('/site/assets/RockMatrix');
-
     // Alfred
     require_once __DIR__ . "/Functions.php";
     $this->createPermission(self::permission_alfred,
@@ -119,6 +113,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function ready() {
     $this->liveReload();
     $this->addAssets();
+
+    // add default styles and scripts on frontend pages
+    if($this->page->template != 'admin') {
+      $this->styles()->addAll('sections');
+      $this->styles()->addAll('layouts');
+      $this->styles()->addAll('partials');
+      $this->styles()->addAll('/site/assets/RockMatrix');
+    }
   }
 
   /**

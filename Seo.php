@@ -206,6 +206,7 @@ class Seo extends Wire {
      * The second parameter can be used to modify behaviour via hook.
      */
     public function ___getImageUrl($image, $tag): string {
+      if(!$image) return '';
       if($image instanceof Pageimages) $image = $image->first();
       return $this->imageInfo($image, $tag)->url;
     }
