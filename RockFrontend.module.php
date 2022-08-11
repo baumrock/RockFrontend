@@ -141,7 +141,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           $secret = $this->getLivereloadSecret();
           $html = str_replace(
             "</head>",
-            "<script>let rf_livereload_secret = '$secret'</script></head>",
+            "\n  <script>let rf_livereload_secret = '$secret'</script></head>",
             $html
           );
         }

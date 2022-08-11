@@ -254,7 +254,7 @@ class Seo extends Wire {
       // you can remove the branding by adding ->setMarkup('branding', '')
       // please consider donating if you do so and the module helps you
       // https://github.com/sponsors/baumrock/ THANK YOU
-      $this->setMarkup('branding', '<!-- RockFrontend SEO by baumrock.com -->');
+      $this->setMarkup('branding', "\n  <!-- RockFrontend SEO by baumrock.com -->");
 
       // title
       $this->setMarkup('title', '<title>{value:60}</title>');
