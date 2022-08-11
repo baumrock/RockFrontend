@@ -7,7 +7,7 @@ use ProcessWire\WireData;
 class StylesArray extends AssetsArray {
 
   const cacheName = 'rockfrontend-stylesarray-cache';
-  const comment = '<!--rockfrontend-styles-head-->';
+  const comment = '<!-- rockfrontend-styles-head -->';
 
   /**
    * Add all files of folder to assets array
@@ -42,10 +42,10 @@ class StylesArray extends AssetsArray {
     if($opt->debug) {
       $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
       if($this->opt('autoload')) {
-        $out .= "$indent<!-- autoloading of default scripts/styles enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
+        $out .= "$indent<!-- autoloading of default styles enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
       }
     }
-    $out .= $indent.self::comment."\n";
+    $out .= $this->name == 'head' ? $indent.self::comment."\n" : '';
 
     // if there are any less files we render them at the beginning
     // this makes it possible to overwrite styles via plain CSS later
