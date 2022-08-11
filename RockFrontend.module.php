@@ -55,7 +55,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.14.2',
+      'version' => '1.14.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -103,10 +103,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->createPermission(self::permission_alfred,
     "Is allowed to use ALFRED frontend editing");
     $this->createCSS();
-    if($this->loadAlfred()) {
-      $this->scripts()->add($this->path."Alfred.js");
-      $this->styles()->add($this->path."Alfred.css");
-    }
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
@@ -144,6 +140,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
             "\n  <script>let rf_livereload_secret = '$secret'</script></head>",
             $html
           );
+        }
+
+        // load alfred?
+        if($this->loadAlfred()) {
+          $this->scripts()->add($this->path."Alfred.js");
+          $this->styles()->add($this->path."Alfred.css");
         }
 
         // autoload scripts and styles
@@ -221,7 +223,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * @return string
    */
   public function alfred($page = null, $options = []) {
-    if(!$this->wire->user->isLoggedin()) return;
+    if(!$this->alfredAllowed()) return;
 
     // support short syntax
     if(is_string($options)) $options = ['fields'=>$options];
@@ -350,6 +352,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'widgetStyle' => $opt->widgetStyle,
     ]);
     return " alfred='$str'";
+  }
+
+  /**
+   * Is ALFRED allowed for current user?
+   */
+  protected function alfredAllowed(): bool {
+    if($this->wire->user->isSuperuser()) return true;
+    if($this->wire->user->hasPermission(self::permission_alfred)) return true;
+    return false;
   }
 
   /**
