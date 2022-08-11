@@ -22,6 +22,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   const livereloadCacheName = "rockfrontend_livereload"; // also in livereload.php
   const cache = 'rockfrontend-uikit-versions';
   const installedprofilekey = 'rockfrontend-installed-profile';
+  const recompile = 'rockfrontend-recompile-less';
 
   const field_layout = self::prefix."layout";
 
@@ -54,7 +55,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.9',
+      'version' => '1.13.10',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -110,6 +111,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
+    $this->addHookAfter("Modules::refresh", $this, "refreshModules");
   }
 
   public function ready() {
@@ -745,6 +747,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $profiles["$path/$label"] = $label;
     }
     return $profiles;
+  }
+
+  /**
+   * Things to do when modules are refreshed
+   */
+  public function refreshModules() {
+    $this->wire->session->set(self::recompile, true);
   }
 
   /**

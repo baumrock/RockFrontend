@@ -1,6 +1,7 @@
 <?php namespace RockFrontend;
 
 use ProcessWire\Less;
+use ProcessWire\RockFrontend;
 use ProcessWire\WireData;
 
 class StylesArray extends AssetsArray {
@@ -71,9 +72,12 @@ class StylesArray extends AssetsArray {
     if($less AND $filesCnt) {
       $cssPath = $this->wire->config->paths->root.ltrim($opt->cssDir, "/");
       $cssFile = $cssPath.$opt->cssName.".css";
+
       $recompile = false;
       if(!is_file($cssFile)) $recompile = true;
       elseif($lessCurrent !== $lessCache) $recompile = true;
+      elseif($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
+
       // create css file
       $m = "?m=$m";
       $url = str_replace(
@@ -88,6 +92,7 @@ class StylesArray extends AssetsArray {
         ]);
         $less->saveCss($cssFile);
         $this->wire->cache->save(self::cacheName, $lessCurrent);
+        $this->wire->session->set(RockFrontend::recompile, false);
         $this->log("Recompiled RockFrontend $url");
       }
       $out .= "$indent<link rel='stylesheet' href='{$url}$m'>\n";
