@@ -55,7 +55,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.11',
+      'version' => '1.13.12',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -199,10 +199,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   /**
    * ALFRED - A Lovely FRontend EDitor
+   *
+   * Usage (short syntax):
+   * alfred($page, "title,images")
+   *
+   * Usage (verbose):
+   * alfred($page, [
+   *   'fields' => ['title', 'images'],
+   *   'trash' => false,
+   *   ...
+   * ])
+   *
    * @return string
    */
   public function alfred($page = null, $options = []) {
     if(!$this->wire->user->isLoggedin()) return;
+
+    // support short syntax
+    if(is_string($options)) $options = ['fields'=>$options];
+
     // set flag to show that at least one alfred tag is on the page
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
@@ -226,7 +241,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $opt->setArray($options);
 
     // prepare fields suffix
-    $fields = $opt->fields ? "&fields=".$opt->fields : '';
+    $fields = '';
+    if($opt->fields) {
+      $fields = '&fields=';
+      $fieldsarray = $opt->fields;
+      if(!is_array($fieldsarray)) $fieldsarray = explode(",", $fieldsarray);
+      array_map('trim', $fieldsarray);
+      foreach($fieldsarray as $f) {
+        if($this->wire->fields->get((string)$f)) $fields .= "$f,";
+      }
+      $fields = trim($fields, ",");
+    }
 
     // icons
     $icons = [];
