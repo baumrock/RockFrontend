@@ -8,9 +8,6 @@ class StylesArray extends AssetsArray {
   const cacheName = 'rockfrontend-stylesarray-cache';
   const comment = '<!--rockfrontend-styles-head-->';
 
-  /** @var array */
-  protected $options = [];
-
   /**
    * Add all files of folder to assets array
    *
@@ -53,6 +50,8 @@ class StylesArray extends AssetsArray {
     if($opt->debug) {
       $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
     }
+
+    // parse all less files
     foreach($this as $asset) {
       if($asset->ext !== 'less') continue;
       if($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->\n";
@@ -91,8 +90,14 @@ class StylesArray extends AssetsArray {
       $indent = '  ';
     }
 
+    // render all assets
     foreach($this as $asset) {
       if($asset->ext === 'less') continue;
+      if($asset instanceof AssetComment) {
+        $out .= "$indent<!-- {$asset->comment} -->\n";
+        continue;
+      }
+
       $m = $asset->m ? "?m=".$asset->m : "";
 
       // add rel=stylesheet if no other relation is set
@@ -104,14 +109,6 @@ class StylesArray extends AssetsArray {
       $indent = '  ';
     }
     return $out;
-  }
-
-  /**
-   * Set options for rendering
-   */
-  public function setOptions(array $options): self {
-    $this->options = array_merge($this->options, $options);
-    return $this;
   }
 
 }

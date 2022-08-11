@@ -8,7 +8,8 @@ class ScriptsArray extends AssetsArray {
     $out = $this->name == 'head' ? "$indent".self::comment."\n" : '';
     foreach($this as $script) {
       $m = $script->m ? "?m=".$script->m : "";
-      $out .= "$indent<script src='{$script->url}$m'{$script->suffix}></script>\n";
+      $suffix = $script->suffix ? " ".$script->suffix : '';
+      $out .= "$indent<script src='{$script->url}$m'$suffix></script>\n";
     }
     return $out;
   }

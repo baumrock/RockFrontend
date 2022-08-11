@@ -6,6 +6,11 @@ class AssetsArray extends \ProcessWire\WireArray {
 
   public $name;
 
+  /** @var array */
+  protected $options = [
+    'autoload' => true, // flag to autoload default scripts and styles
+  ];
+
   public function __construct(string $name) {
     $this->name = $name;
     parent::__construct();
@@ -15,7 +20,7 @@ class AssetsArray extends \ProcessWire\WireArray {
    * @return self
    */
   public function add($file, $suffix = '') {
-    $file = new Asset($file, $suffix);
+    if(!$file instanceof AssetComment) $file = new Asset($file, $suffix);
     parent::add($file);
     return $this;
   }
@@ -47,12 +52,35 @@ class AssetsArray extends \ProcessWire\WireArray {
     return $this;
   }
 
+  public function comment($str): self {
+    $comment = new AssetComment($str);
+    $this->add($comment);
+    return $this;
+  }
+
+  /**
+   * Get options value
+   * @return mixed
+   */
+  public function opt(string $key) {
+    $opt = $this->options;
+    if(array_key_exists($key, $opt)) return $opt[$key];
+  }
+
   /**
    * @return self
    */
   public function prepend($file, $suffix = '') {
     $file = new Asset($file, $suffix);
     parent::prepend($file);
+    return $this;
+  }
+
+  /**
+   * Set options for rendering
+   */
+  public function setOptions(array $options): self {
+    $this->options = array_merge($this->options, $options);
     return $this;
   }
 

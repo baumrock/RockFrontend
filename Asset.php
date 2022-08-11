@@ -9,6 +9,7 @@ class Asset extends WireData {
   public $m;
   public $path;
   public $suffix;
+  public $comment;
 
   public function __construct($file, $suffix = '') {
     /** @var RockFrontend $rockfrontend */
@@ -31,6 +32,7 @@ class Asset extends WireData {
       'm' => $this->m,
       'suffix' => $this->suffix,
       'ext' => $this->ext,
+      'comment' => $this->comment,
     ];
   }
 

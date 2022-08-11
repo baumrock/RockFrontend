@@ -54,7 +54,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.7',
+      'version' => '1.13.8',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -74,6 +74,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->home = $this->wire->pages->get(1);
 
     require_once($this->path."Asset.php");
+    require_once($this->path."AssetComment.php");
     require_once($this->path."AssetsArray.php");
     require_once($this->path."StylesArray.php");
     require_once($this->path."ScriptsArray.php");
@@ -114,14 +115,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function ready() {
     $this->liveReload();
     $this->addAssets();
-
-    // add default styles and scripts on frontend pages
-    if($this->page->template != 'admin') {
-      $this->styles()->addAll('layouts');
-      $this->styles()->addAll('sections');
-      $this->styles()->addAll('partials');
-      $this->styles()->addAll('/site/assets/RockMatrix');
-    }
   }
 
   /**
@@ -133,7 +126,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->addHookAfter(
       "Page::render",
       function(HookEvent $event) use($rockfrontend) {
+        $page = $event->object;
         $html = $event->return;
+        $styles = $this->styles();
+        $scripts = $this->scripts();
+
         // early exit if html does not contain a head section
         if(!strpos($html, "</head>")) return;
 
@@ -147,15 +144,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           );
         }
 
+        // autoload scripts and styles
+        $rockfrontend->autoload($page);
+
         // check if assets have already been added
         // if not we inject them at the end of the <head>
         $assets = '';
-        if(!strpos($html, StylesArray::comment)) {
-          $assets .= $rockfrontend->styles()->render();
-        }
-        if(!strpos($html, ScriptsArray::comment)) {
-          $assets .= $rockfrontend->scripts()->render();
-        }
+        if(!strpos($html, StylesArray::comment)) $assets .= $styles->render();
+        if(!strpos($html, ScriptsArray::comment)) $assets .= $scripts->render();
 
         // return replaced markup
         $html = str_replace("</head>", "$assets</head>", $html);
@@ -315,6 +311,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'widgetStyle' => $opt->widgetStyle,
     ]);
     return " alfred='$str'";
+  }
+
+  /**
+   * Autoload scripts and styles
+   */
+  public function autoload($page) {
+    $styles = $this->styles();
+    $scripts = $this->scripts();
+
+    if($page->template != 'admin') {
+      // frontend
+      if($styles->opt('autoload')) {
+        $styles->comment("autoloading of styles enabled - disable using ->setOptions(['autoload'=>false])");
+        $styles->addAll('layouts');
+        $styles->addAll('sections');
+        $styles->addAll('partials');
+        $styles->addAll('/site/assets/RockMatrix');
+      }
+    }
   }
 
   /**
