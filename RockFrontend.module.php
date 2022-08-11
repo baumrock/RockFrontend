@@ -55,7 +55,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.14.0',
+      'version' => '1.14.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -103,7 +103,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->createPermission(self::permission_alfred,
     "Is allowed to use ALFRED frontend editing");
     $this->createCSS();
-    if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
+    if($this->loadAlfred()) {
       $this->scripts()->add($this->path."Alfred.js");
       $this->styles()->add($this->path."Alfred.css");
     }
@@ -730,6 +730,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
     // add live reloading script
     $this->addLiveReloadScript();
+  }
+
+  /**
+   * Load ALFRED assets?
+   */
+  protected function loadAlfred(): bool {
+    if(!$this->hasAlfred) return false;
+    if($this->wire->user->isSuperuser()) return true;
+    if($this->wire->user->hasPermission(self::permission_alfred)) return true;
   }
 
   public function migrate() {
