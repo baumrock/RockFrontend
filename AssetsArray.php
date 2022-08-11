@@ -52,9 +52,9 @@ class AssetsArray extends \ProcessWire\WireArray {
     return $this;
   }
 
-  public function comment($str): self {
+  public function comment($str, $prepend = false): self {
     $comment = new AssetComment($str);
-    $this->add($comment);
+    $prepend ? $this->prepend($comment) : $this->add($comment);
     return $this;
   }
 
@@ -71,7 +71,7 @@ class AssetsArray extends \ProcessWire\WireArray {
    * @return self
    */
   public function prepend($file, $suffix = '') {
-    $file = new Asset($file, $suffix);
+    if(!$file instanceof AssetComment) $file = new Asset($file, $suffix);
     parent::prepend($file);
     return $this;
   }

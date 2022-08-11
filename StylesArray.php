@@ -37,7 +37,14 @@ class StylesArray extends AssetsArray {
     $opt->setArray($options);
 
     $indent = $opt->indent;
-    $out = "\n$indent".self::comment."\n";
+    $out = "\n";
+    if($opt->debug) {
+      $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
+      if($this->opt('autoload')) {
+        $out .= "$indent<!-- autoloading of default scripts/styles enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
+      }
+    }
+    $out .= $indent.self::comment."\n";
 
     // if there are any less files we render them at the beginning
     // this makes it possible to overwrite styles via plain CSS later
@@ -47,9 +54,6 @@ class StylesArray extends AssetsArray {
     $lessCurrent = ''; // string to store file info
     $m = 0;
     $filesCnt = 0;
-    if($opt->debug) {
-      $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
-    }
 
     // parse all less files
     foreach($this as $asset) {
