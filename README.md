@@ -12,7 +12,7 @@ https://processwire.com/talk/topic/27417-rockfrontend-%F0%9F%9A%80%F0%9F%9A%80-t
 
 # Donations
 
-<a href=https://paypal.me/baumrock><img src=donate.svg></a>
+<a href=https://github.com/sponsors/baumrock><img src=donate.svg></a>
 
 😎🤗👍
 
@@ -27,6 +27,20 @@ RockFrontend is a progressive frontend module for ProcessWire that can help you 
 * Support for template engines - LATTE on board
 
 <img src=hr.svg>
+
+## Quickstart
+
+If you are using RockFrontend for the very first time it is recommended that you install one of the available profiles via the module's config screen.
+
+Recommended folder structure
+
+```
+/site
+  /templates
+    /layouts
+    /partials
+    /sections
+```
 
 ## Highlights
 
@@ -113,14 +127,19 @@ RockFrontend does not force you to use an MVC architecture, though I'm always us
 ```php
 <?php namespace ProcessWire;
 /** @var RockFrontend $rockfrontend */
-// do this above markup so that we can add scripts and styles from layout files
+$rockfrontend->styles()
+  ->add(/path/to/your/file.css)
+  ;
+$rockfrontend->scripts()
+  ->add(/path/to/your/file.js)
+  ;
 ?><!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <?= $page->seo ?>
+  <?= $rockfrontend->seo() ?>
   <?php
   // your scripts will be injected here automatically
   // see the video for details!

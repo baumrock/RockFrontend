@@ -55,7 +55,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.12',
+      'version' => '1.14.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -102,7 +102,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     require_once __DIR__ . "/Functions.php";
     $this->createPermission(self::permission_alfred,
     "Is allowed to use ALFRED frontend editing");
-    $this->createAlfredCSS();
+    $this->createCSS();
     if($this->wire->user->isSuperuser() OR $this->wire->user->hasPermission(self::permission_alfred)) {
       $this->scripts()->add($this->path."Alfred.js");
       $this->styles()->add($this->path."Alfred.css");
@@ -200,15 +200,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /**
    * ALFRED - A Lovely FRontend EDitor
    *
-   * Usage (short syntax):
+   * Usage:
    * alfred($page, "title,images")
    *
-   * Usage (verbose):
+   * Usage with options array (for RockMatrix blocks)
    * alfred($page, [
-   *   'fields' => ['title', 'images'],
    *   'trash' => false,
-   *   ...
-   * ])
+   *   'fields' => 'foo,bar',
+   * ]);
+   *
+   * You can also provide fields as array when using the verbose syntax
+   * alfred($page, [
+   *   'trash' => false,
+   *   'fields' => [
+   *     'foo',
+   *     'bar',
+   *   ],
+   * ]);
    *
    * @return string
    */
@@ -243,14 +251,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // prepare fields suffix
     $fields = '';
     if($opt->fields) {
-      $fields = '&fields=';
-      $fieldsarray = $opt->fields;
-      if(!is_array($fieldsarray)) $fieldsarray = explode(",", $fieldsarray);
-      array_map('trim', $fieldsarray);
-      foreach($fieldsarray as $f) {
-        if($this->wire->fields->get((string)$f)) $fields .= "$f,";
+      if(is_array($opt->fields)) $opt->fields = implode(",", $opt->fields);
+
+      // check if the requested fields are available on that page
+      // if the field does not exist for that page we don't request it
+      // this is to prevent exception errors breaking page editing
+      $sep = "&fields=";
+      foreach(explode(",", $opt->fields) as $field) {
+        $field = trim($field);
+        if(!$page->template->hasField($field)) continue;
+        $fields .= $sep.$field;
+        $sep = ",";
       }
-      $fields = trim($fields, ",");
     }
 
     // icons
@@ -362,7 +374,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Create CSS from LESS file
    * @return void
    */
-  private function createAlfredCSS() {
+  private function createCSS() {
     if(!$this->wire->user->isSuperuser()) return;
     $css = $this->path."Alfred.css";
     $lessFile = $this->path."Alfred.less";
@@ -835,11 +847,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $file = $this->getFile($path);
     if(!$file) return;
 
-    $ext = pathinfo($file, PATHINFO_EXTENSION);
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     if($ext == 'php') {
       $options = $opt->getArray();
       return $this->wire->files->render($file, $vars, $options);
     }
+    elseif($ext == 'svg') return $this->svg($file);
+
     try {
       $method = "renderFile".ucfirst(strtolower($ext));
       return $this->$method($file, $vars);
