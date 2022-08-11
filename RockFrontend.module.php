@@ -739,6 +739,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if(!$this->hasAlfred) return false;
     if($this->wire->user->isSuperuser()) return true;
     if($this->wire->user->hasPermission(self::permission_alfred)) return true;
+    return false;
   }
 
   public function migrate() {
