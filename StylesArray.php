@@ -8,6 +8,9 @@ class StylesArray extends AssetsArray {
   const cacheName = 'rockfrontend-stylesarray-cache';
   const comment = '<!--rockfrontend-styles-head-->';
 
+  /** @var array */
+  protected $options = [];
+
   /**
    * Add all files of folder to assets array
    *
@@ -27,15 +30,17 @@ class StylesArray extends AssetsArray {
     // setup options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
-      'indent' => '',
+      'debug' => $this->wire->config->debug,
+      'indent' => '  ',
       'cssDir' => "/site/templates/bundle/",
       'cssName' => $this->name,
       'sourcemaps' => $this->wire->config->debug,
     ]);
+    $opt->setArray($this->options);
     $opt->setArray($options);
 
-    $out = self::comment;
     $indent = $opt->indent;
+    $out = "\n$indent".self::comment."\n";
 
     // if there are any less files we render them at the beginning
     // this makes it possible to overwrite styles via plain CSS later
@@ -45,11 +50,14 @@ class StylesArray extends AssetsArray {
     $lessCurrent = ''; // string to store file info
     $m = 0;
     $filesCnt = 0;
+    if($opt->debug) {
+      $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
+    }
     foreach($this as $asset) {
       if($asset->ext !== 'less') continue;
+      if($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->\n";
       if(!$less) {
         $out .= "$indent<script>alert('install Less module for parsing {$asset->url}')</script>\n";
-        $indent = '  ';
         continue;
       }
       $less->addFile($asset->path);
@@ -96,6 +104,14 @@ class StylesArray extends AssetsArray {
       $indent = '  ';
     }
     return $out;
+  }
+
+  /**
+   * Set options for rendering
+   */
+  public function setOptions(array $options): self {
+    $this->options = array_merge($this->options, $options);
+    return $this;
   }
 
 }

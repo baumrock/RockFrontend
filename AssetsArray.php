@@ -48,6 +48,15 @@ class AssetsArray extends \ProcessWire\WireArray {
   }
 
   /**
+   * @return self
+   */
+  public function prepend($file, $suffix = '') {
+    $file = new Asset($file, $suffix);
+    parent::prepend($file);
+    return $this;
+  }
+
+  /**
    * Magic toString Method
    * We return an empty string in case an AssetsArray is requested as string
    * This is to make it possible to add scripts and styles from within latte files

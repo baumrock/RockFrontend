@@ -54,7 +54,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.13.6',
+      'version' => '1.13.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -117,8 +117,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
     // add default styles and scripts on frontend pages
     if($this->page->template != 'admin') {
-      $this->styles()->addAll('sections');
       $this->styles()->addAll('layouts');
+      $this->styles()->addAll('sections');
       $this->styles()->addAll('partials');
       $this->styles()->addAll('/site/assets/RockMatrix');
     }
