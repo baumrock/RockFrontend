@@ -20,9 +20,27 @@ class AssetsArray extends \ProcessWire\WireArray {
    * @return self
    */
   public function add($file, $suffix = '') {
+    $debug = $this->getDebugNote($file);
     if(!$file instanceof AssetComment) $file = new Asset($file, $suffix);
+    $file->debug = $debug;
     parent::add($file);
     return $this;
+  }
+
+  public function getDebugNote($file = null) {
+    $trace = array_reverse(Debug::backtrace(['getFile' => 'basename']));
+    $debug = '';
+    foreach($trace as $i=>$item) {
+      if($debug) continue;
+      $call = $item['call'];
+      $match = false;
+      if(strpos($call, "ScriptsArray->")===0) $match = true;
+      if(strpos($call, "StylesArray->")===0) $match = true;
+      if($match) $debug = "<!-- ".$item['file']." -->";
+    }
+    // bd($debug, $file);
+    // bd($trace);
+    return $debug;
   }
 
   /**
@@ -71,7 +89,9 @@ class AssetsArray extends \ProcessWire\WireArray {
    * @return self
    */
   public function prepend($file, $suffix = '') {
+    $debug = $this->getDebugNote($file);
     if(!$file instanceof AssetComment) $file = new Asset($file, $suffix);
+    $file->debug = $debug;
     parent::prepend($file);
     return $this;
   }

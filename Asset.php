@@ -5,6 +5,7 @@ use ProcessWire\WireData;
 
 class Asset extends WireData {
 
+  public $debug;
   public $ext;
   public $m;
   public $path;
@@ -33,6 +34,7 @@ class Asset extends WireData {
       'suffix' => $this->suffix,
       'ext' => $this->ext,
       'comment' => $this->comment,
+      'debug' => $this->debug,
     ];
   }
 

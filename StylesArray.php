@@ -58,8 +58,9 @@ class StylesArray extends AssetsArray {
 
     // parse all less files
     foreach($this as $asset) {
+      // bd($asset);
       if($asset->ext !== 'less') continue;
-      if($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->\n";
+      if($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->{$asset->debug}\n";
       if(!$less) {
         $out .= "$indent<script>alert('install Less module for parsing {$asset->url}')</script>\n";
         continue;
@@ -95,7 +96,8 @@ class StylesArray extends AssetsArray {
         $this->wire->session->set(RockFrontend::recompile, false);
         $this->log("Recompiled RockFrontend $url");
       }
-      $out .= "$indent<link rel='stylesheet' href='{$url}$m'>\n";
+      $debug = $opt->debug ? "<!-- less compiled by RockFrontend -->" : '';
+      $out .= "$indent<link rel='stylesheet' href='{$url}$m'>$debug\n";
       $indent = '  ';
     }
 
@@ -114,7 +116,8 @@ class StylesArray extends AssetsArray {
       $rel = " rel='stylesheet'";
       if(strpos($suffix, " rel=")===false) $suffix .= $rel;
 
-      $out .= "$indent<link href='{$asset->url}$m' $suffix>\n";
+      $debug = $opt->debug ? $asset->debug : '';
+      $out .= "$indent<link href='{$asset->url}$m' $suffix>$debug\n";
       $indent = '  ';
     }
     return $out;

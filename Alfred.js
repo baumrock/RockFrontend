@@ -19,8 +19,8 @@
           +(icon.tooltip ? " title='" + icon.tooltip + "'" : '')
           +"class='icon "+icon.class+"'"
           +(icon.confirm ? " data-confirm='"+icon.confirm+"'" : '')
-          +" data-barba-prevent "+(icon.suffix||'')+">"
-        +"<img src='/site/modules/RockFrontend/icons/"+icon.icon+".svg'></span>"
+          +" uk-tooltip data-barba-prevent "+(icon.suffix||'')+">"
+        +"<img src='"+RockFrontend.rootUrl+"site/modules/RockFrontend/icons/"+icon.icon+".svg'></span>"
         +"</a>";
     });
     html += "</div>";
@@ -50,10 +50,10 @@
 
   Alfred.prototype.plus = function(type, href) {
     return "<div class='add-"+type+"'>"
-      +"<a href='"+href+"' title='Add Content' class='icon pw-modal' "
+      +"<a href='"+href+"' title='Add Content ("+type+")' uk-tooltip class='icon pw-modal' "
         +" data-barba-prevent='' data-buttons='button.ui-button[type=submit]'"
         +" data-autoclose='' data-reload=''>"
-        +"<img src='/site/modules/RockFrontend/icons/plus.svg'>"
+        +"<img src='"+RockFrontend.rootUrl+"site/modules/RockFrontend/icons/plus.svg'>"
       +"</a>"
     +"</div>";
   }
@@ -130,7 +130,7 @@
       else {
         // show confirm dialog
         vex.dialog.confirm({
-          unsafeMessage: confirm + "<div style='margin-top:10px;'><small>Tip: Hold down SHIFT to trash elements without confirmation.</small></div>",
+          unsafeMessage: confirm + "<div style='margin-top:10px;'><small>Tip: Hold down SHIFT to do this without confirmation.</small></div>",
           callback: function (value) {
             if(value !== true) return;
             sendAjax();

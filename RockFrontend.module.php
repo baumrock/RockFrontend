@@ -34,6 +34,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /** @var bool */
   public $hasAlfred = false;
 
+  /** @var array */
+  protected $js = [];
+
   /** @var Engine */
   private $latte;
 
@@ -55,7 +58,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.14.3',
+      'version' => '1.15.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -144,6 +147,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
         // load alfred?
         if($this->loadAlfred()) {
+          $this->js("rootUrl", $this->wire->config->urls->root);
           $this->scripts()->add($this->path."Alfred.js");
           $this->styles()->add($this->path."Alfred.css");
         }
@@ -151,9 +155,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         // autoload scripts and styles
         $rockfrontend->autoload($page);
 
+        // at the very end we inject the js variables
+        $assets = '';
+        $json = count($this->js) ? json_encode($this->js) : '';
+        if($json) $assets .= "\n  <script>let RockFrontend = $json</script>";
+
         // check if assets have already been added
         // if not we inject them at the end of the <head>
-        $assets = '';
         if(!strpos($html, StylesArray::comment)) $assets .= $styles->render();
         if(!strpos($html, ScriptsArray::comment)) $assets .= $scripts->render();
 
@@ -240,13 +248,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // setup options
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
+      'fields' => '', // fields to edit
+
+      // setting specific to rockmatrix blocks
       'addTop' => false,
       'addBottom' => false,
       'move' => $isWidget ? false : true,
       'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
       'widgetStyle' => $isWidget, // make it orange
       'trash' => true, // will set the trash icon for rockmatrix blocks
-      'fields' => '', // fields to edit
+      'duplicate' => true, // can item be duplicated?
     ]);
     $opt->setArray($options);
 
@@ -279,32 +290,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
     }
-    if($page AND $page instanceof Block) {
-      // if the _block context is set for this block we use it as block
-      // this is to support the concept of "widgets" where widgets render global blocks.
-      // when trashing such a block we want to trash the reference widget and not the global block itself!
-      $block = $page;
-      $widget = $page->_widget ?: $page;
-      if($opt->move) {
-        $icons[] = (object)[
-          'icon' => 'move',
-          'label' => $block->title,
-          'tooltip' => "Move Block #{$widget->id}",
-          'class' => 'pw-modal',
-          'href' => $widget->getMatrixPage()->editUrl."&field=".$widget->getMatrixField()."&moveblock=$widget",
-          'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
-        ];
-      }
-      if($opt->trash AND $page->trashable()) {
-        $icons[] = (object)[
-          'icon' => 'trash-2',
-          'label' => $page->title,
-          'tooltip' => "Trash Block #{$widget->id}",
-          'href' => $widget->rmxUrl("/trash/?block=$widget"),
-          'confirm' => __('Do you really want to delete this element?'),
-        ];
-      }
-    }
+    if($page AND $page instanceof Block) $page->addAlfredIcons($icons, $opt);
 
     if($this->wire->user->isSuperuser()) {
       $path = $this->getTplPath();
@@ -676,7 +662,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     ]);
     $opt->setArray($options);
     $url = rtrim($this->wire->config->urls($this), "/");
-    $title = $opt->title ? "title='{$opt->title}'" : "";
+    $title = $opt->title ? "title='{$opt->title}' uk-tooltip" : "";
     return "<div class='{$opt->wrapperClass}' style='{$opt->style}'>
       <a href='$href' $title class='{$opt->class}' {$opt->attrs}>
         <img src='$url/icons/$icon.svg' style='display:inline'>
@@ -702,6 +688,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $page = $page ?: $this->wire->page;
     $active = $page->parents()->add($page);
     return $active->has($menuItem);
+  }
+
+  /**
+   * Get or set a javascript value that is sent to the frontend
+   * @return mixed
+   */
+  public function js($key, $value = null) {
+    // getter
+    if($value === null) {
+      if(array_key_exists($key, $this->js)) return $this->js[$key];
+      return false;
+    }
+    // setter
+    $this->js[$key] = $value;
   }
 
   /**

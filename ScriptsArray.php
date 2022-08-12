@@ -30,10 +30,11 @@ class ScriptsArray extends AssetsArray {
     }
     $out .= $this->name == 'head' ? $indent.self::comment."\n" : '';
 
-    foreach($this as $script) {
-      $m = $script->m ? "?m=".$script->m : "";
-      $suffix = $script->suffix ? " ".$script->suffix : '';
-      $out .= "$indent<script src='{$script->url}$m'$suffix></script>\n";
+    foreach($this as $asset) {
+      $m = $asset->m ? "?m=".$asset->m : "";
+      $suffix = $asset->suffix ? " ".$asset->suffix : '';
+      $debug = $opt->debug ? $asset->debug : '';
+      $out .= "$indent<script src='{$asset->url}$m'$suffix></script>$debug\n";
     }
     return $out;
   }
