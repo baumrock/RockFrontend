@@ -52,13 +52,13 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   text-align: center;
 }
 .alfred .add-top {
-  top: -13px;
+  top: -30px;
   left: 0;
   right: 0;
   text-align: center;
 }
 .alfred .add-bottom {
-  bottom: -17px;
+  bottom: -30px;
   left: 0;
   right: 0;
   text-align: center;
