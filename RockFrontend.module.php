@@ -63,10 +63,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'autoload' => true,
       'singular' => true,
       'icon' => 'code',
-      'requires' => [
-        // The module will work without RockMigrations but you will have to create
-        // the layout field manually and add it to templates if you want to use it
-      ],
+      // The module will work without RockMigrations but you will have to create
+      // the layout field manually and add it to templates if you want to use it
+      'requires' => [],
       'installs' => [
         'PageFrontEdit',
       ],
