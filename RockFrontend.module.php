@@ -178,23 +178,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   private function addLiveReloadScript() {
-    // add script to the backend
-    if($this->wire->page->template == 'admin') {
-      $process = $this->wire->page->process;
-
-      // on some pages in the backend live reloading can cause problems
-      // or is just not helpful so we exclude it
-      if($process == "ProcessModule") return;
-      if($process == "ProcessPageList") return;
-
-      $url = $this->wire->config->urls($this);
-      $m = filemtime($this->path."livereload.js");
-      $this->wire->config->scripts->add($url."livereload.js?m=$m");
-    }
-    // add script to the frontend
-    else {
-      $this->scripts('head')->add($this->path."livereload.js");
-    }
+    // we only add live reloading to the frontend
+    if($this->wire->page->template == 'admin') return;
+    $this->scripts('head')->add($this->path."livereload.js");
   }
 
   /**
