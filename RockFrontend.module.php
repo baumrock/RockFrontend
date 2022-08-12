@@ -58,7 +58,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.0',
+      'version' => '1.15.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -242,7 +242,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
       'widgetStyle' => $isWidget, // make it orange
       'trash' => true, // will set the trash icon for rockmatrix blocks
-      'duplicate' => true, // can item be duplicated?
+      'clone' => true, // can item be cloned?
     ]);
     $opt->setArray($options);
 
