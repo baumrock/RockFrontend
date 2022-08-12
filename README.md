@@ -53,7 +53,16 @@ ATTENTION: Make sure that this setting is only applied for local development! Se
 $config->livereload = 1;
 ```
 
-Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position.
+Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position!
+
+Also note that you can prevent RockMigrations from automatically fire when a reload is triggered, which might speed up your reloads significantly depending on the migrations you have setup:
+
+```php
+// site/ready.php
+/** @var RockMigrations $rm */
+$rm = $this->wire->modules->get('RockMigrations');
+$rm->noMigrate();
+```
 
 <img src=hr.svg>
 
