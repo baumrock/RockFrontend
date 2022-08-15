@@ -118,6 +118,37 @@ $wire->addHook("RockFrontend::renderFileFoo", function($event) {
 
 <img src=hr.svg>
 
+## Using the /site/templates/_init.php file
+
+You can define variables and functions in your `_init.php` file:
+
+```php
+<?php // no namespace here!! se note below
+
+$foo = 'I am the foo variable';
+
+function foo() {
+  return 'I am the foo function';
+}
+```
+
+Then you can access your variables and functions from within all your rendered files:
+
+```php
+// using LATTE example syntax
+<p>Content of the foo variable: {$foo}</p>
+
+<p>Return value of foo(): {foo()}</p>
+```
+
+Note that we are not using the `ProcessWire` namespace in our `_init.php` file, so that we can simply call `foo()` directly. If you want or need to use the ProcessWire namespace in your `_init.php` than you need to call `\ProcessWire\foo()` from your template files instead of just `foo()`:
+
+```php
+<p>Content of the foo variable: {$foo}</p>
+<p>Return value of foo(): {\ProcessWire\foo()}</p>
+```
+
+
 ## FAQ
 
 ### Does RockFrontend force me to use a CSS Frontend Framework?

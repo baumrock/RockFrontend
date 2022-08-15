@@ -58,7 +58,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.1',
+      'version' => '1.15.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -110,6 +110,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
     $this->addHookAfter("Modules::refresh", $this, "refreshModules");
+    $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
   }
 
   public function ready() {
@@ -350,6 +351,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         $styles->addAll('/site/assets/RockMatrix');
       }
     }
+  }
+
+  /**
+   * Auto-prepend file before rendering for exposing variables from _init.php
+   */
+  public function autoPrepend($event) {
+    $event->object->setPrependFilename($this->path."AutoPrepend.php");
   }
 
   /**
