@@ -58,7 +58,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.2',
+      'version' => '1.15.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -308,6 +308,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if(!count($icons)) return;
 
     // setup links for add buttons
+    $blockid = '';
     if($page instanceof Block) {
       // see explanation about widget above
       $block = $page;
@@ -315,6 +316,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
       if(!$isWidget) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
       if(!$isWidget) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+
+      // add blockid to block markup
+      $blockid = " data-rmxblock=$widget ";
     }
 
     $str = json_encode((object)[
@@ -323,7 +327,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'addBottom' => $opt->addBottom,
       'widgetStyle' => $opt->widgetStyle,
     ]);
-    return " alfred='$str'";
+    return "$blockid alfred='$str'";
   }
 
   /**
