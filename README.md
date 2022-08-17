@@ -192,6 +192,8 @@ $wire->addHook("RockFrontend::renderFileFoo", function($event) {
 
 ## RockFrontend and RepeaterMatrix
 
+If your matrix-blocks are regular PHP files you can simply call `echo $page->your_matrix` and ProcessWire will render the field for you. But if you want to use LATTE files instead, you can use RockFrontend to do so!
+
 While you can always render repeater matrix fields manually RockFrontend has some nice helpers. This is the long and manual way of rendering a matrix field:
 
 ```php
