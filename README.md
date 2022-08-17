@@ -99,6 +99,31 @@ echo $user->isLoggedin();
 
 ### Custom variables in rendered files
 
+Syntax example:
+
+```php
+echo $rockfrontend->render("sections/header.latte");
+foreach($page->children() as $child) {
+  // in this case $child will be available as $page variable in card.latte
+  echo $rockfrontend->render("partials/card.latte", $child);
+}
+
+echo $rockfrontend->render("sections/footer.latte", [
+  'mail' => 'foo@bar.com', // available as $mail in footer.latte
+  'today' => date("d.m.Y"), // available as $today in footer.latte
+]);
+```
+
+If you use render() from within a LATTE file RockFrontend will automatically return an instance of a Latte Html object so that you don't need to add the |noescape filter!
+
+```php
+<div class="uk-child-width-1-3@m" uk-grid>
+  <div n:foreach="$page->children() as $item">
+    {$rockfrontend->render("partials/card", $item)}
+  </div>
+</div>
+```
+
 Note that render() works different than PHP's `include` or `require`! This is best explained by an example:
 
 ```php
@@ -125,13 +150,9 @@ But you can provide custom variables easily:
 ```php
 $foo = 'foo!';
 echo $rockfrontend->render("path/to/your/file.php", [
-  'foo' => $foo,
-  'bar' => 'I am the bar value',
+  'foo' => $foo, // available as $foo
+  'today' => date("d.m.Y"), // available as $today
 ]);
-
-// file.php
-value of foo: <?= $foo ?> // outputs foo!
-value of bar: <?= $bar ?> // outputs "I am the bar value"
 ```
 
 You can also make all defined variables available in your rendered file, but note that this might overwrite already defined API variables (like $pages, $files, $config...) so use this technique with caution:

@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.6',
+      'version' => '1.15.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -828,6 +828,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Render a RepeaterMatrix field
    * echo $rf->render($page->your_matrix_field);
    *
+   * Use render to render children of current page:
+   * foreach($page->children() as $item) {
+   *   echo $rockfrontend->render("partials/card.latte", $item);
+   *   // note that $item will be available in card as $page variable!
+   * }
+   *
+   * You can also provide custom variables as second parameter:
+   * $rockfrontend->render("your/file.php", [
+   *   'foo' => $pages->get('/foo'), // available as $foo
+   *   'today' => date("d.m.Y"), // available as $today
+   * ]);
+   *
    * @param mixed $path
    * @param array $vars
    * @param array $options
@@ -842,6 +854,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($path instanceof RepeaterMatrixPageArray) {
       return $this->renderMatrix($path, $vars, $options);
     }
+
+    // prepare variables
+    if($vars instanceof Page) $vars = ['page' => $vars];
 
     // we add the $rf variable to all files that are rendered via RockFrontend
     $vars = array_merge($this->wire('all')->getArray(), $vars, ['rf'=>$this]);
@@ -873,21 +888,30 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // path is a string, render file
     $file = $this->getFile($path);
     if(!$file) return;
+    $html = '';
 
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     if($ext == 'php') {
       $options = $opt->getArray();
-      return $this->wire->files->render($file, $vars, $options);
+      $html = $this->wire->files->render($file, $vars, $options);
     }
-    elseif($ext == 'svg') return $this->svg($file);
-
-    try {
-      $method = "renderFile".ucfirst(strtolower($ext));
-      return $this->$method($file, $vars);
-    } catch (\Throwable $th) {
-      return $th->getMessage();
+    elseif($ext == 'svg') $html = $this->svg($file);
+    else {
+      try {
+        $method = "renderFile".ucfirst(strtolower($ext));
+        $html = $this->$method($file, $vars);
+      } catch (\Throwable $th) {
+        $html = $th->getMessage();
+      }
     }
 
+    // if render() was called from within a latte file we return a HTML object
+    // so that we dont need to use the |noescape filter
+    if(strpos(Debug::backtrace()[0]['file'], "/site/assets/cache/Latte/")===0) {
+      $html = new Html($html);
+    }
+
+    return $html;
   }
 
   /**
