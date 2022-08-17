@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.5',
+      'version' => '1.15.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -838,6 +838,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if(!$vars) $vars = [];
 
     // add support for rendering repeater matrix fields
+    if(!$path) return; // if field does not exist
     if($path instanceof RepeaterMatrixPageArray) {
       return $this->renderMatrix($path, $vars, $options);
     }
