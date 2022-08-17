@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.7',
+      'version' => '1.15.8',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -644,6 +644,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /**
+   * Return a latte HTML object that doesn't need to be |noescaped
+   * @return Html
+   */
+  public function html($str) {
+    return new Html($str);
+  }
+
+  /**
    * Render icon link
    * @return string
    */
@@ -908,7 +916,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // if render() was called from within a latte file we return a HTML object
     // so that we dont need to use the |noescape filter
     if(strpos(Debug::backtrace()[0]['file'], "/site/assets/cache/Latte/")===0) {
-      $html = new Html($html);
+      return $this->html($html);
     }
 
     return $html;
