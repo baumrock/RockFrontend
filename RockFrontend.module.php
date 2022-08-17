@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.8',
+      'version' => '1.15.9',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -647,7 +647,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Return a latte HTML object that doesn't need to be |noescaped
    * @return Html
    */
-  public function html($str) {
+  public static function html($str) {
     return new Html($str);
   }
 
