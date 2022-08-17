@@ -140,6 +140,20 @@ You can also make all defined variables available in your rendered file, but not
 echo $rockfrontend->render('/path/to/your/file.php', get_defined_vars());
 ```
 
+### Example rendering a RepeaterMatrix field
+
+```php
+// main.php
+foreach($page->your_matrix_field as $item) {
+  // render every block and make the $page variable be the current block
+  // instead of the viewed page.
+  echo $rockfrontend->render("/matrix/".$item->type, ['page' => $item]);
+}
+
+// matrix type foo (/site/templates/matrix/foo.php)
+<h1><?= $page->title ?></h1>
+```
+
 ## Using template engines
 
 ### LATTE
