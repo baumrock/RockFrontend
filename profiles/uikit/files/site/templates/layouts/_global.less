@@ -13,10 +13,16 @@ body {
  * grow <main> so that footer is sticky at the bottom of the page
  * add this class to your <body> element to make the <main> element grow
  */
-.tmg-main-grow {
+ .tmg-main-grow {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+
+  // this ensures that if the body has a background color
+  // it is visible after 100vh
+  height: 100%;
+  min-height: 100vh;
+
+  // grow <main> section so that footer sticks to bottom
   main { flex-grow: 1; }
 }
 
