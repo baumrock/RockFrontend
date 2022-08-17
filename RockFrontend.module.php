@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.4',
+      'version' => '1.15.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -240,7 +240,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       // setting specific to rockmatrix blocks
       'addTop' => false,
       'addBottom' => false,
-      'move' => $isWidget ? false : true,
+      'move' => true,
       'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
       'widgetStyle' => $isWidget, // make it orange
       'trash' => true, // will set the trash icon for rockmatrix blocks
@@ -312,11 +312,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $blockid = '';
     if($page instanceof Block) {
       // see explanation about widget above
-      $block = $page;
       $widget = $page->_widget ?: $page;
 
-      if(!$isWidget) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
-      if(!$isWidget) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+      $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
+      $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
 
       // add blockid to block markup
       $blockid = " data-rmxblock=$widget ";
