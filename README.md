@@ -140,20 +140,6 @@ You can also make all defined variables available in your rendered file, but not
 echo $rockfrontend->render('/path/to/your/file.php', get_defined_vars());
 ```
 
-### Example rendering a RepeaterMatrix field
-
-```php
-// main.php
-foreach($page->your_matrix_field as $item) {
-  // render every block and make the $page variable be the current block
-  // instead of the viewed page.
-  echo $rockfrontend->render("/matrix/".$item->type, ['page' => $item]);
-}
-
-// matrix type foo (/site/templates/matrix/foo.php)
-<h1><?= $page->title ?></h1>
-```
-
 ## Using template engines
 
 ### LATTE
@@ -203,6 +189,36 @@ $wire->addHook("RockFrontend::renderFileFoo", function($event) {
   $event->return = "Rendering .foo-file $file";
 });
 ```
+
+## RockFrontend and RepeaterMatrix
+
+While you can always render repeater matrix fields manually RockFrontend has some nice helpers. This is the long and manual way of rendering a matrix field:
+
+```php
+// main.php
+foreach($page->your_matrix_field as $item) {
+  // render every block and make the $page variable be the current block
+  // instead of the viewed page.
+  echo $rockfrontend->render("/matrix/".$item->type, ['page' => $item]);
+}
+
+// matrix type foo (/site/templates/matrix/foo.php)
+<h1><?= $page->title ?></h1>
+```
+
+Or simply use the shortcut:
+
+```php
+echo $rockfrontend->render($page->your_matrix);
+
+// or in a latte file
+{$rockfrontend->render($page->your_matrix)}
+
+// example matrix block: /site/templates/fields/your_matrix/foo.latte
+<h1>Foo block having id {$page->id}</h1>
+```
+
+Note that when using $rockfrontend->render() to render matrix fields you can also use latte files for rendering and the `$page` variable in the view file will be the current matrix block instead of the currently viewed page. If you need to access the current page you can use `$wire->page` instead of `$page`.
 
 <img src=hr.svg>
 

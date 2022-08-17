@@ -1,6 +1,7 @@
 <?php namespace ProcessWire;
 
 use Latte\Engine;
+use Latte\Runtime\Html;
 use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
 use RockFrontend\StylesArray;
@@ -58,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.3',
+      'version' => '1.15.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -825,7 +826,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    *  'layouts/default', // default layout (fallback)
    * ]);
    *
-   * @param string|array $path
+   * Render a RepeaterMatrix field
+   * echo $rf->render($page->your_matrix_field);
+   *
+   * @param mixed $path
    * @param array $vars
    * @param array $options
    * @return string
@@ -833,6 +837,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function ___render($path, $vars = null, $options = []) {
     $page = $this->wire->page;
     if(!$vars) $vars = [];
+
+    // add support for rendering repeater matrix fields
+    if($path instanceof RepeaterMatrixPageArray) {
+      return $this->renderMatrix($path, $vars, $options);
+    }
 
     // we add the $rf variable to all files that are rendered via RockFrontend
     $vars = array_merge($this->wire('all')->getArray(), $vars, ['rf'=>$this]);
@@ -980,6 +989,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $layout = $this->getLayout($page);
     if($layout) return $this->render($layout);
     return $this->render($fallback);
+  }
+
+  /**
+   * Render RepeaterMatrix fields
+   * @return string
+   */
+  public function renderMatrix($items, $vars, $options) {
+    $out = '';
+    foreach($items as $item) {
+      $field = $item->getForField();
+      $type = $item->type;
+      $file = "fields/$field/$type";
+      $vars = array_merge($vars, ['page'=>$item]);
+      $out .= $this->render($file, $vars, $options);
+    }
+
+    // if renderMatrix was called from a latte file we return HTML instead
+    // of a string so that we don't need to call |noescape filter
+    $trace = Debug::backtrace()[1]['file'];
+    if(strpos($trace, "/site/assets/cache/Latte/")===0) $out = new Html($out);
+
+    return $out;
   }
 
   /**
