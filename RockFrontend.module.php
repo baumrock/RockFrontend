@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.16.0',
+      'version' => '1.16.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -112,6 +112,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
     $this->addHookAfter("Modules::refresh", $this, "refreshModules");
     $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
+
+    // health checks
+    $this->checkHealth();
   }
 
   public function ready() {
@@ -307,6 +310,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function autoPrepend($event) {
     $event->object->setPrependFilename($this->path."AutoPrepend.php");
+  }
+
+  /**
+   * Do several health checks
+   */
+  private function checkHealth() {
+    // if rockmatrix is installed check that the version matches
+    if($this->wire->modules->isInstalled('RockMatrix')) {
+      $v = $this->wire->modules->get('RockMatrix')->getModuleInfo()['version'];
+      $version = "2.5.0";
+      if(version_compare($v, $version) < 0) {
+        $this->warning("Please update RockMatrix to version $version+");
+      }
+    }
   }
 
   /**
