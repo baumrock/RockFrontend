@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.16.1',
+      'version' => '1.16.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -239,6 +239,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $opt = $this->wire(new WireData()); /** @var WireData $opt */
     $opt->setArray([
       'fields' => '', // fields to edit
+      'path' => $this->getTplPath(), // path to edit file
 
       // setting specific to rockmatrix blocks
       'addTop' => false,
@@ -513,22 +514,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($page AND $page instanceof Block) $page->addAlfredIcons($icons, $opt);
 
     if($this->wire->user->isSuperuser()) {
-      $path = $this->getTplPath();
       $tracy = $this->wire->config->tracy;
       if(is_array($tracy) and array_key_exists('localRootPath', $tracy))
         $root = $tracy['localRootPath'];
       else $root = $this->wire->config->paths->root;
-      $link = str_replace($this->wire->config->paths->root, $root, $path);
+      $link = str_replace($this->wire->config->paths->root, $root, $opt->path);
 
       // file edit link
       $icons[] = (object)[
         'icon' => 'code',
-        'label' => $path,
+        'label' => $opt->path,
         'href' => "vscode://file/$link",
         'tooltip' => $link,
       ];
       // style edit link
-      $less = substr($path, 0, -4).".less";
+      $less = substr($opt->path, 0, -4).".less";
       if(is_file($less)) {
         $less = str_replace($this->wire->config->paths->root, $root, $less);
         $icons[] = (object)[
