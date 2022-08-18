@@ -59,7 +59,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.15.9',
+      'version' => '1.16.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -245,6 +245,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'widgetStyle' => $isWidget, // make it orange
       'trash' => true, // will set the trash icon for rockmatrix blocks
       'clone' => true, // can item be cloned?
+      'widget' => !$isWidget, // can item be converted into a widget?
     ]);
     $opt->setArray($options);
 
@@ -490,6 +491,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
     }
+
+    // add rockmatrix icons
     if($page AND $page instanceof Block) $page->addAlfredIcons($icons, $opt);
 
     if($this->wire->user->isSuperuser()) {
