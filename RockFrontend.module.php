@@ -248,64 +248,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     ]);
     $opt->setArray($options);
 
-    // prepare fields suffix
-    $fields = '';
-    if($opt->fields) {
-      if(is_array($opt->fields)) $opt->fields = implode(",", $opt->fields);
-
-      // check if the requested fields are available on that page
-      // if the field does not exist for that page we don't request it
-      // this is to prevent exception errors breaking page editing
-      $sep = "&fields=";
-      foreach(explode(",", $opt->fields) as $field) {
-        $field = trim($field);
-        if(!$page->template->hasField($field)) continue;
-        $fields .= $sep.$field;
-        $sep = ",";
-      }
-    }
-
     // icons
-    $icons = [];
-    if($page AND $page->editable()) {
-      $icons[] = (object)[
-        'icon' => 'edit',
-        'label' => $page->title,
-        'tooltip' => "Edit Block #{$page->id}",
-        'href' => $page->editUrl().$fields,
-        'class' => 'pw-modal',
-        'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
-      ];
-    }
-    if($page AND $page instanceof Block) $page->addAlfredIcons($icons, $opt);
-
-    if($this->wire->user->isSuperuser()) {
-      $path = $this->getTplPath();
-      $tracy = $this->wire->config->tracy;
-      if(is_array($tracy) and array_key_exists('localRootPath', $tracy))
-        $root = $tracy['localRootPath'];
-      else $root = $this->wire->config->paths->root;
-      $link = str_replace($this->wire->config->paths->root, $root, $path);
-
-      // file edit link
-      $icons[] = (object)[
-        'icon' => 'code',
-        'label' => $path,
-        'href' => "vscode://file/$link",
-        'tooltip' => $link,
-      ];
-      // style edit link
-      $less = substr($path, 0, -4).".less";
-      if(is_file($less)) {
-        $less = str_replace($this->wire->config->paths->root, $root, $less);
-        $icons[] = (object)[
-          'icon' => 'eye',
-          'label' => $less,
-          'href' => "vscode://file/$less",
-          'tooltip' => $less,
-        ];
-      }
-    }
+    $icons = $this->getIcons($page, $opt);
     if(!count($icons)) return;
 
     // setup links for add buttons
@@ -510,6 +454,72 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
     // no file, return false
     return false;
+  }
+
+  /**
+   * Get ALFRED icons
+   * @return array
+   */
+  public function ___getIcons($page, $opt) {
+    $icons = [];
+
+    // prepare fields suffix
+    $fields = '';
+    if($opt->fields) {
+      if(is_array($opt->fields)) $opt->fields = implode(",", $opt->fields);
+
+      // check if the requested fields are available on that page
+      // if the field does not exist for that page we don't request it
+      // this is to prevent exception errors breaking page editing
+      $sep = "&fields=";
+      foreach(explode(",", $opt->fields) as $field) {
+        $field = trim($field);
+        if(!$page->template->hasField($field)) continue;
+        $fields .= $sep.$field;
+        $sep = ",";
+      }
+    }
+
+    if($page AND $page->editable()) {
+      $icons[] = (object)[
+        'icon' => 'edit',
+        'label' => $page->title,
+        'tooltip' => "Edit Block #{$page->id}",
+        'href' => $page->editUrl().$fields,
+        'class' => 'pw-modal',
+        'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
+      ];
+    }
+    if($page AND $page instanceof Block) $page->addAlfredIcons($icons, $opt);
+
+    if($this->wire->user->isSuperuser()) {
+      $path = $this->getTplPath();
+      $tracy = $this->wire->config->tracy;
+      if(is_array($tracy) and array_key_exists('localRootPath', $tracy))
+        $root = $tracy['localRootPath'];
+      else $root = $this->wire->config->paths->root;
+      $link = str_replace($this->wire->config->paths->root, $root, $path);
+
+      // file edit link
+      $icons[] = (object)[
+        'icon' => 'code',
+        'label' => $path,
+        'href' => "vscode://file/$link",
+        'tooltip' => $link,
+      ];
+      // style edit link
+      $less = substr($path, 0, -4).".less";
+      if(is_file($less)) {
+        $less = str_replace($this->wire->config->paths->root, $root, $less);
+        $icons[] = (object)[
+          'icon' => 'eye',
+          'label' => $less,
+          'href' => "vscode://file/$less",
+          'tooltip' => $less,
+        ];
+      }
+    }
+    return $icons;
   }
 
   /**
