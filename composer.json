@@ -1,5 +1,6 @@
 {
     "require": {
-        "latte/latte": "^3.0"
+        "latte/latte": "^3.0",
+        "sabberworm/php-css-parser": "^8.4"
     }
 }

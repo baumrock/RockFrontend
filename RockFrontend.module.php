@@ -6,6 +6,11 @@ use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
 use RockFrontend\StylesArray;
 use RockMatrix\Block;
+use Sabberworm\CSS\OutputFormat;
+use Sabberworm\CSS\Parser;
+use Sabberworm\CSS\Rule\Rule;
+use Sabberworm\CSS\RuleSet\AtRuleSet;
+use Sabberworm\CSS\RuleSet\RuleSet;
 
 /**
  * @author Bernhard Baumrock, 05.01.2022
@@ -24,6 +29,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   const cache = 'rockfrontend-uikit-versions';
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
+
+  const webfont_agents = [
+    'woff2' => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0', // very modern browsers
+    'woff' => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0', // modern browsers
+    'ttf' => 'Mozilla/5.0 (Unknown; Linux x86_64) AppleWebKit/538.1 (KHTML, like Gecko) Safari/538.1 Daum/4.1', // safari, android, ios
+    'svg' => 'Mozilla/4.0 (iPad; CPU OS 4_0_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/4.1 Mobile/9A405 Safari/7534.48.3', // legacy ios
+    'eot' => 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)', // IE
+  ];
+  const webfont_comments = [
+    'woff2' => '/* Super Modern Browsers */',
+    'woff' => '/* Pretty Modern Browsers */',
+    'ttf' => '/* Safari, Android, iOS */',
+    'svg' => '/* Legacy iOS */',
+  ];
 
   const field_layout = self::prefix."layout";
 
@@ -59,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.16.2',
+      'version' => '1.17.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -88,7 +107,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->wire('home', $this->home);
 
     // watch this file and run "migrate" on change or refresh
-    if($rm = $this->rm()) $rm->watch($this, 0.01);
+    // if($rm = $this->rm()) $rm->watch($this, 0.01);
 
     // setup folders that are scanned for files
     $this->folders = $this->wire(new WireArray());
@@ -1242,6 +1261,33 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $inputfields->add($f);
     $this->addUikitNote($f);
 
+    $f = new InputfieldText();
+    $f->name = 'webfont';
+    $f->label = 'Webfont-URL';
+    $f->description = 'Enter URL to download webfont from, eg https://fonts.googleapis.com/css?family=Baloo+2:800|Open+Sans&display=swap';
+    $f->notes = 'Font files will be downloaded to /site/templates/fonts/';
+    $inputfields->add($f);
+
+    // webfont downloader
+    $data = $this->downloadWebfont();
+    if($data->suggestedCss) {
+      $f = new InputfieldMarkup();
+      $f->label = 'Suggested CSS';
+      $f->description = "You can copy&paste the created CSS into your stylesheet. The paths expect it to live in /site/templates/layouts/ - change the path to your needs!
+        See [https://css-tricks.com/snippets/css/using-font-face-in-css/](https://css-tricks.com/snippets/css/using-font-face-in-css/) for details!";
+      $f->value = "<pre style='max-height:400px;'><code>{$data->suggestedCss}</code></pre>";
+      $f->notes = "Data is stored in the current session and will be reset on logout";
+      $inputfields->add($f);
+    }
+    if($data->rawCss) {
+      $f = new InputfieldMarkup();
+      $f->label = 'Raw CSS (for debugging)';
+      $f->value = "<pre style='max-height:400px;'><code>{$data->rawCss}</code></pre>";
+      $f->notes = "Data is stored in the current session and will be reset on logout";
+      $f->collapsed = Inputfield::collapsedYes;
+      $inputfields->add($f);
+    }
+
     return $inputfields;
   }
 
@@ -1253,6 +1299,198 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     }
     $f->notes .= $note;
   }
+
+  /** ##### webfont downloader ##### */
+
+  public function createCssSuggestion($data): string {
+    // bd($data->files, 'files');
+    $css = "/* suggestion for practical level of browser support */";
+    foreach($data->fonts as $name=>$set) {
+      /** @var AtRuleSet $set */
+      // bd('create suggestion for name '.$name);
+      // bd($set, 'set');
+      $files = $data->files->find("basename=$name");
+
+      // remove src from set
+      $set->removeRule('src');
+
+      // add new src rule
+      $rule = new Rule('src');
+      $src = '';
+
+      // see https://css-tricks.com/snippets/css/using-font-face-in-css/#practical-level-of-browser-support
+      foreach($files->find("format=woff|woff2") as $file) {
+        $comment = self::webfont_comments[$file->format];
+        $src .= "  url('../fonts/{$file->name}') format('{$file->format}'), $comment \n  ";
+      }
+      $src = trim($src, ",\n ");
+      $rule->setValue($src);
+      $set->addRule($rule);
+
+      $css .= "\n".$set->render($data->parserformat);
+    }
+
+    $css .= "\n\n/* suggestion for deepest possible browser support */";
+    foreach($data->fonts as $name=>$set) {
+      /** @var AtRuleSet $set */
+      // bd('create suggestion for name '.$name);
+      // bd($set, 'set');
+      $files = $data->files->find("basename=$name");
+
+      // remove src from set
+      $set->removeRule('src');
+
+      // add new src rule
+      $rule = new Rule('src');
+      $src = '';
+
+      // see https://css-tricks.com/snippets/css/using-font-face-in-css/#practical-level-of-browser-support
+      $eot = $files->get("format=eot");
+      if($eot) {
+        $src .= "url('../fonts/{$eot->name}'); /* IE9 Compat Modes */\n  ";
+        $src .= "src: url('../fonts/{$eot->name}?#iefix') format('embedded-opentype'), /* IE6-IE8 */\n  ";
+      }
+      foreach($files->find("format!=eot") as $file) {
+        if(!$src) $src = "src: ";
+        $format = $file->format;
+        if($format == 'ttf') $format = 'truetype';
+        $comment = self::webfont_comments[$file->format];
+        $src .= "  url('../fonts/{$file->name}') format('$format'), $comment \n  ";
+      }
+      $src = trim($src, ",\n ");
+      $rule->setValue($src);
+      $set->addRule($rule);
+
+      $css .= "\n".$set->render($data->parserformat);
+    }
+
+    return $css;
+  }
+
+  public function downloadWebfont(): WireData {
+    $url = $this->wire->input->post('webfont', 'string');
+    if(!$url) {
+      // get data from session and return it
+      $sessiondata = (array)json_decode((string)$this->wire->session->webfontdata);
+      $data = new WireData();
+      $data->setArray($sessiondata);
+      return $data;
+    }
+    $data = $this->getFontData();
+
+    // url was set, prepare fresh data
+    $data->url = $url;
+
+    /** @var WireHttp $http */
+    $http = $this->wire(new WireHttp());
+    foreach(self::webfont_agents as $format=>$agent) {
+      $data->rawCss .= "/* requesting format '$format' by using user agent '$agent' */\n";
+      $http->setHeader("user-agent", $agent);
+      $result = $http->get($url);
+      $data->rawCss .= $result;
+      $data = $this->parseResult($result, $format, $data);
+    }
+    // bd($data, 'data after http');
+
+    $data->suggestedCss = trim($this->createCssSuggestion($data), "\n");
+
+    // save data to session and return it
+    $this->wire->session->webfontdata = json_encode($data->getArray());
+    return $data;
+  }
+
+  /**
+   * Get a blank fontdata object
+   */
+  public function getFontData(): WireData {
+    $data = new WireData();
+    $data->rawCss = '';
+    $data->suggestedCss = '';
+    $data->fonts = new WireData();
+
+    // load css parser
+    require_once __DIR__ . "/vendor/autoload.php";
+    $of = (new OutputFormat())->createPretty()->indentWithSpaces(2);
+    $data->parserformat = $of;
+
+    // create fonts dir
+    $dir = $this->wire->config->paths->templates."fonts/";
+    $this->wire->files->mkdir($dir);
+    $data->fontdir = $dir;
+
+    // downloaded font files
+    $data->files = new WireArray();
+
+    return $data;
+  }
+
+  /**
+   * Extract http url from src()
+   * @return string
+   */
+  public function getHttpUrl($src) {
+    preg_match("/url\((.*?)\)/", $src, $matches);
+    return trim($matches[1], "\"' ");
+  }
+
+  /**
+   * CSS parser helper method
+   * @return Rule|false
+   */
+  public function getRuleValue($str, RuleSet $ruleset) {
+    try {
+      $rule = $ruleset->getRules($str);
+      if(!count($rule)) return false;
+      return $rule[0]->getValue();
+    } catch (\Throwable $th) {
+      return "";
+    }
+  }
+
+  public function parseResult($result, $format, $data = null): WireData {
+    if(!$data) $data = $this->getFontData();
+
+    $parser = new Parser($result);
+    $css = $parser->parse();
+
+    $http = new WireHttp();
+    foreach($css->getAllRuleSets() as $set) {
+      if(!$set instanceof AtRuleSet) continue;
+
+      // create a unique name from family settings
+      $name = $this->wire->sanitizer->pageName(
+        $this->getRuleValue("font-family", $set)."-".
+        $this->getRuleValue("font-style", $set)."-".
+        $this->getRuleValue("font-weight", $set)
+      );
+
+      // save ruleset to fonts data
+      $data->fonts->set($name, $set);
+
+      // download url
+      $src = (string)$this->getRuleValue("src", $set);
+      $httpUrl = $this->getHttpUrl($src);
+      // db($src, 'src');
+      // db($httpUrl, 'httpUrl');
+
+      // save font to file and add it to the files array
+      $filename = $name.".$format";
+      $filepath = $data->fontdir.$filename;
+      $http->download($httpUrl, $filepath);
+      $size = wireBytesStr(filesize($filepath), true);
+      $filedata = new WireData();
+      $filedata->name = $filename;
+      $filedata->basename = $name;
+      $filedata->path = $filepath;
+      $filedata->format = $format;
+      $filedata->size = $size;
+      $data->files->add($filedata);
+    }
+    // db($data, 'data');
+    return $data;
+  }
+
+  /** ##### END webfont downloader ##### */
 
   public function profileInstalledNote() {
     $note = $this->wire->pages->get(1)->meta(self::installedprofilekey);
