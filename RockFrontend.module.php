@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.0',
+      'version' => '1.17.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1351,7 +1351,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         $src .= "src: url('../fonts/{$eot->name}?#iefix') format('embedded-opentype'), /* IE6-IE8 */\n  ";
       }
       foreach($files->find("format!=eot") as $file) {
-        if(!$src) $src = "src: ";
         $format = $file->format;
         if($format == 'ttf') $format = 'truetype';
         $comment = self::webfont_comments[$file->format];
