@@ -6,6 +6,20 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit4099f35b7b6284e2f3a57db28b8351f5
 {
+    public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'Sabberworm\\CSS\\' => 15,
+        ),
+    );
+
+    public static $prefixDirsPsr4 = array (
+        'Sabberworm\\CSS\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/src',
+        ),
+    );
+
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Latte\\Attributes\\TemplateFilter' => __DIR__ . '/..' . '/latte/latte/src/Latte/attributes.php',
@@ -186,6 +200,8 @@ class ComposerStaticInit4099f35b7b6284e2f3a57db28b8351f5
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
+            $loader->prefixLengthsPsr4 = ComposerStaticInit4099f35b7b6284e2f3a57db28b8351f5::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit4099f35b7b6284e2f3a57db28b8351f5::$prefixDirsPsr4;
             $loader->classMap = ComposerStaticInit4099f35b7b6284e2f3a57db28b8351f5::$classMap;
 
         }, null, ClassLoader::class);
