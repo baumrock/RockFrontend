@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.1',
+      'version' => '1.17.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -546,8 +546,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         'href' => "vscode://file/$link",
         'tooltip' => $link,
       ];
+      $ext = pathinfo($link, PATHINFO_EXTENSION);
       // style edit link
-      $less = substr($opt->path, 0, -4).".less";
+      $less = substr($opt->path, 0, strlen($ext)*-1-1).".less";
       if(is_file($less)) {
         $less = str_replace($this->wire->config->paths->root, $root, $less);
         $icons[] = (object)[
