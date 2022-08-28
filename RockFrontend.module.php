@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.9',
+      'version' => '1.17.10',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -537,7 +537,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         'label' => $page->title,
         'tooltip' => "Edit Block #{$page->id}",
         'href' => $page->editUrl().$fields,
-        'class' => 'pw-modal',
+        'class' => 'pw-modal alfred-edit',
         'suffix' => 'data-buttons="button.ui-button[type=submit]" data-autoclose data-reload',
       ];
     }

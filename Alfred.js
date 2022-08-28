@@ -152,6 +152,12 @@
         });
       }
     });
+
+    // edit block on double click
+    $(document).on('dblclick', function(e) {
+      let $alfred = $(e.target).closest('.alfred');
+      $alfred.find('.alfred-edit').click();
+    });
   });
 
 })()
