@@ -71,12 +71,17 @@
         }
         $ = jQuery;
         Alfred.init();
+        let url = ProcessWire.config['pw-root-url'];
+
+        // load fontawesome
+        // this is necessary for the close icon and for the modal loading spinner
+        $('head').append('<link rel="stylesheet" href="'+url+'wire/templates-admin/styles/font-awesome/css/font-awesome.min.css" type="text/css">');
 
         // load vex for delete block confirm dialog
         if(typeof vex == 'undefined') {
-          $('head').append('<script src="/wire/modules/Jquery/JqueryUI/vex/scripts/vex.combined.min.js"></script>');
-          $('head').append('<link rel="stylesheet" href="/wire/modules/Jquery/JqueryUI/vex/css/vex.css">');
-          $('head').append('<link rel="stylesheet" href="/wire/modules/Jquery/JqueryUI/vex/css/vex-theme-default.css">');
+          $('head').append('<script src="'+url+'wire/modules/Jquery/JqueryUI/vex/scripts/vex.combined.min.js"></script>');
+          $('head').append('<link rel="stylesheet" href="'+url+'wire/modules/Jquery/JqueryUI/vex/css/vex.css">');
+          $('head').append('<link rel="stylesheet" href="'+url+'wire/modules/Jquery/JqueryUI/vex/css/vex-theme-default.css">');
           $('head').append('<script>vex.defaultOptions.className="vex-theme-default";');
         }
 
@@ -99,10 +104,19 @@
   Alfred.ready(function() {
     console.log('ALFRED is ready :)');
 
+    // reload page when modal is closed
     $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
       if(eventData.abort) return; // modal.js populates 'abort' if "x" button was clicked
       console.log('reloading...');
       Alfred.reload();
+    });
+
+    // add loaded class to iframe for css transition (fade in)
+    $(document).on('pw-modal-opened', function() {
+      let $iframe = $("iframe.pw-modal-window");
+      $iframe.on('load', function() {
+        $iframe.addClass('pw-modal-loaded');
+      });
     });
 
     // clicks on confirm links
