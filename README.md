@@ -65,7 +65,7 @@ $rm = $this->wire->modules->get('RockMigrations');
 $rm->noMigrate();
 ```
 
-If using DDEV make sure you have a correct webserver type: `webserver_type: apache-fpm`
+If using DDEV make sure you have a correct webserver type otherwise the reloads will be buggy and slow: `webserver_type: apache-fpm`
 
 <img src=hr.svg>
 
