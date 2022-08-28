@@ -71,7 +71,7 @@
         }
         $ = jQuery;
         Alfred.init();
-        let url = ProcessWire.config['pw-root-url'];
+        let url = RockFrontend.rootUrl;
 
         // load fontawesome
         // this is necessary for the close icon and for the modal loading spinner

@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.5',
+      'version' => '1.17.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -173,7 +173,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           $this->js("rootUrl", $this->wire->config->urls->root);
           $this->scripts()->add($this->path."Alfred.js");
           $this->addAlfredStyles();
-          $this->wire->config->js('pw-root-url', $this->wire->config->urls->root);
         }
 
         // autoload scripts and styles
