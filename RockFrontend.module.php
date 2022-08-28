@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.3',
+      'version' => '1.17.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -172,7 +172,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         if($this->loadAlfred()) {
           $this->js("rootUrl", $this->wire->config->urls->root);
           $this->scripts()->add($this->path."Alfred.js");
-          $this->styles()->add($this->path."Alfred.css");
+          $this->addAlfredStyles();
         }
 
         // autoload scripts and styles
@@ -199,6 +199,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         $event->return = $html;
       }
     );
+  }
+
+  public function ___addAlfredStyles() {
+    $this->styles()->add($this->path."Alfred.css");
   }
 
   private function addLiveReloadScript() {
