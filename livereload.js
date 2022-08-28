@@ -2,6 +2,9 @@
 // we start listening for changes one second after page load
 // this makes sure that the page does not reload immediately after creating a new page
 setTimeout(() => {
+  let isModal = !!document.querySelector('body.modal');
+  if(isModal) return;
+
   console.log('RockFrontend is listening for file changes...');
   let reloading = false;
   const evtSource = new EventSource(
