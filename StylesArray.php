@@ -9,6 +9,8 @@ class StylesArray extends AssetsArray {
   const cacheName = 'rockfrontend-stylesarray-cache';
   const comment = '<!-- rockfrontend-styles-head -->';
 
+  protected $vars = [];
+
   /**
    * Add all files of folder to assets array
    *
@@ -91,6 +93,13 @@ class StylesArray extends AssetsArray {
         $less->setOptions([
           'sourceMap' => $opt->sourcemaps,
         ]);
+
+        // modify variables
+        // you can add color modifications via PHP like this:
+        // $rf->styles()->setVar('alfred-primary', 'blue');
+        $less->parser()->ModifyVars($this->vars);
+
+        // save css file to disk
         $less->saveCss($cssFile);
         $this->wire->cache->save(self::cacheName, $lessCurrent);
         $this->wire->session->set(RockFrontend::recompile, false);
@@ -121,6 +130,16 @@ class StylesArray extends AssetsArray {
       $indent = '  ';
     }
     return $out;
+  }
+
+  /**
+   * Set a less variable
+   * @return array
+   */
+  public function setVar($key, $value) {
+    $vars = $this->vars;
+    $vars[$key] = $value;
+    return $this->vars = $vars;
   }
 
 }

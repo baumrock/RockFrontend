@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.11',
+      'version' => '1.17.12',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -263,6 +263,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $opt->setArray([
       'fields' => '', // fields to edit
       'path' => $this->getTplPath(), // path to edit file
+      'edit' => true,
 
       // setting specific to rockmatrix blocks
       'addTop' => false,
@@ -459,6 +460,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /**
+   * Force recreation of CSS files
+   */
+  public function forceRecompile() {
+    $this->wire->session->set(self::recompile, true);
+  }
+
+  /**
    * Get file path of file
    *
    * You can look for files in folders like this:
@@ -531,7 +539,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       }
     }
 
-    if($page AND $page->editable()) {
+    if($page AND $page->editable() AND $opt->edit) {
       $icons[] = (object)[
         'icon' => 'edit',
         'label' => $page->title,
@@ -892,7 +900,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Things to do when modules are refreshed
    */
   public function refreshModules() {
-    $this->wire->session->set(self::recompile, true);
+    $this->forceRecompile();
   }
 
   /**
