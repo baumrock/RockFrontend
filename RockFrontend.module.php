@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.12',
+      'version' => '1.17.13',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -266,8 +266,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'edit' => true,
 
       // setting specific to rockmatrix blocks
-      'addTop' => false,
-      'addBottom' => false,
+      'noBlock' => false, // prevent block icons if true
+      'addTop' => null, // set to false to prevent icon
+      'addBottom' => null, // set to false to prevent icon
       'move' => true,
       'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
       'widgetStyle' => $isWidget, // make it orange
@@ -287,10 +288,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       // see explanation about widget above
       $widget = $page->_widget ?: $page;
 
-      $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
-      $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+      if($opt->noBlock) {
+        if($opt->addTop !== true) $opt->addTop = false;
+        if($opt->addBottom !== true) $opt->addBottom = false;
+      }
+      if($opt->addTop !== false) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
+      if($opt->addBottom !== false) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
 
-      // add blockid to block markup
       $blockid = " data-rmxblock=$widget ";
     }
 
