@@ -78,13 +78,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.13',
+      'version' => '1.17.14',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
       'icon' => 'code',
       // The module will work without RockMigrations but you will have to create
       // the layout field manually and add it to templates if you want to use it
+      // I'm not using the layout field though, so this feature might be dropped
     ];
   }
 
@@ -1257,6 +1258,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public function ___install() {
     $this->init();
     if($this->rm()) $this->migrate();
+    // install FrontendEditing
+    $this->wire->modules->get('PageFrontEdit');
   }
 
   /**
