@@ -20,3 +20,23 @@ Just add the `rf-griddropdown` class to the grid where you want to use the dropd
   {/foreach}
 </div>
 ```
+
+## Arrows
+
+To add an arrow to your dropdown that is aligned with the griditem simply add this markup to your dropdown:
+
+```html
+<div class='rf-griddropdown-arrow'>
+  <svg><!-- custom svg arrow --></svg>
+</div>
+```
+
+```css
+.rf-griddropdown-arrow {
+  margin-top: 20px;
+  svg {
+    height: 50px;
+    margin-top: -45px;
+  }
+}
+```

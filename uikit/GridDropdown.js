@@ -1,5 +1,10 @@
 "use strict";
 
+/**
+ * Grid Dropdown UIkit Component
+ * v1.1
+ */
+
 (function(){
   let util = UIkit.util;
   let id = 0;
@@ -9,6 +14,34 @@
   // class to hold all instances of dropdowns
   function GridDropdowns() {
     this.dropdowns = {};
+  }
+
+  /**
+   * Close all given items
+   */
+  GridDropdowns.prototype.closeAll = function(items, callback) {
+    util.each(items, function(item) {
+      if(typeof item == 'undefined') return;
+      if(!item.isOpen) return;
+      item.close();
+    });
+    this.whenClosed(items, callback);
+  }
+
+  /**
+   * Reload all open dropdowns (when window is resized)
+   */
+  GridDropdowns.prototype.reloadAll = function() {
+    let openItems = this.getOpen(this.dropdowns);
+    let afterClose = () => {
+      // let last;
+      util.each(openItems, (item) => {
+        item.show();
+        // last = item;
+      });
+      // util.scrollIntoView(last);
+    }
+    this.closeAll(this.dropdowns, afterClose);
   }
 
   /**
@@ -44,6 +77,35 @@
     return dropdowns.get(id);
   }
 
+  /**
+   * Get all open items
+   */
+  GridDropdowns.prototype.getOpen = function(items) {
+    let open = [];
+    util.each(items, (item) => {
+      if(item.isOpen) open.push(item);
+    });
+    return open;
+  }
+
+  /**
+   * Helper that executes a callback when all items have been closed
+   */
+  GridDropdowns.prototype.whenClosed = function(items, callback) {
+    // console.log('check all closed?', items);
+    let loop = setInterval(() => {
+      // console.log('checking');
+      let open = false;
+      util.each(items, (item) => {
+        if(item.isOpen) open = true;
+      });
+      if(!open) {
+        clearInterval(loop);
+        callback();
+      }
+    }, 50);
+  }
+
   // ########## GridDropdown ##########
 
   // init class
@@ -61,9 +123,6 @@
     this.findGridItem(toggle);
     util.attr(this.gridItem, 'data-griddropdown-id', this.id);
     util.attr(toggle, 'data-griddropdown-id', this.id);
-
-    // debug: log all dropdowns
-    // console.log(dropdowns.dropdowns);
   }
 
   /**
@@ -78,34 +137,6 @@
 
     // toggle accordion
     this.getAcc(true).toggle();
-  }
-
-  /**
-   * Close all dropdowns of current row
-   */
-  GridDropdown.prototype.closeAllInRow = function(doneCallback) {
-    let items = this.rowItems();
-    util.each(items, function(item) {
-      let dropdown = dropdowns.getDropdown(item);
-      if(typeof dropdown == 'undefined') return;
-      if(!dropdown.isOpen) return;
-      dropdown.close();
-    });
-
-    let i = 0;
-    items = this.rowItems(true);
-    // console.log('check all closed?', items);
-    let loop = setInterval(() => {
-      // console.log('checking');
-      let open = false;
-      util.each(items, (item) => {
-        if(item.isOpen) open = true;
-      });
-      if(!open) {
-        clearInterval(loop);
-        doneCallback();
-      }
-    }, 50);
   }
 
   /**
@@ -151,6 +182,13 @@
     let acc = util.$('[uk-accordion]', this.getInfo());
     if(getComponent) return UIkit.accordion(acc);
     return acc;
+  }
+
+  /**
+   * Get accordion elements container
+   */
+  GridDropdown.prototype.getAccContainer = function() {
+    return this.getAcc().closest('.rf-griddropdown-container');
   }
 
   /**
@@ -207,6 +245,28 @@
   }
 
   /**
+   * Set width of arrow container to match the grid item
+   */
+  GridDropdown.prototype.setArrowWidth = function() {
+    let item = this.gridItem;
+    let acc = this.getAcc();
+    let width = util.width(item);
+    let itemleft = item.getBoundingClientRect().left;
+
+    // get reference to compare the left offset with
+    let ref = acc.closest('.rf-griddropdown-container');
+    let refleft = ref.getBoundingClientRect().left;
+    // console.log(itemleft, item);
+    // console.log(refleft, ref);
+
+    // find arrow
+    let arrow = util.$('.rf-griddropdown-arrow', acc);
+    util.addClass(arrow, 'uk-position-absolute uk-flex uk-flex-center');
+    util.width(arrow, width);
+    arrow.style.left = Math.floor(itemleft-refleft)+"px";
+  }
+
+  /**
    * Show the popup
    */
   GridDropdown.prototype.show = function() {
@@ -217,11 +277,12 @@
     // we fetch acc outside of the callback to make sure
     // it is ready when we need it and we dont need another settimeout
     let acc = dropdown.createAccordion();
-    this.closeAllInRow(() => {
+    dropdowns.closeAll(this.rowItems(true), () => {
       // isOpen is set when the opening starts
       // it is removed when the closing has finished
       dropdown.isOpen = true;
       dropdown.showing = false;
+      dropdown.setArrowWidth();
       acc.toggle();
     });
   }
@@ -249,13 +310,11 @@
   // listen to toggle closed events
   util.on(document, 'hidden', function(e) {
     let el = e.target;
-    if(!util.$('>div.rf-griddropdown-inner', el)) return;
     let dropdown = dropdowns.getDropdown(el);
-    // console.log(dropdown);
-
-    // isOpen is set when the opening starts
-    // it is removed when the closing has finished
+    console.log('hidden', dropdown);
+    if(!dropdown) return;
     dropdown.isOpen = false;
+    util.remove(dropdown.getAccContainer());
   });
 
   // listen to toggle opened events
@@ -275,6 +334,15 @@
     if(!el) return;
     let dropdown = dropdowns.getDropdown(el);
     dropdown.close();
+  });
+
+  // reload all dropdowns on resize
+  let timer;
+  util.on(window, 'resize', function() {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      dropdowns.reloadAll();
+    }, 250);
   });
 
 })();
