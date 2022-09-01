@@ -85,10 +85,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'icon' => 'code',
       // The module will work without RockMigrations but you will have to create
       // the layout field manually and add it to templates if you want to use it
-      'requires' => [],
-      'installs' => [
-        'PageFrontEdit',
-      ],
     ];
   }
 
@@ -1339,6 +1335,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $f->notes .= $note;
   }
 
+  public function profileInstalledNote() {
+    $note = $this->wire->pages->get(1)->meta(self::installedprofilekey);
+    if($note) return "Installed profile: $note";
+  }
+
   /** ##### webfont downloader ##### */
 
   public function createCssSuggestion($data): string {
@@ -1529,10 +1530,5 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /** ##### END webfont downloader ##### */
-
-  public function profileInstalledNote() {
-    $note = $this->wire->pages->get(1)->meta(self::installedprofilekey);
-    if($note) return "Installed profile: $note";
-  }
 
 }
