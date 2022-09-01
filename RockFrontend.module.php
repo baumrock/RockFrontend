@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.14',
+      'version' => '1.17.15',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1260,6 +1260,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($this->rm()) $this->migrate();
     // install FrontendEditing
     $this->wire->modules->get('PageFrontEdit');
+    $this->message('Installed Module PageFrontEdit');
   }
 
   /**
