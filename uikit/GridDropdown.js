@@ -63,7 +63,7 @@
     util.attr(toggle, 'data-griddropdown-id', this.id);
 
     // debug: log all dropdowns
-    console.log(dropdowns.dropdowns);
+    // console.log(dropdowns.dropdowns);
   }
 
   /**
@@ -94,9 +94,9 @@
 
     let i = 0;
     items = this.rowItems(true);
-    console.log('check all closed?', items);
+    // console.log('check all closed?', items);
     let loop = setInterval(() => {
-      console.log('checking');
+      // console.log('checking');
       let open = false;
       util.each(items, (item) => {
         if(item.isOpen) open = true;
