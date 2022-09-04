@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.16',
+      'version' => '1.17.17',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1300,11 +1300,43 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $inputfields->add($f);
     $this->addUikitNote($f);
 
+    $this->downloadCDN();
+    $f = new InputfieldMarkup();
+    $f->name = 'cdn';
+    $f->label = 'CDN-Downloader';
+    $f->description = 'Loading assets via CDN might be illegal in your country due to GDPR regulations!';
+    $f->notes = 'Files will be downloaded to /site/templates/assets/';
+    $f->value = "
+      <ul class='presets'>
+        <li><a href=# data-cdn='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js' data-filename='alpine.js'>AlpineJS</a></li>
+      </ul>
+      <style>.cdntable td {padding: 0;margin:0}</style>
+      <table class='uk-table cdntable'>
+        <tr><td>CDN Url</td><td><input type='text' name='cdn'></td></tr>
+        <tr><td>Local filename</td><td><input type='text' name='filename'></td></tr>
+      </table>
+      <script>
+      (function() {
+        let util = UIkit.util;
+        util.on('.presets a', 'click', function(e) {
+          e.preventDefault();
+          let a = e.target.closest('a');
+          let cdn = util.data(a, 'cdn');
+          let filename = util.data(a, 'filename');
+          util.$('input[name=cdn]').value = cdn;
+          util.$('input[name=filename]').value = filename;
+        });
+      })()
+      </script>
+      ";
+    $inputfields->add($f);
+
     $f = new InputfieldText();
     $f->name = 'webfont';
-    $f->label = 'Webfont-URL';
-    $f->description = 'Enter URL to download webfont from, eg https://fonts.googleapis.com/css?family=Baloo+2:800|Open+Sans&display=swap';
-    $f->notes = 'Font files will be downloaded to /site/templates/fonts/';
+    $f->label = 'Webfont-Downloader';
+    $f->description = 'Using webfonts might be illegal in your country due to GDPR regulations!';
+    $f->notes = 'Enter URL to download webfont from, eg https://fonts.googleapis.com/css?family=Baloo+2:800|Open+Sans&display=swap
+      Font files will be downloaded to /site/templates/fonts/';
     $inputfields->add($f);
 
     // webfont downloader
@@ -1315,14 +1347,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $f->description = "You can copy&paste the created CSS into your stylesheet. The paths expect it to live in /site/templates/layouts/ - change the path to your needs!
         See [https://css-tricks.com/snippets/css/using-font-face-in-css/](https://css-tricks.com/snippets/css/using-font-face-in-css/) for details!";
       $f->value = "<pre style='max-height:400px;'><code>{$data->suggestedCss}</code></pre>";
-      $f->notes = "Data is stored in the current session and will be reset on logout";
+      $f->notes = "Data above is stored in the current session and will be reset on logout";
       $inputfields->add($f);
     }
     if($data->rawCss) {
       $f = new InputfieldMarkup();
       $f->label = 'Raw CSS (for debugging)';
       $f->value = "<pre style='max-height:400px;'><code>{$data->rawCss}</code></pre>";
-      $f->notes = "Data is stored in the current session and will be reset on logout";
+      $f->notes = "Data above is stored in the current session and will be reset on logout";
       $f->collapsed = Inputfield::collapsedYes;
       $inputfields->add($f);
     }
@@ -1339,6 +1371,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $f->notes .= $note;
   }
 
+  private function downloadCDN() {
+    $url = $this->wire->input->post('cdn', 'url');
+    $filename = $this->wire->input->post('filename', 'string')
+      ?: pathinfo($url, PATHINFO_BASENAME);
+    if(!$url) return;
+    /** @var WireHttp $http */
+    $http = $this->wire(new WireHttp());
+    $path = $this->wire->config->paths->templates."assets/";
+    $this->wire->files->mkdir($path);
+    $file = $path.$filename;
+    $http->download($url, $file);
+
+    $ext = pathinfo($file, PATHINFO_EXTENSION);
+    if($ext == 'js') {
+      $content = $this->wire->files->fileGetContents($file);
+      $this->wire->files->filePutContents($file, "// $url\n$content");
+    }
+  }
+
   public function profileInstalledNote() {
     $note = $this->wire->pages->get(1)->meta(self::installedprofilekey);
     if($note) return "Installed profile: $note";
@@ -1346,7 +1397,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   /** ##### webfont downloader ##### */
 
-  public function createCssSuggestion($data): string {
+  private function createCssSuggestion($data): string {
     // bd($data->files, 'files');
     $css = "/* suggestion for practical level of browser support */";
     foreach($data->fonts as $name=>$set) {
@@ -1410,7 +1461,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     return $css;
   }
 
-  public function downloadWebfont(): WireData {
+  private function downloadWebfont(): WireData {
     $url = $this->wire->input->post('webfont', 'string');
     if(!$url) {
       // get data from session and return it
@@ -1445,7 +1496,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /**
    * Get a blank fontdata object
    */
-  public function getFontData(): WireData {
+  private function getFontData(): WireData {
     $data = new WireData();
     $data->rawCss = '';
     $data->suggestedCss = '';
@@ -1471,7 +1522,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Extract http url from src()
    * @return string
    */
-  public function getHttpUrl($src) {
+  private function getHttpUrl($src) {
     preg_match("/url\((.*?)\)/", $src, $matches);
     return trim($matches[1], "\"' ");
   }
@@ -1480,7 +1531,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * CSS parser helper method
    * @return Rule|false
    */
-  public function getRuleValue($str, RuleSet $ruleset) {
+  private function getRuleValue($str, RuleSet $ruleset) {
     try {
       $rule = $ruleset->getRules($str);
       if(!count($rule)) return false;
@@ -1490,7 +1541,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     }
   }
 
-  public function parseResult($result, $format, $data = null): WireData {
+  private function parseResult($result, $format, $data = null): WireData {
     if(!$data) $data = $this->getFontData();
 
     $parser = new Parser($result);
