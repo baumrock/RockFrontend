@@ -1305,8 +1305,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $f->name = 'cdn';
     $f->label = 'CDN-Downloader';
     $f->description = 'Loading assets via CDN might be illegal in your country due to GDPR regulations!';
-    $f->notes = 'Files will be downloaded to /site/templates/assets/';
+    $f->notes = 'Files will be downloaded to /site/templates/assets/
+      Need more presets? Let me know in the forum!';
     $f->value = "
+      Presets:
       <ul class='presets'>
         <li><a href=# data-cdn='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js' data-filename='alpine.js'>AlpineJS</a></li>
       </ul>
