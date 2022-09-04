@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.15',
+      'version' => '1.17.16',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -323,9 +323,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($page->template != 'admin') {
       // frontend
       if($styles->opt('autoload')) {
-        $styles->addAll('layouts');
-        $styles->addAll('sections');
-        $styles->addAll('partials');
+        $styles->addAll('/site/templates/layouts');
+        $styles->addAll('/site/templates/sections');
+        $styles->addAll('/site/templates/partials');
         $styles->addAll('/site/assets/RockMatrix');
       }
     }
