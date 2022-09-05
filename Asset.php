@@ -10,6 +10,7 @@ class Asset extends WireData {
   public $m;
   public $path;
   public $suffix;
+  public $url;
   public $comment;
 
   public function __construct($file, $suffix = '') {
@@ -30,6 +31,7 @@ class Asset extends WireData {
   public function __debugInfo() {
     return [
       'path' => $this->path,
+      'url' => $this->url,
       'm' => $this->m,
       'suffix' => $this->suffix,
       'ext' => $this->ext,
