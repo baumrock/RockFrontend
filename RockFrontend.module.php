@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.19',
+      'version' => '1.17.20',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -489,22 +489,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
     // if no extension was provided try php or latte extension
     if(!pathinfo($file, PATHINFO_EXTENSION)) {
-      if($f = $this->getFile("$file.php", $forcePath)) return realpath($f);
-      if($f = $this->getFile("$file.latte", $forcePath)) return realpath($f);
+      if($f = $this->getFile("$file.php", $forcePath)) return $this->realpath($f);
+      if($f = $this->getFile("$file.latte", $forcePath)) return $this->realpath($f);
     }
 
     // if file exists return it
     // this will also find files relative to /site/templates!
     // TODO maybe prevent loading of relative paths outside assets?
     $inRoot = $this->wire->files->fileInPath($file, $this->wire->config->paths->root);
-    if($inRoot AND is_file($file)) return realpath($file);
+    if($inRoot AND is_file($file)) return $this->realpath($file);
 
     // look for the file in specified folders
     foreach($this->folders as $folder) {
       $folder = Paths::normalizeSeparators($folder);
       $folder = rtrim($folder,"/")."/";
       $path = $folder.ltrim($file,"/");
-      if(is_file($path)) return realpath($path);
+      if(is_file($path)) return $this->realpath($path);
     }
 
     // no file found
@@ -895,6 +895,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $profiles["$path/$label"] = $label;
     }
     return $profiles;
+  }
+
+  /**
+   * Return normalized realpath
+   * @return string
+   */
+  public function realpath($file) {
+    return Paths::normalizeSeparators(realpath($file));
   }
 
   /**
