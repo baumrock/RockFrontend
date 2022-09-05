@@ -20,6 +20,7 @@ class LiveReload {
     $this->exclude = array_merge([
       'site/assets/cache/*',
       'site/assets/logs/*',
+      'site/assets/sessions/*',
 
       // ignore files to make sure we dont reload the backend after file upload
       'site/assets/files/*',
