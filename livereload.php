@@ -18,12 +18,11 @@ class LiveReload {
 
     // merge default excluded files with user input
     $this->exclude = array_merge([
+      'site/assets/backups/*',
       'site/assets/cache/*',
+      'site/assets/files/*',
       'site/assets/logs/*',
       'site/assets/sessions/*',
-
-      // ignore files to make sure we dont reload the backend after file upload
-      'site/assets/files/*',
     ], $exclude ?: []);
 
     $this->dir = $dir;
