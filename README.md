@@ -308,11 +308,6 @@ echo $rockfrontend->scripts()->render(); // render "head" scripts
 
 When parsing LESS files RockFrontend will create a file `bundle/head.css` for you!
 
-### What is the bundle/head.css file?
-
-If you request a styles() array without
-
-
 ## FAQ
 
 ### Does RockFrontend force me to use a CSS Frontend Framework?
