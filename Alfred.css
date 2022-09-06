@@ -66,6 +66,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 .alfred .icons {
   top: -1px;
   right: 0;
+  text-align: right;
 }
 .alfred.rmx-widget:hover {
   outline: 4px groove orange !important;
