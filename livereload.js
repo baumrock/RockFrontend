@@ -11,6 +11,10 @@ setTimeout(() => {
     '/livereload.php?secret='+rf_livereload_secret,
     { withCredentials: true }
   );
+  // prevent error msg in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=833462
+  window.addEventListener('beforeunload', () => {
+    evtSource.close();
+  });
   evtSource.onmessage = function(event) {
     let changes = JSON.parse(event.data);
     if(changes.length && !reloading) {
