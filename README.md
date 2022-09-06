@@ -2,6 +2,8 @@
 
 <br>
 
+See the video here:
+
 <a href="https://www.youtube.com/watch?v=7CoIj--u4ps"><img src=thumb.jpg></a>
 
 <br>
