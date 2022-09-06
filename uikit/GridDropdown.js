@@ -311,8 +311,8 @@
   util.on(document, 'hidden', function(e) {
     let el = e.target;
     let dropdown = dropdowns.getDropdown(el);
-    console.log('hidden', dropdown);
     if(!dropdown) return;
+    util.removeClass(dropdown.gridItem, 'rf-griddropdown-open');
     dropdown.isOpen = false;
     util.remove(dropdown.getAccContainer());
   });
@@ -322,6 +322,7 @@
     let el = e.target;
     if(!util.$('>div.rf-griddropdown-inner', el)) return;
     let dropdown = dropdowns.getDropdown(el);
+    util.addClass(dropdown.gridItem, 'rf-griddropdown-open');
 
     // show close button
     let close = util.$$('[uk-close]', dropdown.getAcc());
