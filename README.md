@@ -287,7 +287,10 @@ RockFrontend comes with a helper class for scripts and styles. You can add asset
 You can request a new ScriptsArray like this:
 
 ```php
-$scripts = $rockfrontend->scripts();
+$scripts = $rockfrontend->scripts()
+  ->add('path/to/your/script.js')
+  ->addAll('add/all/scripts/of/this/folder')
+  ;
 bd($scripts); // you can use tracy to inspect the ScriptsArray object!
 ```
 
