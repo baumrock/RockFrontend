@@ -307,9 +307,16 @@ RockFrontend will render the `head` scripts and styles automatically right befor
 ```php
 echo $rockfrontend->styles()->render(); // render "head" styles
 echo $rockfrontend->scripts()->render(); // render "head" scripts
+echo $customscripts->render(); // from the example above
 ```
 
-When parsing LESS files RockFrontend will create a file `bundle/head.css` for you!
+If you add LESS files to the StylesArray RockFrontend will use the name of the array as filename of the parsed CSS file:
+
+```php
+$rockfrontend->styles()->render() --> /site/templates/bundle/head.css
+$rockfrontend->styles('head')->render() --> /site/templates/bundle/head.css
+$rockfrontend->styles('foo')->render() --> /site/templates/bundle/foo.css
+```
 
 ## FAQ
 
