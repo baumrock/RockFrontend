@@ -280,6 +280,38 @@ Note that we are not using the `ProcessWire` namespace in our `_init.php` file, 
 <p>Return value of foo(): {\ProcessWire\foo()}</p>
 ```
 
+## Assets (Scripts and Styles)
+
+RockFrontend comes with a helper class for scripts and styles. You can add assets easily via the `add()` method or you can add all files in a folder with `addAll('/path/to/folder')`. That means you can split up your CSS in easy to understand and easy to maintain chunks, but you only need to add them once to your main markup file!
+
+You can request a new ScriptsArray like this:
+
+```php
+$scripts = $rockfrontend->scripts();
+bd($scripts); // you can use tracy to inspect the ScriptsArray object!
+```
+
+By default this will use `head` as the name for the ScriptsArray so you can add files to that array whenever and wherever you like.
+
+```php
+$headscripts = $rockfrontend->scripts();
+$bodyscripts = $rockfrontend->scripts('body');
+$customscripts = $rockfrontend->scripts('foobar');
+```
+
+RockFrontend will render the `head` scripts and styles automatically right before your `</head>` tag. If you want to render those scripts and styles in another place you can manually render them like this:
+
+```php
+echo $rockfrontend->styles()->render(); // render "head" styles
+echo $rockfrontend->scripts()->render(); // render "head" scripts
+```
+
+When parsing LESS files RockFrontend will create a file `bundle/head.css` for you!
+
+### What is the bundle/head.css file?
+
+If you request a styles() array without
+
 
 ## FAQ
 
