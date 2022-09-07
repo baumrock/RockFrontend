@@ -46,6 +46,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   const field_layout = self::prefix."layout";
 
+  /** @var WireData */
+  public $alfredCache;
+
   /** @var WireArray $folders */
   public $folders;
 
@@ -78,7 +81,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.22',
+      'version' => '1.18.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -102,6 +105,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
     $this->wire('home', $this->home);
+    $this->alfredCache = $this->wire(new WireData());
 
     // watch this file and run "migrate" on change or refresh
     // if($rm = $this->rm()) $rm->watch($this, 0.01);
@@ -144,6 +148,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function addAssets() {
     $rockfrontend = $this;
+
+    // hook after page render to add script
+    // this will also replace alfred tags
     $this->addHookAfter(
       "Page::render",
       function(HookEvent $event) use($rockfrontend) {
@@ -170,6 +177,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           $this->js("rootUrl", $this->wire->config->urls->root);
           $this->scripts()->add($this->path."Alfred.js");
           $this->addAlfredStyles();
+          $html = preg_replace_callback("/data-alfred-(.*?)=1/", function($match) {
+            $id = $match[1];
+            return $this->alfredCache->get($id);
+          }, $html);
         }
 
         // autoload scripts and styles
@@ -301,7 +312,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'addBottom' => $opt->addBottom,
       'widgetStyle' => $opt->widgetStyle,
     ]);
-    return "$blockid alfred='$str'";
+
+    // save markup to cache and generate alfred tag
+    // the tag will be replaced on page rander
+    // this is to make it possible to use alfred() without |noescape filter :))
+    $id = "i".uniqid();
+    $str = "$blockid alfred='$str'";
+    $this->alfredCache->set($id, $str);
+    return "data-alfred-$id=1";
   }
 
   /**

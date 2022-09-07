@@ -444,6 +444,20 @@ You can use the `render()` method to write SVG markup directly to your template 
 echo $rockfrontend->render('img/icon.svg');
 ```
 
+You can even provide variables to replace, so you can create completely dynamic SVGs with custom rotation angles or colors etc...
+
+```php
+{$rockfrontend->render('img/triangle.svg', [
+  // replace the {rotate} tag in the svg markup
+  'rotate'=>45,
+  'color'=>'blue',
+])}
+
+// add the replacement tag to your svg file
+// img/triangle.svg
+<svg style="transform: rotate({rotate}deg); border: 2px solid {color};">...
+```
+
 ## Menus
 
 RockFrontend comes with a handy method `isActive()` to keep your menu markup clean. Using `latte` you'll get super simple markup without if-else-hell:
