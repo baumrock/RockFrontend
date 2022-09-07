@@ -438,7 +438,7 @@ You can use the `render()` method to write SVG markup directly to your template 
 ```php
 // latte
 // icon is in /site/templates/img/icon.svg
-{$rockfrontend->render('img/icon.svg')|noescape}
+{$rockfrontend->render('img/icon.svg')}
 
 // php
 echo $rockfrontend->render('img/icon.svg');
