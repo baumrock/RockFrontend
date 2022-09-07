@@ -886,9 +886,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   /**
    * Get array of available profiles
+   * hookable so that other modules can extend available profiles
    * @return array
    */
-  private function profiles() {
+  public function ___profiles() {
     $profiles = [];
     $path = Paths::normalizeSeparators(__DIR__."/profiles");
     foreach(array_diff(scandir($path), ['.','..']) as $label) {
