@@ -78,7 +78,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.17.21',
+      'version' => '1.17.22',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -997,7 +997,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       $options = $opt->getArray();
       $html = $this->wire->files->render($file, $vars, $options);
     }
-    elseif($ext == 'svg') $html = $this->svg($file);
+    elseif($ext == 'svg') $html = $this->svg($file, $vars);
     else {
       try {
         $method = "renderFile".ucfirst(strtolower($ext));
@@ -1221,11 +1221,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * Render svg file
    * @return string
    */
-  public function svg($filename) {
+  public function svg($filename, $replacements = []) {
+    $filename = $this->getFile($filename);
     if(!is_file($filename)) return;
     // we use file_get_contents because $files->render can cause parse errors
     // see https://wordpress.stackexchange.com/a/256445
-    return file_get_contents($filename);
+    $svg = file_get_contents($filename);
+    if(!is_array($replacements)) return $this->html($svg);
+    if(!count($replacements)) return $this->html($svg);
+    foreach($replacements as $k=>$v) {
+      if(!is_string($v)) continue;
+      $svg = str_replace("{{$k}}", $v, $svg);
+    }
+    return $this->html($svg);
   }
 
   /**
