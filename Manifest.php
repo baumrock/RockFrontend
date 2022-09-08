@@ -30,15 +30,19 @@ class Manifest extends Wire {
    * Create manifest when a PW page is saved
    *
    * By default this will create the manifest on every page save. You can adjust
-   * that by providing a selector that the saved page has to match:
+   * that by providing a selector that the saved page has to match. You can also
+   * set a condition, for example to create the manifest only if debug mode is
+   * ON:
    *
+   * // put this in /site/init.php and echo $rockfrontend->seo() in your markup
    * $rockfrontend->manifest()
    *   ->themeColor(...)
-   *   ->createOnSave("template=home");
+   *   ->createOnSave("template=home", $config->debug);
    *
    * @return self
    */
-  public function createOnSave($selector = 'id>0') {
+  public function createOnSave($selector = 'id>0', $condition = true) {
+    if(!$condition) return;
     $this->wire->addHookAfter("Pages::saved", function($event) use($selector) {
       $page = $event->arguments(0);
       if(!$page->matches($selector)) return;
