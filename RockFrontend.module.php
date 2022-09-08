@@ -81,7 +81,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.18.0',
+      'version' => '1.18.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -751,7 +751,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * @return Html
    */
   public static function html($str) {
-    return new Html($str);
+    // we try to return a latte html object
+    // If we are not calling that from within a latte file
+    // the html object will not be available. This can be the case in Seo tags.
+    // To make sure it returns something we catch erros and return the plain
+    // string instead. That means if called from outside a latte file it will
+    // still return the HTML.
+    try {
+      return new Html($str);
+    } catch (\Throwable $th) {
+      return $str;
+    }
   }
 
   /**
