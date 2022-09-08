@@ -5,6 +5,7 @@ use ProcessWire\Page;
 use ProcessWire\Pageimage;
 use ProcessWire\Pageimages;
 use ProcessWire\Paths;
+use ProcessWire\RockFrontend;
 use ProcessWire\Wire;
 use ProcessWire\WireData;
 use ProcessWire\WireHttp;
@@ -303,6 +304,21 @@ class Seo extends Wire {
       $this->setValue('og:image:alt', function() {
         if(!$this->getRaw('og:image')) return;
         return $this->getRaw('title');
+      });
+
+      // webmanifest
+      $this->setMarkup('manifest', '<link rel="manifest" href="{value}">');
+      $this->setValue('manifest', function() {
+        /** @var RockFrontend $rf */
+        $rf = $this->wire->modules->get('RockFrontend');
+        $manifest = $rf->manifest();
+        return $manifest->url();
+      });
+      $this->setMarkup('theme-color', '<meta name="theme-color" content="{value}">');
+      $this->setValue('theme-color', function() {
+        /** @var RockFrontend $rf */
+        $rf = $this->wire->modules->get('RockFrontend');
+        return $rf->manifest()->themeColor;
       });
     }
 

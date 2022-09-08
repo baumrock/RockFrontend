@@ -2,6 +2,7 @@
 
 use Latte\Engine;
 use Latte\Runtime\Html;
+use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
 use RockFrontend\StylesArray;
@@ -65,6 +66,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
+
+  /** @var Manifest */
+  protected $manifest;
 
   /** @var string */
   public $path;
@@ -869,6 +873,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($this->wire->user->isSuperuser()) return true;
     if($this->wire->user->hasPermission(self::permission_alfred)) return true;
     return false;
+  }
+
+  /**
+   * Create a site webmanifest in PW root
+   * @return Manifest
+   */
+  public function manifest() {
+    require_once $this->path."Manifest.php";
+    return $this->manifest ?: $this->manifest = new Manifest();
   }
 
   public function migrate() {
