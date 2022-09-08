@@ -17,10 +17,24 @@ namespace Latte;
 class Helpers
 {
 	/** @var array<string, int>  empty (void) HTML elements */
-	public static array $emptyElements = [
+	public static $emptyElements = [
 		'img' => 1, 'hr' => 1, 'br' => 1, 'input' => 1, 'meta' => 1, 'area' => 1, 'embed' => 1, 'keygen' => 1, 'source' => 1, 'base' => 1,
 		'col' => 1, 'link' => 1, 'param' => 1, 'basefont' => 1, 'frame' => 1, 'isindex' => 1, 'wbr' => 1, 'command' => 1, 'track' => 1,
 	];
+
+
+	/**
+	 * Checks callback.
+	 * @param  mixed  $callable
+	 */
+	public static function checkCallback($callable): callable
+	{
+		if (!is_callable($callable, false, $text)) {
+			throw new \InvalidArgumentException("Callback '$text' is not callable.");
+		}
+
+		return $callable;
+	}
 
 
 	/**
@@ -42,55 +56,22 @@ class Helpers
 	}
 
 
-	/** intentionally without callable typehint, because it generates bad error messages */
-	public static function toReflection($callable): \ReflectionFunctionAbstract
+	public static function removeFilter(string &$modifier, string $filter): bool
 	{
-		if (is_string($callable) && strpos($callable, '::')) {
-			return new \ReflectionMethod($callable);
-		} elseif (is_array($callable)) {
-			return new \ReflectionMethod($callable[0], $callable[1]);
-		} elseif (is_object($callable) && !$callable instanceof \Closure) {
-			return new \ReflectionMethod($callable, '__invoke');
-		} else {
-			return new \ReflectionFunction($callable);
+		$tmp = str_replace('|checkUrl', '', $modifier);
+		if ($filter === 'noescape' && preg_match('#\|noescape\s*\S#Di', $tmp)) {
+			trigger_error("Filter |noescape should be placed at the very end in '$tmp'", E_USER_DEPRECATED);
 		}
+		$modifier = preg_replace('#\|(' . $filter . ')\s?(?=\||$)#Di', '', $modifier, -1, $found);
+		return (bool) $found;
 	}
 
 
-	public static function sortBeforeAfter(array $list): array
+	/**
+	 * Starts the $haystack string with the prefix $needle?
+	 */
+	public static function startsWith(string $haystack, string $needle): bool
 	{
-		foreach ($list as $name => $info) {
-			if (!$info instanceof \stdClass || !($info->before ?? $info->after ?? null)) {
-				continue;
-			}
-
-			unset($list[$name]);
-			$names = array_keys($list);
-			$best = null;
-
-			foreach ((array) $info->before as $target) {
-				if ($target === '*') {
-					$best = 0;
-				} elseif (isset($list[$target])) {
-					$pos = array_search($target, $names, true);
-					$best = min($pos, $best ?? $pos);
-				}
-			}
-
-			foreach ((array) ($info->after ?? null) as $target) {
-				if ($target === '*') {
-					$best = count($names);
-				} elseif (isset($list[$target])) {
-					$pos = array_search($target, $names, true);
-					$best = max($pos + 1, $best);
-				}
-			}
-
-			$list = array_slice($list, 0, $best, true)
-				+ [$name => $info]
-				+ array_slice($list, $best, null, true);
-		}
-
-		return $list;
+		return strncmp($haystack, $needle, strlen($needle)) === 0;
 	}
 }

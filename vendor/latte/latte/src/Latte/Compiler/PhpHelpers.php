@@ -7,42 +7,74 @@
 
 declare(strict_types=1);
 
-namespace Latte\Compiler;
-
-use Latte\CompileException;
+namespace Latte;
 
 
 /**
  * PHP helpers.
  * @internal
  */
-final class PhpHelpers
+class PhpHelpers
 {
 	/**
 	 * Optimizes code readability.
 	 */
 	public static function reformatCode(string $source): string
 	{
-		$res = '';
+		$res = $php = '';
 		$lastChar = ';';
 		$tokens = new \ArrayIterator(token_get_all($source));
-		$level = 0;
+		$level = $openLevel = 0;
+		$lineLength = 100;
+		$specialBrace = false;
 
 		foreach ($tokens as $n => $token) {
 			$next = $tokens[$n + 1] ?? [null, ''];
 
 			if (is_array($token)) {
-				[$name, $token] = $token;
-				if ($name === T_ELSE || $name === T_ELSEIF) {
+				[$name, $token] = ($tmp = $token);
+				if ($name === T_INLINE_HTML) {
+					$res .= $token;
+
+				} elseif ($name === T_OPEN_TAG) {
+					$openLevel = $level;
+
+				} elseif ($name === T_CLOSE_TAG) {
+					if ($next[0] === T_OPEN_TAG) { // remove ?)<?php
+						if (!strspn($lastChar, ';{:/' . ($specialBrace ? '' : '}'))) {
+							$php = rtrim($php) . ($lastChar = ';') . "\n" . str_repeat("\t", $level);
+						} elseif (substr($next[1], -1) === "\n") {
+							$php .= "\n" . str_repeat("\t", $level);
+						}
+
+						$tokens->next();
+
+					} else {
+						if (trim($php) !== '' || substr($res, -1) === '<') { // skip <?php ?) but preserve <<?php
+							$inline = strpos($php, "\n") === false && strlen($res) - strrpos($res, "\n") < $lineLength;
+							$res .= '<?php' . ($inline ? ' ' : "\n" . str_repeat("\t", $openLevel));
+							if (strpos($next[1], "\n") === false) {
+								$token = rtrim($token, "\n");
+							} else {
+								$php = rtrim($php, "\t");
+							}
+
+							$res .= $php . $token;
+						}
+
+						$php = '';
+						$lastChar = ';';
+					}
+				} elseif ($name === T_ELSE || $name === T_ELSEIF) {
 					if ($next === ':' && $lastChar === '}') {
-						$res .= ';'; // semicolon needed in if(): ... if() ... else:
+						$php .= ';'; // semicolon needed in if(): ... if() ... else:
 					}
 
 					$lastChar = '';
-					$res .= $token;
+					$php .= $token;
 
 				} elseif ($name === T_DOC_COMMENT || $name === T_COMMENT) {
-					$res .= preg_replace("#\n[ \t]*+(?!\n)#", "\n" . str_repeat("\t", $level), $token);
+					$php .= preg_replace("#\n[ \t]*+(?!\n)#", "\n" . str_repeat("\t", $level), $token);
 
 				} elseif ($name === T_WHITESPACE) {
 					$prev = $tokens[$n - 1];
@@ -55,17 +87,11 @@ final class PhpHelpers
 						$token = '';
 					}
 
-					$res .= $token;
+					$php .= $token;
 
 				} elseif ($name === T_OBJECT_OPERATOR) {
 					$lastChar = '->';
-					$res .= $token;
-
-				} elseif ($name === T_OPEN_TAG) {
-					$res .= "<?php\n";
-
-				} elseif ($name === T_CLOSE_TAG) {
-					throw new \LogicException('Unexpected token');
+					$php .= $token;
 
 				} else {
 					if (in_array($name, [T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true)) {
@@ -73,24 +99,32 @@ final class PhpHelpers
 					}
 
 					$lastChar = '';
-					$res .= $token;
+					$php .= $token;
 				}
 			} else {
 				if ($token === '{' || $token === '[') {
 					$level++;
+					if ($lastChar === '->' || $lastChar === '$') {
+						$specialBrace = true;
+					}
 				} elseif ($token === '}' || $token === ']') {
 					$level--;
-					$res .= "\x08";
+					$php .= "\x08";
 
 				} elseif ($token === ';') {
+					$specialBrace = false;
 					if ($next[0] !== T_WHITESPACE) {
 						$token .= "\n" . str_repeat("\t", $level); // indent last line
 					}
 				}
 
 				$lastChar = $token;
-				$res .= $token;
+				$php .= $token;
 			}
+		}
+
+		if ($php) {
+			$res .= "<?php\n" . str_repeat("\t", $openLevel) . $php;
 		}
 
 		$res = str_replace(["\t\x08", "\x08"], '', $res);
@@ -98,7 +132,10 @@ final class PhpHelpers
 	}
 
 
-	public static function dump(mixed $value, bool $multiline = false): string
+	/**
+	 * @param  mixed  $value
+	 */
+	public static function dump($value, bool $multiline = false): string
 	{
 		if (is_array($value)) {
 			$indexed = $value && array_keys($value) === range(0, count($value) - 1);
@@ -118,110 +155,43 @@ final class PhpHelpers
 	}
 
 
-	public static function optimizeEcho(string $source): string
+	public static function inlineHtmlToEcho(string $source): string
 	{
 		$res = '';
 		$tokens = token_get_all($source);
-		$start = null;
 
 		for ($i = 0; $i < \count($tokens); $i++) {
 			$token = $tokens[$i];
-			if ($token[0] === T_ECHO) {
-				if (!$start) {
-					$str = '';
-					$start = strlen($res);
+			if (is_array($token)) {
+				if ($token[0] === T_INLINE_HTML) {
+					$str = $token[1];
+					$n = $i + 1;
+					while (isset($tokens[$n])) {
+						if ($tokens[$n][0] === T_INLINE_HTML) {
+							$str .= $tokens[$n][1];
+							$i = $n;
+						} elseif (
+							$tokens[$n][0] !== T_OPEN_TAG
+							&& $tokens[$n][0] !== T_CLOSE_TAG
+							&& $tokens[$n][0] !== T_WHITESPACE
+						) {
+							break;
+						}
+
+						$n++;
+					}
+
+					$export = $str === "\n" ? '"\n"' : var_export($str, true);
+					$res .= "<?php echo $export ?>";
+					continue;
 				}
 
-			} elseif ($start && $token[0] === T_CONSTANT_ENCAPSED_STRING && $token[1][0] === "'") {
-				$str .= stripslashes(substr($token[1], 1, -1));
-
-			} elseif ($start && $token === ';') {
-				if ($str !== '') {
-					$res = substr_replace(
-						$res,
-						'echo ' . ($str === "\n" ? '"\n"' : var_export($str, true)),
-						$start,
-						strlen($res) - $start,
-					);
-				}
-
-			} elseif ($token[0] !== T_WHITESPACE) {
-				$start = null;
+				$res .= $token[1];
+			} else {
+				$res .= $token;
 			}
-
-			$res .= is_array($token) ? $token[1] : $token;
 		}
 
 		return $res;
-	}
-
-
-	public static function decodeNumber(string $str, &$base = null): int|float|null
-	{
-		$str = str_replace('_', '', $str);
-
-		if ($str[0] !== '0' || $str === '0') {
-			$base = 10;
-			return $str + 0;
-		} elseif ($str[1] === 'x' || $str[1] === 'X') {
-			$base = 16;
-			return hexdec($str);
-		} elseif ($str[1] === 'b' || $str[1] === 'B') {
-			$base = 2;
-			return bindec($str);
-		} elseif (strpbrk($str, '89')) {
-			return null;
-		} else {
-			$base = 8;
-			return octdec($str);
-		}
-	}
-
-
-	public static function decodeEscapeSequences(string $str, ?string $quote): string
-	{
-		if ($quote !== null) {
-			$str = str_replace('\\' . $quote, $quote, $str);
-		}
-
-		return preg_replace_callback(
-			'~\\\\([\\\\$nrtfve]|[xX][0-9a-fA-F]{1,2}|[0-7]{1,3}|u\{([0-9a-fA-F]+)\})~',
-			function ($matches) {
-				$ch = $matches[1];
-				$replacements = [
-					'\\' => '\\',
-					'$' => '$',
-					'n' => "\n",
-					'r' => "\r",
-					't' => "\t",
-					'f' => "\f",
-					'v' => "\v",
-					'e' => "\x1B",
-				];
-				if (isset($replacements[$ch])) {
-					return $replacements[$ch];
-				} elseif ($ch[0] === 'x' || $ch[0] === 'X') {
-					return chr(hexdec(substr($ch, 1)));
-				} elseif ($ch[0] === 'u') {
-					return self::codePointToUtf8(hexdec($matches[2]));
-				} else {
-					return chr(octdec($ch));
-				}
-			},
-			$str,
-		);
-	}
-
-
-	private static function codePointToUtf8(int $num): string
-	{
-		return match (true) {
-			$num <= 0x7F => chr($num),
-			$num <= 0x7FF => chr(($num >> 6) + 0xC0) . chr(($num & 0x3F) + 0x80),
-			$num <= 0xFFFF => chr(($num >> 12) + 0xE0) . chr((($num >> 6) & 0x3F) + 0x80) . chr(($num & 0x3F) + 0x80),
-			$num <= 0x1FFFFF => chr(($num >> 18) + 0xF0) . chr((($num >> 12) & 0x3F) + 0x80)
-				. chr((($num >> 6) & 0x3F) + 0x80) . chr(($num & 0x3F) + 0x80),
-			default => throw new CompileException('Invalid UTF-8 codepoint escape sequence: Codepoint too large'),
-		};
 	}
 }

@@ -20,7 +20,7 @@ class StringLoader implements Latte\Loader
 	use Latte\Strict;
 
 	/** @var string[]|null  [name => content] */
-	private ?array $templates = null;
+	private $templates;
 
 
 	/**
@@ -35,7 +35,7 @@ class StringLoader implements Latte\Loader
 	/**
 	 * Returns template source code.
 	 */
-	public function getContent(string $name): string
+	public function getContent($name): string
 	{
 		if ($this->templates === null) {
 			return $name;
@@ -47,7 +47,7 @@ class StringLoader implements Latte\Loader
 	}
 
 
-	public function isExpired(string $name, int $time): bool
+	public function isExpired($name, $time): bool
 	{
 		return false;
 	}
@@ -56,7 +56,7 @@ class StringLoader implements Latte\Loader
 	/**
 	 * Returns referred template name.
 	 */
-	public function getReferredName(string $name, string $referringName): string
+	public function getReferredName($name, $referringName): string
 	{
 		if ($this->templates === null) {
 			throw new \LogicException("Missing template '$name'.");
@@ -69,7 +69,7 @@ class StringLoader implements Latte\Loader
 	/**
 	 * Returns unique identifier for caching.
 	 */
-	public function getUniqueId(string $name): string
+	public function getUniqueId($name): string
 	{
 		return $this->getContent($name);
 	}

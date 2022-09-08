@@ -4,26 +4,26 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97e9f294f1f3abe14907b8aec64937a9",
+    "content-hash": "7bb78751950cb95e9dc38f96dbd997b2",
     "packages": [
         {
             "name": "latte/latte",
-            "version": "v3.0.2",
+            "version": "v2.11.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/latte.git",
-                "reference": "c3eee2e4e2c21cdf9f9c158c4bfa6150625457e1"
+                "reference": "3a5ed09d92b3bb2c428814bb919c2f8637bc49b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/latte/zipball/c3eee2e4e2c21cdf9f9c158c4bfa6150625457e1",
-                "reference": "c3eee2e4e2c21cdf9f9c158c4bfa6150625457e1",
+                "url": "https://api.github.com/repos/nette/latte/zipball/3a5ed09d92b3bb2c428814bb919c2f8637bc49b1",
+                "reference": "3a5ed09d92b3bb2c428814bb919c2f8637bc49b1",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-tokenizer": "*",
-                "php": ">=8.0 <8.2"
+                "php": ">=7.1 <8.2"
             },
             "conflict": {
                 "nette/application": "<2.4.1"
@@ -48,7 +48,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.0-dev"
+                    "dev-master": "2.11-dev"
                 }
             },
             "autoload": {
@@ -86,9 +86,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/latte/issues",
-                "source": "https://github.com/nette/latte/tree/v3.0.2"
+                "source": "https://github.com/nette/latte/tree/v2.11.4"
             },
-            "time": "2022-06-15T13:42:57+00:00"
+            "time": "2022-05-30T13:34:15+00:00"
         },
         {
             "name": "sabberworm/php-css-parser",
@@ -152,5 +152,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }

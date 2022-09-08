@@ -19,36 +19,35 @@ class SecurityPolicy implements Latte\Policy
 {
 	use Latte\Strict;
 
-	public const All = ['*'];
-	public const ALL = self::All;
+	public const ALL = ['*'];
 
 	/** @var string[] */
-	private array $tags = [];
+	private $tags = [];
 
 	/** @var string[] */
-	private array $filters = [];
+	private $filters = [];
 
 	/** @var string[] */
-	private array $functions = [];
+	private $functions = [];
 
 	/** @var string[][] */
-	private array $methods = [];
+	private $methods = [];
 
 	/** @var string[][] */
-	private array $properties = [];
+	private $properties = [];
 
 	/** @var array<string, array<string, bool>> */
-	private array $methodCache = [];
+	private $methodCache = [];
 
 	/** @var array<string, array<string, bool>> */
-	private array $propertyCache = [];
+	private $propertyCache = [];
 
 
 	public static function createSafePolicy(): self
 	{
 		$policy = new self;
 
-		// does not include: contentType, debugbreak, dump, extends, import, include, layout,
+		// does not include: contentType, debugbreak, dump, extends, import, include, includeblock, layout,
 		// php (but 'do' is allowed), sandbox, snippet, snippetArea, templatePrint, varPrint, embed
 		$policy->allowTags([
 			'_', '=', 'attr', 'block', 'breakIf', 'capture', 'case', 'class', 'continueIf', 'default',
@@ -69,10 +68,21 @@ class SecurityPolicy implements Latte\Policy
 
 		$policy->allowFunctions(['clamp', 'divisibleBy', 'even', 'first', 'last', 'odd', 'slice']);
 
-		$policy->allowMethods(Latte\Essential\CachingIterator::class, self::All);
-		$policy->allowProperties(Latte\Essential\CachingIterator::class, self::All);
+		$policy->allowMethods(Latte\Runtime\CachingIterator::class, self::ALL);
+		$policy->allowProperties(Latte\Runtime\CachingIterator::class, self::ALL);
 
 		return $policy;
+	}
+
+
+	/**
+	 * @deprecated  use allowTags()
+	 */
+	public function allowMacros(array $tags): self
+	{
+		trigger_error(__METHOD__ . '() is deprecated, use allowTags()', E_USER_DEPRECATED);
+		$this->allowTags($tags);
+		return $this;
 	}
 
 
@@ -128,9 +138,9 @@ class SecurityPolicy implements Latte\Policy
 	}
 
 
-	public function isTagAllowed(string $tag): bool
+	public function isMacroAllowed(string $macro): bool
 	{
-		return isset($this->tags[strtolower($tag)]) || isset($this->tags['*']);
+		return isset($this->tags[strtolower($macro)]) || isset($this->tags['*']);
 	}
 
 

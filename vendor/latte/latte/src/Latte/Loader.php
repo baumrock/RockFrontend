@@ -17,21 +17,34 @@ interface Loader
 {
 	/**
 	 * Returns template source code.
+	 * @param  string  $name
+	 * @return string
 	 */
-	function getContent(string $name): string;
+	function getContent($name);
 
 	/**
 	 * Checks whether template is expired.
+	 * @param  string  $name
+	 * @param  int  $time
+	 * @return bool
 	 */
-	function isExpired(string $name, int $time): bool;
+	function isExpired($name, $time);
 
 	/**
 	 * Returns referred template name.
+	 * @param  string  $name
+	 * @param  string  $referringName
+	 * @return string
 	 */
-	function getReferredName(string $name, string $referringName): string;
+	function getReferredName($name, $referringName);
 
 	/**
 	 * Returns unique identifier for caching.
+	 * @param  string  $name
+	 * @return string
 	 */
-	function getUniqueId(string $name): string;
+	function getUniqueId($name);
 }
+
+
+interface_exists(ILoader::class);

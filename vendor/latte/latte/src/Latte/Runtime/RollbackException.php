@@ -10,11 +10,7 @@ declare(strict_types=1);
 namespace Latte\Runtime;
 
 
-interface HtmlStringable
+/** @internal */
+class RollbackException extends \Exception
 {
-	/** @return string in HTML format */
-	function __toString(): string;
 }
-
-
-interface_exists(IHtmlString::class);

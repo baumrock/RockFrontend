@@ -19,17 +19,22 @@ use Tracy;
  */
 class LattePanel implements Tracy\IBarPanel
 {
-	public bool $dumpParameters = true;
+	/** @var bool */
+	public $dumpParameters = true;
 
 	/** @var Template[] */
-	private array $templates = [];
-	private array $list;
-	private ?string $name = null;
+	private $templates = [];
+
+	/** @var array */
+	private $list;
+
+	/** @var string|null */
+	private $name;
 
 
 	public static function initialize(Engine $latte, ?string $name = null, ?Tracy\Bar $bar = null): void
 	{
-		$bar ??= Tracy\Debugger::getBar();
+		$bar = $bar ?? Tracy\Debugger::getBar();
 		$bar->addPanel(new self($latte, $name));
 	}
 
@@ -75,7 +80,7 @@ class LattePanel implements Tracy\IBarPanel
 	}
 
 
-	private function buildList(Template $template, int $depth = 0, int $count = 1): void
+	private function buildList(Template $template, int $depth = 0, int $count = 1)
 	{
 		$this->list[] = (object) [
 			'template' => $template,

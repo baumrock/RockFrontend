@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Latte\Runtime;
 
 use Latte;
-use Latte\ContentType;
+use Latte\Engine;
 use Latte\Helpers;
 
 
@@ -20,23 +20,29 @@ use Latte\Helpers;
  */
 class FilterExecutor
 {
+	/** @var string[] */
+	public $_origNames = [];
+
 	/** @var callable[] */
-	private array $_dynamic = [];
+	private $_dynamic = [];
 
 	/** @var array<string, array{callable, ?bool}> */
-	private array $_static = [];
+	private $_static = [];
 
 
 	/**
 	 * Registers run-time filter.
+	 * @return static
 	 */
-	public function add(?string $name, callable $callback): static
+	public function add(?string $name, callable $callback)
 	{
 		if ($name === null) {
 			array_unshift($this->_dynamic, $callback);
 		} else {
-			$this->_static[$name] = [$callback, null];
-			unset($this->$name);
+			$lower = strtolower($name);
+			$this->_static[$lower] = [$callback, null, $name];
+			$this->_origNames[$name] = $lower;
+			unset($this->$lower);
 		}
 
 		return $this;
@@ -45,11 +51,11 @@ class FilterExecutor
 
 	/**
 	 * Returns all run-time filters.
-	 * @return callable[]
+	 * @return string[]
 	 */
 	public function getAll(): array
 	{
-		return array_combine(array_keys($this->_static), array_column($this->_static, 0));
+		return array_combine($tmp = array_keys($this->_static), $tmp);
 	}
 
 
@@ -58,57 +64,68 @@ class FilterExecutor
 	 */
 	public function __get(string $name): callable
 	{
-		if (isset($this->_static[$name])) {
-			[$callback, $aware] = $this->prepareFilter($name);
+		$lname = strtolower($name);
+		if (isset($this->$lname)) { // case mismatch
+			return $this->$lname;
+
+		} elseif (isset($this->_static[$lname])) {
+			[$callback, $aware] = $this->prepareFilter($lname);
 			if ($aware) { // FilterInfo aware filter
-				return $this->$name = function (...$args) use ($callback) {
+				return $this->$lname = function (...$args) use ($callback) {
 					array_unshift($args, $info = new FilterInfo);
 					if ($args[1] instanceof HtmlStringable) {
 						$args[1] = $args[1]->__toString();
-						$info->contentType = ContentType::Html;
+						$info->contentType = Engine::CONTENT_HTML;
 					}
 
 					$res = $callback(...$args);
-					return $info->contentType === ContentType::Html
+					return $info->contentType === Engine::CONTENT_HTML
 						? new Html($res)
 						: $res;
 				};
 			} else { // classic filter
-				return $this->$name = $callback;
+				return $this->$lname = $callback;
 			}
 		}
 
-		// dynamic filter
-		foreach ($this->_dynamic as $loader) {
-			$callback = $loader($name);
-			if ($callback !== null) {
-				$this->_static[$name] = [$callback, null];
-				return $this->__get($name);
+		return $this->$lname = function (...$args) use ($lname, $name) { // dynamic filter
+			array_unshift($args, $lname);
+			foreach ($this->_dynamic as $filter) {
+				$res = $filter(...$args);
+				if ($res !== null) {
+					return $res;
+				} elseif (isset($this->_static[$lname])) { // dynamic converted to classic
+					$this->$name = $this->_static[$lname][0];
+					return ($this->$name)(...func_get_args());
+				}
 			}
-		}
 
-		$hint = ($t = Helpers::getSuggestion(array_keys($this->_static), $name))
-			? ", did you mean '$t'?"
-			: '.';
-		throw new \LogicException("Filter '$name' is not defined$hint");
+			$hint = ($t = Helpers::getSuggestion(array_keys($this->_static), $name))
+				? ", did you mean '$t'?"
+				: '.';
+			throw new \LogicException("Filter '$name' is not defined$hint");
+		};
 	}
 
 
 	/**
 	 * Calls filter with FilterInfo.
+	 * @param  mixed  ...$args
+	 * @return mixed
 	 */
-	public function filterContent(string $name, FilterInfo $info, mixed ...$args): mixed
+	public function filterContent(string $name, FilterInfo $info, ...$args)
 	{
-		if (!isset($this->_static[$name])) {
+		$lname = strtolower($name);
+		if (!isset($this->_static[$lname])) {
 			$hint = ($t = Helpers::getSuggestion(array_keys($this->_static), $name))
 				? ", did you mean '$t'?"
 				: '.';
 			throw new \LogicException("Filter |$name is not defined$hint");
 		}
 
-		[$callback, $aware] = $this->prepareFilter($name);
+		[$callback, $aware] = $this->prepareFilter($lname);
 
-		if ($info->contentType === ContentType::Html && $args[0] instanceof HtmlStringable) {
+		if ($info->contentType === Engine::CONTENT_HTML && $args[0] instanceof HtmlStringable) {
 			$args[0] = $args[0]->__toString();
 		}
 
@@ -118,15 +135,15 @@ class FilterExecutor
 		}
 
 		// classic filter
-		if ($info->contentType !== ContentType::Text) {
+		if ($info->contentType !== Engine::CONTENT_TEXT) {
 			throw new Latte\RuntimeException("Filter |$name is called with incompatible content type " . strtoupper($info->contentType)
-				. ($info->contentType === ContentType::Html ? ', try to prepend |stripHtml.' : '.'));
+				. ($info->contentType === Engine::CONTENT_HTML ? ', try to prepend |stripHtml.' : '.'));
 		}
 
 		$res = ($this->$name)(...$args);
 		if ($res instanceof HtmlStringable) {
 			trigger_error("Filter |$name should be changed to content-aware filter.");
-			$info->contentType = ContentType::Html;
+			$info->contentType = Engine::CONTENT_HTML;
 			$res = $res->__toString();
 		}
 
@@ -139,12 +156,23 @@ class FilterExecutor
 	 */
 	private function prepareFilter(string $name): array
 	{
-		if (!isset($this->_static[$name][1])) {
-			$params = Helpers::toReflection($this->_static[$name][0])->getParameters();
-			$this->_static[$name][1] = $params
-				&& $params[0]->getType() instanceof \ReflectionNamedType
-				&& $params[0]->getType()->getName() === FilterInfo::class;
+		if (isset($this->_static[$name][1])) {
+			return $this->_static[$name];
 		}
+
+		$callback = $this->_static[$name][0];
+		if (is_string($callback) && strpos($callback, '::')) {
+			$callback = explode('::', $callback);
+		} elseif (is_object($callback)) {
+			$callback = [$callback, '__invoke'];
+		}
+
+		$ref = is_array($callback)
+			? new \ReflectionMethod($callback[0], $callback[1])
+			: new \ReflectionFunction($callback);
+		$this->_static[$name][1] = ($tmp = $ref->getParameters())
+			&& $tmp[0]->getType() instanceof \ReflectionNamedType
+			&& $tmp[0]->getType()->getName() === FilterInfo::class;
 
 		return $this->_static[$name];
 	}

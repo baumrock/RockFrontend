@@ -17,52 +17,58 @@ final class Linter
 {
 	use Latte\Strict;
 
-	public function __construct(
-		private ?Latte\Engine $engine = null,
-		private bool $debug = false,
-	) {
+	/** @var bool */
+	private $debug;
+
+	/** @var Latte\Engine|null */
+	private $engine;
+
+
+	public function __construct(?Latte\Engine $engine = null, bool $debug = false)
+	{
+		$this->engine = $engine;
+		$this->debug = $debug;
 	}
 
 
-	public function scanDirectory(string $path): bool
+	public function scanDirectory(string $dir): bool
 	{
-		$this->initialize();
+		echo "Scanning $dir\n";
 
-		echo "Scanning $path\n";
+		$it = new \RecursiveDirectoryIterator($dir);
+		$it = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::LEAVES_ONLY);
+		$it = new \RegexIterator($it, '~\.latte$~');
 
-		$files = $this->getFiles($path);
-
-		$this->engine ??= $this->createEngine();
+		$this->engine = $this->engine ?? $this->createEngine();
 		$this->engine->setLoader(new Latte\Loaders\StringLoader);
 
 		$counter = 0;
-		$errors = 0;
-		foreach ($files as $file) {
+		$success = true;
+		foreach ($it as $file) {
 			echo str_pad(str_repeat('.', $counter++ % 40), 40), "\x0D";
-			$errors += $this->lintLatte((string) $file) ? 0 : 1;
+			$success = $this->lintLatte((string) $file) && $success;
 		}
 
 		echo str_pad('', 40), "\x0D";
-		echo "Done (checked $counter files, found errors in $errors)\n";
-		return !$errors;
+		echo "Done.\n";
+		return $success;
 	}
 
 
 	private function createEngine(): Latte\Engine
 	{
 		$engine = new Latte\Engine;
-		$engine->addExtension(new Latte\Essential\TranslatorExtension(null));
 
-		if (class_exists(Nette\Bridges\ApplicationLatte\UIExtension::class)) {
-			$engine->addExtension(new Nette\Bridges\ApplicationLatte\UIExtension(null));
+		if (class_exists(Nette\Bridges\CacheLatte\CacheMacro::class)) {
+			$engine->getCompiler()->addMacro('cache', new Nette\Bridges\CacheLatte\CacheMacro);
 		}
 
-		if (class_exists(Nette\Bridges\CacheLatte\CacheExtension::class)) {
-			$engine->addExtension(new Nette\Bridges\CacheLatte\CacheExtension(new Nette\Caching\Storages\DevNullStorage));
+		if (class_exists(Nette\Bridges\ApplicationLatte\UIMacros::class)) {
+			Nette\Bridges\ApplicationLatte\UIMacros::install($engine->getCompiler());
 		}
 
-		if (class_exists(Nette\Bridges\FormsLatte\FormsExtension::class)) {
-			$engine->addExtension(new Nette\Bridges\FormsLatte\FormsExtension);
+		if (class_exists(Nette\Bridges\FormsLatte\FormMacros::class)) {
+			Nette\Bridges\FormsLatte\FormMacros::install($engine->getCompiler());
 		}
 
 		return $engine;
@@ -95,8 +101,7 @@ final class Linter
 			if ($this->debug) {
 				echo $e;
 			}
-			$pos = $e->position?->line ? ':' . $e->position->line : '';
-			$pos .= $e->position?->column ? ':' . $e->position->column : '';
+			$pos = $e->sourceLine ? ':' . $e->sourceLine : '';
 			fwrite(STDERR, "[ERROR]      $file$pos    {$e->getMessage()}\n");
 			return false;
 
@@ -125,7 +130,7 @@ final class Linter
 			$pipes,
 			null,
 			null,
-			['bypass_shell' => true],
+			['bypass_shell' => true]
 		);
 		if (!is_resource($process)) {
 			return 'Unable to lint PHP code';
@@ -135,41 +140,5 @@ final class Linter
 			return strip_tags(explode("\n", $error)[1]);
 		}
 		return null;
-	}
-
-
-	private function initialize(): void
-	{
-		if (function_exists('pcntl_signal')) {
-			pcntl_signal(SIGINT, function (): void {
-				pcntl_signal(SIGINT, SIG_DFL);
-				echo "Terminated\n";
-				exit(1);
-			});
-		} elseif (function_exists('sapi_windows_set_ctrl_handler')) {
-			sapi_windows_set_ctrl_handler(function () {
-				echo "Terminated\n";
-				exit(1);
-			});
-		}
-
-		set_time_limit(0);
-	}
-
-
-	private function getFiles(string $path): \Iterator
-	{
-		if (is_file($path)) {
-			return new \ArrayIterator([$path]);
-
-		} elseif (preg_match('~[*?]~', $path)) {
-			return new \GlobIterator($path);
-
-		} else {
-			$it = new \RecursiveDirectoryIterator($path);
-			$it = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::LEAVES_ONLY);
-			$it = new \RegexIterator($it, '~\.latte$~');
-			return $it;
-		}
 	}
 }
