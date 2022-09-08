@@ -106,7 +106,6 @@ class Manifest extends Wire {
     $this->wire->files->filePutContents($filepath, $this->render([
       'created' => date("Y-m-d H:i:s"), // add created timestamp
     ]));
-    bd('saved to file');
     return $this;
   }
 
