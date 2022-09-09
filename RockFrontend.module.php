@@ -2,6 +2,7 @@
 
 use Latte\Engine;
 use Latte\Runtime\Html;
+use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
 use RockFrontend\StylesArray;
@@ -66,6 +67,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
 
+  /** @var Manifest */
+  protected $manifest;
+
   /** @var string */
   public $path;
 
@@ -81,7 +85,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.18.0',
+      'version' => '1.18.4',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -751,7 +755,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    * @return Html
    */
   public static function html($str) {
-    return new Html($str);
+    // we try to return a latte html object
+    // If we are not calling that from within a latte file
+    // the html object will not be available. This can be the case in Seo tags.
+    // To make sure it returns something we catch erros and return the plain
+    // string instead. That means if called from outside a latte file it will
+    // still return the HTML.
+    try {
+      return new Html($str);
+    } catch (\Throwable $th) {
+      return $str;
+    }
   }
 
   /**
@@ -859,6 +873,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     if($this->wire->user->isSuperuser()) return true;
     if($this->wire->user->hasPermission(self::permission_alfred)) return true;
     return false;
+  }
+
+  /**
+   * Create a site webmanifest in PW root
+   * @return Manifest
+   */
+  public function manifest() {
+    require_once $this->path."Manifest.php";
+    return $this->manifest ?: $this->manifest = new Manifest();
   }
 
   public function migrate() {

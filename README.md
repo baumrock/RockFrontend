@@ -166,6 +166,28 @@ You can also make all defined variables available in your rendered file, but not
 echo $rockfrontend->render('/path/to/your/file.php', get_defined_vars());
 ```
 
+## SEO
+
+### Adding a manifest file to your project
+
+By adding a webmanifest file to your project you can improve the mobile experinece of your site. RockFrontend makes it super simple to set the browsers statusbar color for example:
+
+```php
+// site/init.php
+/** @var RockFrontend $rockfrontend */
+$rockfrontend->manifest()
+  ->themeColor('#6764A4')
+  ->createOnSave();
+```
+
+This will create the file `website.webmanifest` in the PW root folder. Next you just need to render the SEO tags in your main markup file:
+
+```php
+echo $rockfrontend->seo();
+```
+
+Note that it's intentionally not site.webmanifest as this breaks path autocomplete if you quickly want to traverse into the /site folder.
+
 ## Using template engines
 
 ### LATTE

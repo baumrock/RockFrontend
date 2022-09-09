@@ -14,6 +14,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   border: 3px solid #ececec !important;
   width: 30px !important;
   height: 30px !important;
+  box-sizing: content-box;
   display: inline-block;
   text-align: center;
 }
@@ -48,6 +49,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   border: 3px solid #ececec !important;
   width: 30px !important;
   height: 30px !important;
+  box-sizing: content-box;
   display: inline-block;
   text-align: center;
 }

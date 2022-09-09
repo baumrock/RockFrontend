@@ -5,6 +5,7 @@ use ProcessWire\Page;
 use ProcessWire\Pageimage;
 use ProcessWire\Pageimages;
 use ProcessWire\Paths;
+use ProcessWire\RockFrontend;
 use ProcessWire\Wire;
 use ProcessWire\WireData;
 use ProcessWire\WireHttp;
@@ -121,15 +122,17 @@ class Seo extends Wire {
       $markup = $out = $this->getMarkup($tag);
 
       // populate placeholders
+      $hasValue = false;
       preg_replace_callback(
         "/{(.*?)(:(.*))?}/",
-        function($matches) use(&$out, $tag) {
+        function($matches) use(&$out, $tag, &$hasValue) {
           $key = $matches[1];
           $trunc = array_key_exists(3, $matches) ? $matches[3] : false;
           $search = $trunc ? "{{$key}:{$trunc}}" : "{{$key}}";
 
           // get raw value for given key
           $value = $this->getStringValue($tag, $key);
+          if($value) $hasValue = true;
 
           // get truncated tag
           if($trunc) $value = $this->truncate($value, $trunc, $tag);
@@ -143,7 +146,8 @@ class Seo extends Wire {
         $markup
       );
 
-      return $out;
+      if($hasValue) return $out;
+      return '';
     }
 
     /**
@@ -209,7 +213,7 @@ class Seo extends Wire {
     public function ___getImageUrl($image, $tag): string {
       if(!$image) return '';
       if($image instanceof Pageimages) $image = $image->first();
-      return $this->imageInfo($image, $tag)->url;
+      return (string)$this->imageInfo($image, $tag)->url;
     }
 
     /**
@@ -298,7 +302,23 @@ class Seo extends Wire {
       });
       $this->setMarkup('og:image:alt', '<meta property="og:image:alt" content="{value:95}">');
       $this->setValue('og:image:alt', function() {
+        if(!$this->getRaw('og:image')) return;
         return $this->getRaw('title');
+      });
+
+      // webmanifest
+      $this->setMarkup('manifest', '<link rel="manifest" href="{value}">');
+      $this->setValue('manifest', function() {
+        /** @var RockFrontend $rf */
+        $rf = $this->wire->modules->get('RockFrontend');
+        $manifest = $rf->manifest();
+        return $manifest->url();
+      });
+      $this->setMarkup('theme-color', '<meta name="theme-color" content="{value}">');
+      $this->setValue('theme-color', function() {
+        /** @var RockFrontend $rf */
+        $rf = $this->wire->modules->get('RockFrontend');
+        return $rf->manifest()->themeColor;
       });
     }
 
