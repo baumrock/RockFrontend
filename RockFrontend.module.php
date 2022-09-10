@@ -86,7 +86,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.19.0',
+      'version' => '1.19.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -882,7 +882,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
    */
   public function manifest() {
     require_once $this->path."Manifest.php";
-    return $this->manifest ?: $this->manifest = new Manifest();
+    if($this->manifest) return $this->manifest;
+    $manifest = new Manifest();
+
+    // by default we update the manifest file when the root page is saved
+    $manifest->createOnSave('id=1');
+
+    return $this->manifest = $manifest;
   }
 
   public function migrate() {
