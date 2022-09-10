@@ -127,12 +127,15 @@ class Manifest extends Wire {
 
   /**
    * Get url of manifest file
+   * This will create the manifest file if it does not exist
    */
   public function url() {
+    $path = $this->filepath();
+    if(!is_file($path)) $this->saveToFile();
     return str_replace(
       $this->wire->config->paths->root,
       $this->wire->config->urls->root,
-      $this->filepath()
+      $path
     );
   }
 

@@ -46,6 +46,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   ];
 
   const field_layout = self::prefix."layout";
+  const field_favicon = self::prefix."favicon";
 
   /** @var WireData */
   public $alfredCache;
@@ -85,7 +86,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.18.4',
+      'version' => '1.19.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -112,7 +113,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->alfredCache = $this->wire(new WireData());
 
     // watch this file and run "migrate" on change or refresh
-    // if($rm = $this->rm()) $rm->watch($this, 0.01);
+    if($rm = $this->rm()) $rm->watch($this, 0.01);
 
     // setup folders that are scanned for files
     $this->folders = $this->wire(new WireArray());
@@ -902,8 +903,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           'closeAfterSelect' => 0, // dont use false
           'flags' => Field::flagSystem,
         ],
+        self::field_favicon => [
+          'type' => 'image',
+          'label' => 'Favicon',
+          'maxFiles' => 1,
+          'descriptionRows' => 0,
+          'extensions' => 'png',
+          'maxSize' => 3, // max 3 megapixels
+          'icon' => 'picture-o',
+          'outputFormat' => FieldtypeFile::outputFormatSingle,
+          'description' => 'For best browser support and quality upload a high resolution PNG (min 512x512). You can use transparency in your favicon.',
+          'notes' => '[See here](https://loqbooq.app/blog/add-favicon-modern-browser-guide) and [here](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/) to learn more about favicons'
+        ],
       ],
     ]);
+    $rm->addFieldToTemplate(self::field_favicon, 'home');
   }
 
   /**
@@ -1327,24 +1341,38 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   */
   public function getModuleConfigInputfields($inputfields) {
 
-    $help = new InputfieldMarkup();
-    $help->label = 'Available Profiles';
-    $help->collapsed(Inputfield::collapsedYes);
-    $inputfields->add($help);
+    $video = new InputfieldMarkup();
+    $video->label = 'processwire-rocks.com';
+    $video->value = '<iframe width="560" height="315" src="https://www.youtube.com/embed/7CoIj--u4ps" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    $inputfields->add($video);
+
+    /** @var RockMigrations $rm */
+    $rm = $this->wire->modules->get('RockMigrations');
+    if(!$rm) {
+      $warn = new InputfieldMarkup();
+      $warn->label = 'Warning';
+      $warn->icon = 'exclamation-triangle';
+      $warn->value = "<div class='uk-text-warning'>RockMigrations is not installed but may be required for some features of RockFrontend. For example it will create a field to upload a Favicon to your site. RockFrontend will then generate all necessary Favicon sizes and markup for all devices.</div>";
+      $inputfields->add($warn);
+    }
 
     $this->profileExecute();
     $f = new InputfieldSelect();
     $f->label = "Install Profile";
-    $f->description = "**WARNING** This will overwrite existing files - make sure to have backups or use GIT for version controlling your project!";
     $f->name = 'profile';
-    $help->value = '<style>h2 {margin:0}</style>';
+    $accordion = '<p>Available Profiles (click to see details):</p><ul uk-accordion>';
     foreach($this->profiles() as $path => $label) {
-      $help->value .= $this->wire->sanitizer->entitiesMarkdown(
+      $text = $this->wire->sanitizer->entitiesMarkdown(
         file_get_contents("$path/readme.md"),
         true
       );
+      $accordion .= "<li><a class='uk-accordion-title uk-text-small' href=#>$label</a>"
+      ."<div class=uk-accordion-content>$text</div></li>";
       $f->addOption($label, $label);
     }
+    $accordion .= "</ul>";
+    $f->prependMarkup = "<p class='uk-text-warning'>WARNING: This will overwrite existing files - make sure to have backups or use GIT for version controlling your project!</p>";
+    $f->prependMarkup .= $accordion;
     $f->notes = $this->profileInstalledNote();
     $inputfields->add($f);
 

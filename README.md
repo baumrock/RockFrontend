@@ -168,6 +168,28 @@ echo $rockfrontend->render('/path/to/your/file.php', get_defined_vars());
 
 ## SEO
 
+### Favicon
+
+Creating favicons and adding the correct markup is a pain. Not with RockFrontend! Just upload a 512x512 PNG to your root page's favicon field and add the seo tags to your main markup file:
+
+```php
+echo $rockfrontend->seo();
+```
+
+This will add all the necessary markup, eg:
+
+```html
+<link rel='icon' type='image/png' sizes='32x32' href=/site/assets/files/1/favicon.32x32.png>
+<link rel='icon' type='image/png' sizes='16x16' href=/site/assets/files/1/favicon.16x16.png>
+<link rel='icon' type='image/png' sizes='48x48' href=/site/assets/files/1/favicon.48x48.png>
+<link rel='icon' type='image/png' sizes='192x192' href=/site/assets/files/1/favicon.192x192.png>
+<link rel='apple-touch-icon' type='image/png' sizes='167x167' href=/site/assets/files/1/favicon.167x167.png>
+<link rel='apple-touch-icon' type='image/png' sizes='180x180' href=/site/assets/files/1/favicon.180x180.png>
+<link rel="manifest" href="/website.webmanifest">
+<meta name="theme-color" content="#074589">
+```
+
+
 ### Adding a manifest file to your project
 
 By adding a webmanifest file to your project you can improve the mobile experinece of your site. RockFrontend makes it super simple to set the browsers statusbar color for example:
@@ -176,17 +198,30 @@ By adding a webmanifest file to your project you can improve the mobile experine
 // site/init.php
 /** @var RockFrontend $rockfrontend */
 $rockfrontend->manifest()
+  ->name('My App')
   ->themeColor('#6764A4')
-  ->createOnSave();
+  ;
 ```
 
-This will create the file `website.webmanifest` in the PW root folder. Next you just need to render the SEO tags in your main markup file:
+Next you just need to render the SEO tags in your main markup file:
 
 ```php
 echo $rockfrontend->seo();
 ```
 
-Note that it's intentionally not site.webmanifest as this breaks path autocomplete if you quickly want to traverse into the /site folder.
+This will create the file `website.webmanifest` in the PW root folder if the file does not exist. If you want to update your manifest file you can simply delete it and reload your page. If you need your manifest file to recreate on page save you can do so like this:
+
+```php
+// site/init.php
+/** @var RockFrontend $rockfrontend */
+$rockfrontend->manifest()
+  ->name($pages->get(1)->title)
+  ->themeColor('#6764A4')
+  ->createOnSave('template=home') // use any page selector you need
+  ;
+```
+
+Note that many favicon generators use `site.webmanifest` as filename. It's intentionally not used in RockFrontend because if you are on the commandline in the pw root folder and want to quickly navigate into the site folder by typing "si + tab" it would ask you where to navigate because you have /site and /site.webmanifest - I found that very annoying so it's called `website.webmanifest`.
 
 ## Using template engines
 

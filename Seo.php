@@ -127,19 +127,25 @@ class Seo extends Wire {
         "/{(.*?)(:(.*))?}/",
         function($matches) use(&$out, $tag, &$hasValue) {
           $key = $matches[1];
-          $trunc = array_key_exists(3, $matches) ? $matches[3] : false;
-          $search = $trunc ? "{{$key}:{$trunc}}" : "{{$key}}";
+          $filter = array_key_exists(3, $matches) ? $matches[3] : false;
+          $search = $filter ? "{{$key}:{$filter}}" : "{{$key}}";
 
           // get raw value for given key
           $value = $this->getStringValue($tag, $key);
           if($value) $hasValue = true;
 
           // get truncated tag
-          if($trunc) $value = $this->truncate($value, $trunc, $tag);
+          if($filter) {
+            // if filter is a number it is a truncate length
+            $trunc = (int)$filter;
+            if($trunc) $value = $this->truncate($value, $filter, $tag);
+          }
 
           // sanitize value
           $value = (string)$value;
-          $value = $this->wire->sanitizer->entities($value);
+          if($filter != 'noescape') {
+            $value = $this->wire->sanitizer->entities($value);
+          }
 
           $out = str_replace($search, $value, $out);
         },
@@ -306,6 +312,31 @@ class Seo extends Wire {
         return $this->getRaw('title');
       });
 
+      // favicon
+      // will be added automatically when uploaded to the favicon field
+      // the PNG icons will be added to webmanifest
+      $this->setMarkup('favicon', '{value:noescape}');
+      $this->setValue('favicon', function() {
+        // get favicon PNG and create all sizes
+        $png = $this->wire->pages->get(1)->getFormatted(RockFrontend::field_favicon);
+        if(!$png) return false;
+
+        // create markup
+        $opt = ['sharpening'=>'none']; // https://bit.ly/3qylo1S
+        $n = "\n  ";
+        return
+          // all browsers
+          "<link rel='icon' type='image/png' sizes='32x32' href={$png->size(32,32, $opt)->url}>"
+          ."$n<link rel='icon' type='image/png' sizes='16x16' href={$png->size(16,16, $opt)->url}>"
+          // google and android
+          ."$n<link rel='icon' type='image/png' sizes='48x48' href={$png->size(48,48, $opt)->url}>"
+          ."$n<link rel='icon' type='image/png' sizes='192x192' href={$png->size(192,192, $opt)->url}>"
+          // apple iphone and ipad
+          ."$n<link rel='apple-touch-icon' type='image/png' sizes='167x167' href={$png->size(167,167, $opt)->url}>"
+          ."$n<link rel='apple-touch-icon' type='image/png' sizes='180x180' href={$png->size(180,180, $opt)->url}>"
+          ;
+      });
+
       // webmanifest
       $this->setMarkup('manifest', '<link rel="manifest" href="{value}">');
       $this->setValue('manifest', function() {
@@ -398,6 +429,13 @@ class Seo extends Wire {
 
       // bd($info->getArray(), 'info');
       return $info;
+    }
+
+    /**
+     * @return RockFrontend
+     */
+    public function rockfrontend() {
+      return $this->wire->modules->get('RockFrontend');
     }
 
   /** ##### end internal methods ##### */
