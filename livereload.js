@@ -9,7 +9,7 @@ setTimeout(() => {
   let evtSource;
   let startStream = function() {
     evtSource = new EventSource(
-      '/livereload.php?secret='+rf_livereload_secret,
+      RockFrontend.rootUrl+'livereload.php?secret='+rf_livereload_secret,
       { withCredentials: true }
     );
     evtSource.onmessage = function(event) {
