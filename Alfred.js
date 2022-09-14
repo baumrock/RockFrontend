@@ -39,10 +39,13 @@
     $(el).addClass('alfred');
     try {
       let config = JSON.parse($(el).attr('alfred'));
+      if(config.addLeft) console.log(config);
       this.addIcons(el, config.icons);
       if(config.widgetStyle) $(el).addClass('rmx-widget');
-      if(config.addTop) $(el).append(this.plus('top', config.addTop));
+      if(config.addTop ) $(el).append(this.plus('top', config.addTop));
       if(config.addBottom) $(el).append(this.plus('bottom', config.addBottom));
+      if(config.addLeft) $(el).append(this.plus('left', config.addLeft));
+      if(config.addRight) $(el).append(this.plus('right', config.addRight));
     } catch (error) {
       alert('invalid json in alfred - dont forget |noescape filter when working with latte files')
     }

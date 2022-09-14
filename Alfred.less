@@ -34,7 +34,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 .alfred {
   position: relative;
 
-  .icons,.add-top,.add-bottom {
+  .icons,.add-top,.add-bottom,.add-left,.add-right {
     display: none;
     position: absolute;
     pointer-events: none;
@@ -66,6 +66,18 @@ body:not(.uk-offcanvas-container) .alfred:hover {
     right: 0;
     text-align: center;
   }
+  .add-left {
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    text-align: center;
+  }
+  .add-right {
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    text-align: center;
+  }
 
   // wrapping div with all icons
   .icons {
@@ -86,5 +98,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
     > .icons { display: inline-block; }
     > .add-top { display: inline-block; }
     > .add-bottom { display: inline-block; }
+    > .add-left { display: inline-block; }
+    > .add-right { display: inline-block; }
   }
 }
