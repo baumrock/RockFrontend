@@ -86,7 +86,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.19.2',
+      'version' => '1.19.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1510,9 +1510,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       // see https://css-tricks.com/snippets/css/using-font-face-in-css/#practical-level-of-browser-support
       foreach($files->find("format=woff|woff2") as $file) {
         $comment = self::webfont_comments[$file->format];
-        $src .= "  url('../fonts/{$file->name}') format('{$file->format}'), $comment \n  ";
+        // comment needs to be first!
+        // last comma will be trimmed and css render() will add ; at the end!
+        $src .= "\n    $comment\n    url('../fonts/{$file->name}') format('{$file->format}'),";
       }
-      $src = trim($src, ",\n ");
+      $src = rtrim($src, ",\n ");
       $rule->setValue($src);
       $set->addRule($rule);
 
@@ -1543,7 +1545,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         $format = $file->format;
         if($format == 'ttf') $format = 'truetype';
         $comment = self::webfont_comments[$file->format];
-        $src .= "  url('../fonts/{$file->name}') format('$format'), $comment \n  ";
+        // comment needs to be first!
+        // last comma will be trimmed and css render() will add ; at the end!
+        $src .= "\n    $comment\n    url('../fonts/{$file->name}') format('{$file->format}'),";
       }
       $src = trim($src, ",\n ");
       $rule->setValue($src);
