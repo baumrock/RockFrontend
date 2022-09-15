@@ -2,6 +2,7 @@
 // we start listening for changes one second after page load
 // this makes sure that the page does not reload immediately after creating a new page
 setTimeout(() => {
+  if(typeof RockFrontend == 'undefined') return;
   let isModal = !!document.querySelector('body.modal');
   if(isModal) return;
   let reloading = false;
