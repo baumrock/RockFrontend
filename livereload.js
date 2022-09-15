@@ -12,9 +12,9 @@ setTimeout(() => {
     let url = rf.rootUrl + "?rockfrontend-livereload=" + rf.livereloadSecret;
     evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
-      let changes = JSON.parse(event.data);
-      if (changes.length && !reloading) {
-        console.log(changes);
+      let changed = event.data;
+      if (changed && !reloading) {
+        console.log(changed);
         // check if we are in the admin and have unsaved changes
         if (document.querySelectorAll(".InputfieldStateChanged").length) {
           console.log("detected change - unsaved changes prevent reload");
@@ -25,8 +25,8 @@ setTimeout(() => {
           return;
         }
         // all fine, reload page
+        console.log("detected change - reloading");
         reloading = true;
-        console.log("detected change - reloading", changes);
         document.location.reload(true);
       } else if (!reloading) console.log("no change");
     };

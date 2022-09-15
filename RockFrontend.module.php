@@ -2,6 +2,7 @@
 
 use Latte\Engine;
 use Latte\Runtime\Html;
+use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
@@ -27,6 +28,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   const tagsUrl = "/rockfrontend-layout-suggestions/{q}";
   const permission_alfred = "rockfrontend-alfred";
   const livereloadCacheName = "rockfrontend_livereload"; // also in livereload.php
+  const getParam = 'rockfrontend-livereload';
   const cache = 'rockfrontend-uikit-versions';
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
@@ -86,7 +88,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.19.6',
+      'version' => '1.20.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -95,6 +97,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       // the layout field manually and add it to templates if you want to use it
       // I'm not using the layout field though, so this feature might be dropped
     ];
+  }
+
+  public function __construct() {
+    $this->addHookBefore("Session::init", function(HookEvent $event) {
+      if(!array_key_exists(self::getParam, $_GET)) return;
+      $event->object->sessionAllow = false;
+
+      include __DIR__ . "/LiveReload.php";
+      $live = new LiveReload();
+      if(!$live->validSecret()) throw new Wire404Exception("Invalid Secret");
+      $live->watch();
+    });
+  }
+
+  /**
+   * @return LiveReload
+   */
+  public function getLiveReload() {
+    require_once __DIR__ . "/LiveReload.php";
+    return new LiveReload();
   }
 
   public function init() {
@@ -170,12 +192,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         // add livereload secret
         if($this->wire->config->livereload) {
           $this->js("rootUrl", $this->wire->config->urls->root);
-          $secret = $this->getLivereloadSecret();
-          $html = str_replace(
-            "</head>",
-            "\n  <script>let rf_livereload_secret = '$secret'</script></head>",
-            $html
-          );
+
+          // create secret and send it to js
+          /** @var WireRandom $rand */
+          $rand = $this->wire(new WireRandom());
+          $secret = $rand->alphanumeric(0, ['minLength'=>30, 'maxLength'=>40]);
+          $this->wire->cache->save(RockFrontend::livereloadCacheName, $secret);
+          $this->js("livereloadSecret", $secret);
         }
 
         // load alfred?
@@ -654,26 +677,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $layout = $page->get(self::field_layout);
     if(!$layout) return false;
     return explode(" ", $layout);
-  }
-
-  /**
-   * Request live reload secret or create a new one
-   * @return string
-   */
-  public function getLivereloadSecret() {
-    $cachefile = $this->wire->config->paths->cache.self::livereloadCacheName.".txt";
-    return $this->wire->cache->get(
-      self::livereloadCacheName,
-      60*60,
-      function() use($cachefile) {
-        $secret = (new WireRandom())->alphanumeric(0, [
-          'minLength' => 40,
-          'maxLength' => 60,
-        ]);
-        $this->wire->files->filePutContents($cachefile, $secret);
-        return $secret;
-      }
-    );
   }
 
   /**
