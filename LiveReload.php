@@ -50,8 +50,14 @@ class LiveReload extends Wire {
 
   public function validSecret() {
     $secret = (string)$_GET[RockFrontend::getParam];
-    $cache = $this->wire->cache->get(RockFrontend::livereloadCacheName);
-    return $secret === $cache;
+    $cache = $this->wire->cache->get(RockFrontend::livereloadCacheName) ?: [];
+    foreach($cache as $k=>$v) {
+      if($secret !== $v) continue;
+      unset($cache[$k]);
+      $this->wire->cache->save(RockFrontend::livereloadCacheName, $cache);
+      return true;
+    }
+    return false;
   }
 
   /**

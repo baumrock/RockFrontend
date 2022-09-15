@@ -88,7 +88,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.20.0',
+      'version' => '1.20.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -103,9 +103,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
     $this->addHookBefore("Session::init", function(HookEvent $event) {
       if(!array_key_exists(self::getParam, $_GET)) return;
       $event->object->sessionAllow = false;
-
-      include __DIR__ . "/LiveReload.php";
-      $live = new LiveReload();
+      $live = $this->getLiveReload();
       if(!$live->validSecret()) throw new Wire404Exception("Invalid Secret");
       $live->watch();
     });
@@ -196,8 +194,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
           // create secret and send it to js
           /** @var WireRandom $rand */
           $rand = $this->wire(new WireRandom());
+          $cache = $this->wire->cache->get(self::livereloadCacheName) ?: [];
           $secret = $rand->alphanumeric(0, ['minLength'=>30, 'maxLength'=>40]);
-          $this->wire->cache->save(RockFrontend::livereloadCacheName, $secret);
+          $merged = array_merge($cache, [$secret]);
+          $this->wire->cache->save(self::livereloadCacheName, $merged);
           $this->js("livereloadSecret", $secret);
         }
 
