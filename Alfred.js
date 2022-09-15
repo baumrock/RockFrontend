@@ -106,13 +106,19 @@
 
     // reload page when modal is closed
     $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
-      // we populate ui.abort when rm blocks are added
+      // we populate ui.abort when RockMatrix blocks are added
       // modal.js populates 'abort' if "x" button was clicked
-      if(eventData.ui.abort !== false && eventData.abort) return; 
+      if(eventData.ui.abort !== false && eventData.abort) return;
       console.log('reloading...');
       Alfred.reload();
     });
 
+    // attach listener to iframe when modal is opened
+    // This is to reload the page if a rockmatrix item was created
+    // and the modal is not saved but closed via the close icon.
+    // To make it obvious for the user that the new block was actually
+    // added to the page even without clicking "save" we reload the page
+    // whick should make the block appear on the screen.
     $(document).on('pw-modal-opened', function(e, eventData) {
       let iFrame = eventData.event.target;
       let modal = iFrame.closest('.ui-dialog');
