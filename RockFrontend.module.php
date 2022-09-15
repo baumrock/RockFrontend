@@ -341,6 +341,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   }
 
   /**
+   * Shortcut to create ALFRED links with horizontal add buttons
+   * Thx @gebeer for the PR!!
+   * @return string
+   */
+  public function alfredH($page = null, $options = []) {
+    return $this->alfred(
+      $page,
+      array_merge(['addHorizontal' => true], $options)
+    );
+  }
+
+  /**
    * Is ALFRED allowed for current user?
    */
   protected function alfredAllowed(): bool {
