@@ -16,6 +16,7 @@ class LiveReload extends Wire {
     // $timer = Debug::startTimer();
     $folders = [
       $this->wire->config->paths->templates,
+      $this->wire->config->paths->classes,
       $this->wire->config->paths->siteModules,
       $this->wire->config->paths->assets,
     ];
