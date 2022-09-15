@@ -86,7 +86,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
   public static function getModuleInfo() {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.19.5',
+      'version' => '1.19.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -169,6 +169,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
 
         // add livereload secret
         if($this->wire->config->livereload) {
+          $this->js("rootUrl", $this->wire->config->urls->root);
           $secret = $this->getLivereloadSecret();
           $html = str_replace(
             "</head>",
