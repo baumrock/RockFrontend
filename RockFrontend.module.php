@@ -282,6 +282,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'noBlock' => false, // prevent block icons if true
       'addTop' => null, // set to false to prevent icon
       'addBottom' => null, // set to false to prevent icon
+      'addHorizontal' => null, // shortcut for addLeft + addRight
       'move' => true,
       'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
       'widgetStyle' => $isWidget, // make it orange
@@ -301,12 +302,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       // see explanation about widget above
       $widget = $page->_widget ?: $page;
 
-      if($opt->noBlock) {
-        if($opt->addTop !== true) $opt->addTop = false;
-        if($opt->addBottom !== true) $opt->addBottom = false;
+      if ($opt->noBlock) {
+        if ($opt->addTop !== true) $opt->addTop = false;
+        if ($opt->addBottom !== true) $opt->addBottom = false;
+        if ($opt->addHorizontal !== true) {
+          $opt->addLeft = false;
+          $opt->addRight = false;
       }
-      if($opt->addTop !== false) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
-      if($opt->addBottom !== false) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+      }
+      if ($opt->addTop !== false) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
+      if ($opt->addBottom !== false) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+      if ($opt->addHorizontal === true) {
+        $opt->addTop = false;
+        $opt->addBottom = false;
+        $opt->addLeft = $widget->rmxUrl("/add/?block=$widget&above=1");
+        $opt->addRight = $widget->rmxUrl("/add/?block=$widget");
+      }
 
       $blockid = " data-rmxblock=$widget ";
     }
@@ -315,6 +326,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
       'icons' => $icons,
       'addTop' => $opt->addTop,
       'addBottom' => $opt->addBottom,
+      'addLeft' => $opt->addLeft,
+      'addRight' => $opt->addRight,
       'widgetStyle' => $opt->widgetStyle,
     ]);
 
