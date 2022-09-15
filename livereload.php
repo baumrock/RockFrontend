@@ -24,6 +24,7 @@ class LiveReload {
       'site/assets/logs/*',
       'site/assets/sessions/*',
       'site/assets/RockCrawler/*.txt',
+      '.git/*',
     ], $exclude ?: []);
 
     $this->dir = $dir;
