@@ -106,9 +106,26 @@
 
     // reload page when modal is closed
     $(document).on('pw-modal-closed', 'a[data-reload]', function(e, eventData) {
-      if(eventData.abort) return; // modal.js populates 'abort' if "x" button was clicked
+      // we populate ui.abort when rm blocks are added
+      // modal.js populates 'abort' if "x" button was clicked
+      if(eventData.ui.abort !== false && eventData.abort) return; 
       console.log('reloading...');
       Alfred.reload();
+    });
+
+    $(document).on('pw-modal-opened', function(e, eventData) {
+      let iFrame = eventData.event.target;
+      let modal = iFrame.closest('.ui-dialog');
+      var abort = true;
+      iFrame.onload = function(e) {
+        let iDoc = iFrame.contentWindow.document;
+        $(iDoc).on('click', '.rmx-button', function(e) {
+          abort = false;
+        });
+      }
+      $(modal).on('dialogclose', function(event, ui) {
+        ui.abort = abort;
+      });
     });
 
     // add loaded class to iframe for css transition (fade in)
