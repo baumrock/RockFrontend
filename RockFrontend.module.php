@@ -308,7 +308,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule {
         if ($opt->addHorizontal !== true) {
           $opt->addLeft = false;
           $opt->addRight = false;
-      }
+        }
       }
       if ($opt->addTop !== false) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
       if ($opt->addBottom !== false) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
