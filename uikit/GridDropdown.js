@@ -334,6 +334,7 @@
     let el = e.target.closest('[uk-close]');
     if(!el) return;
     let dropdown = dropdowns.getDropdown(el);
+    if(!dropdown) return;
     dropdown.close();
   });
 
