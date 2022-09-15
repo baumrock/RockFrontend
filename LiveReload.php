@@ -25,6 +25,7 @@ class LiveReload extends Wire {
         'cache',
         'logs',
         'sessions',
+        'vendor',
       ]
     ];
     // loop files and return on first match
