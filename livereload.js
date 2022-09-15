@@ -8,10 +8,9 @@ setTimeout(() => {
 
   let evtSource;
   let startStream = function () {
-    evtSource = new EventSource(
-      RockFrontend.rootUrl + "livereload.php?secret=" + rf_livereload_secret,
-      { withCredentials: true }
-    );
+    let rf = RockFrontend;
+    let url = rf.rootUrl + "?rockfrontend-livereload=" + rf.livereloadSecret;
+    evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
       let changes = JSON.parse(event.data);
       if (changes.length && !reloading) {
