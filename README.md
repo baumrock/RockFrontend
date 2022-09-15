@@ -24,10 +24,10 @@ https://processwire.com/talk/topic/27417-rockfrontend-%F0%9F%9A%80%F0%9F%9A%80-t
 
 RockFrontend is a progressive frontend module for ProcessWire that can help you take your frontend development to the next level.
 
-* Zero-config auto-refresh and LESS-Support
-* Better project structure to make your project scalable and future proof
-* Support for template engines - LATTE on board
-* Google Font Downloader (in the module's config GUI)
+- Zero-config auto-refresh and LESS-Support
+- Better project structure to make your project scalable and future proof
+- Support for template engines - LATTE on board
+- Google Font Downloader (in the module's config GUI)
 
 <img src=hr.svg>
 
@@ -57,15 +57,6 @@ $config->livereload = 1;
 ```
 
 Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position!
-
-Also note that you can prevent RockMigrations from automatically fire when a reload is triggered, which might speed up your reloads significantly depending on the migrations you have setup:
-
-```php
-// site/ready.php
-/** @var RockMigrations $rm */
-$rm = $this->wire->modules->get('RockMigrations');
-$rm->noMigrate();
-```
 
 If using DDEV make sure you have a correct webserver type otherwise the reloads will be buggy and slow: `webserver_type: apache-fpm`
 
@@ -179,16 +170,24 @@ echo $rockfrontend->seo();
 This will add all the necessary markup, eg:
 
 ```html
-<link rel='icon' type='image/png' sizes='32x32' href=/site/assets/files/1/favicon.32x32.png>
-<link rel='icon' type='image/png' sizes='16x16' href=/site/assets/files/1/favicon.16x16.png>
-<link rel='icon' type='image/png' sizes='48x48' href=/site/assets/files/1/favicon.48x48.png>
-<link rel='icon' type='image/png' sizes='192x192' href=/site/assets/files/1/favicon.192x192.png>
-<link rel='apple-touch-icon' type='image/png' sizes='167x167' href=/site/assets/files/1/favicon.167x167.png>
-<link rel='apple-touch-icon' type='image/png' sizes='180x180' href=/site/assets/files/1/favicon.180x180.png>
-<link rel="manifest" href="/website.webmanifest">
-<meta name="theme-color" content="#074589">
+<link rel='icon' type='image/png' sizes='32x32'
+href=/site/assets/files/1/favicon.32x32.png> <link rel='icon' type='image/png'
+sizes='16x16' href=/site/assets/files/1/favicon.16x16.png> <link rel='icon'
+type='image/png' sizes='48x48' href=/site/assets/files/1/favicon.48x48.png>
+<link rel='icon' type='image/png' sizes='192x192'
+href=/site/assets/files/1/favicon.192x192.png> <link rel='apple-touch-icon'
+type='image/png' sizes='167x167' href=/site/assets/files/1/favicon.167x167.png>
+<link rel='apple-touch-icon' type='image/png' sizes='180x180'
+href=/site/assets/files/1/favicon.180x180.png>
+<link
+  rel="manifest"
+  href="/website.webmanifest"
+/>
+<meta
+  name="theme-color"
+  content="#074589"
+/>
 ```
-
 
 ### Adding a manifest file to your project
 
@@ -231,9 +230,9 @@ RockFrontend ships with the LATTE template engine. I love LATTE because it is ve
 
 If you haven't tried LATTE yet, check out the docs: https://latte.nette.org/
 
-* Latte can simplify the markup a lot (see `n:if` or `n-foreach` here: https://latte.nette.org/en/syntax)
-* Latte adds additional security (see https://latte.nette.org/en/safety-first)
-* Latte makes it possible to still use PHP expressions (see https://latte.nette.org/en/tags#toc-var-expr-expr)
+- Latte can simplify the markup a lot (see `n:if` or `n-foreach` here: https://latte.nette.org/en/syntax)
+- Latte adds additional security (see https://latte.nette.org/en/safety-first)
+- Latte makes it possible to still use PHP expressions (see https://latte.nette.org/en/tags#toc-var-expr-expr)
 
 Also see https://processwire.com/talk/topic/27367-why-i-love-the-latte-template-engine/
 
@@ -303,11 +302,11 @@ echo $rockfrontend->render($page->your_matrix);
 <h1>Foo block having id {$page->id}</h1>
 ```
 
-Note that when using $rockfrontend->render() to render matrix fields you can also use latte files for rendering and the `$page` variable in the view file will be the current matrix block instead of the currently viewed page. If you need to access the current page you can use `$wire->page` instead of `$page`.
+Note that when using $rockfrontend->render() to render matrix fields you can also use latte files for rendering and the `$page`variable in the view file will be the current matrix block instead of the currently viewed page. If you need to access the current page you can use`$wire->page` instead of `$page`.
 
 <img src=hr.svg>
 
-## Using the /site/templates/_init.php file
+## Using the /site/templates/\_init.php file
 
 You can define variables and functions in your `_init.php` file:
 
@@ -385,10 +384,9 @@ No! Some examples might use UIkit classes, but you can choose whatever framework
 
 RockFrontend does not force you to use an MVC architecture, though I'm always using one. It's as simple as adding one file with very little code using the [brilliant core feature "custom page classes"](https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes).
 
-
 <img src=hr.svg>
 
-# Example _main.php
+# Example \_main.php
 
 ```php
 <?php namespace ProcessWire;
@@ -471,9 +469,9 @@ $rockfrontend->styles()
 
 There are several reasons why this is preferable over adding custom script/style tags:
 
-* addIf() keeps your markup file cleaner than using if / echo / endif
-* It automatically adds timestamps of files for cache busting
-* You can inject scripts/styles from within other files (eg PW modules)
+- addIf() keeps your markup file cleaner than using if / echo / endif
+- It automatically adds timestamps of files for cache busting
+- You can inject scripts/styles from within other files (eg PW modules)
 
 RockFrontend itself uses this technique to inject the styles and scripts necessary for frontend editing (ALFRED). Have a look at the module's init() method!
 
@@ -520,16 +518,24 @@ You can even provide variables to replace, so you can create completely dynamic 
 RockFrontend comes with a handy method `isActive()` to keep your menu markup clean. Using `latte` you'll get super simple markup without if-else-hell:
 
 ```html
-<nav id='tm-menu' class='tm-boxed-padding' uk-navbar>
+<nav
+  id="tm-menu"
+  class="tm-boxed-padding"
+  uk-navbar
+>
   <div class="uk-navbar-center uk-visible@m">
     <ul class="uk-navbar-nav">
       <li n:foreach="$home->children() as $item">
-        <a href="{$item->url}"
+        <a
+          href="{$item->url}"
           n:class="$rockfrontend->isActive($item) ? 'uk-active'"
         >
           {$item->title}
         </a>
-        <div class="uk-navbar-dropdown" n:if="$item->numChildren()">
+        <div
+          class="uk-navbar-dropdown"
+          n:if="$item->numChildren()"
+        >
           <ul class="uk-nav uk-navbar-dropdown-nav">
             <li
               n:foreach="$item->children() as $child"
