@@ -51,14 +51,46 @@ Recommended folder structure
 
 ATTENTION: Make sure that this setting is only applied for local development! See https://bit.ly/3xVgtvA how you can setup different configs for dev/staging/production.
 
-```
+```php
 // make RockFrontend watch for changes every second
 $config->livereload = 1;
 ```
 
+This will make RockFrontend watch for changes with the default settings:
+
+<img src=https://i.imgur.com/pdUHelD.png height=500>
+
+Optionally you can customize your setup if you need:
+
+```php
+$config->livereload = [
+  // interval to watch for changes
+  // default is 1s
+  'interval' => 1,
+
+  // user defined includes
+  'include' => [],
+
+  // you can reset default include paths
+  'includeDefaults' => [],
+
+  // user defined exclude regexes
+  'exclude' => [],
+
+  // you can reset default excludes
+  'excludeDefaults' => [],
+]
+```
+
+If you notice unexpected reloads you can inspect the logs which file triggered the reload:
+
+<img src=https://i.imgur.com/Rzm5Eyy.png height=300>
+
+### Browser support
+
 Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position!
 
-If using DDEV make sure you have a correct webserver type otherwise the reloads will be buggy and slow: `webserver_type: apache-fpm`
+If using DDEV make sure you have a correct webserver type otherwise the reloads might be buggy and slow: `webserver_type: apache-fpm`
 
 <img src=hr.svg>
 

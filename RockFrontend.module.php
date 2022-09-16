@@ -92,7 +92,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.20.3',
+      'version' => '1.21.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -105,22 +105,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function __construct()
   {
+    if (!$this->wire->config->livereload) return;
+    if ($this->wire->config->ajax) return;
     $this->addHookBefore("Session::init", function (HookEvent $event) {
       if (!array_key_exists(self::getParam, $_GET)) return;
-      $event->object->sessionAllow = false;
       $live = $this->getLiveReload();
-      if (!$live->validSecret()) throw new Wire404Exception("Invalid Secret");
+
+      // return silently if secret does not match
+      // somehow this check is called twice and always throws an error
+      if (!$live->validSecret()) return;
+
+      $event->object->sessionAllow = false;
       $live->watch();
     });
-  }
-
-  /**
-   * @return LiveReload
-   */
-  public function getLiveReload()
-  {
-    require_once __DIR__ . "/LiveReload.php";
-    return new LiveReload();
   }
 
   public function init()
@@ -710,6 +707,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get a new instance of LiveReload
+   */
+  public function getLiveReload(): LiveReload
+  {
+    require_once __DIR__ . "/LiveReload.php";
+    return new LiveReload();
+  }
+
+  /**
    * Find path in rockfrontend folders
    * Returns path with trailing slash
    * @return string|false
@@ -914,10 +920,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // early exit if live reload is disabled
     if (!$this->wire->config->livereload) return;
 
+    if ($this->wire->page->template == 'admin') {
+      $file = $this->wire->config->paths->root . "livereload.php";
+      if ($this->wire->user->isSuperuser() and is_file($file)) {
+        $this->warning("Found file $file which is not used any more - you can delete it");
+      }
+    }
+
     // early exit when page is opened in modal window
     // this is to prevent enless reloads when the parent frame is reloading
     if ($this->wire->input->get('modal')) return;
-
     // reset the livereload secret on every modules refresh
     $cachefile = $this->wire->config->paths->cache . self::livereloadCacheName . ".txt";
     $this->addHookAfter("Modules::refresh", function () use ($cachefile) {
@@ -925,17 +937,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $this->wire->cache->save(self::livereloadCacheName, null);
     });
 
-    // copy stubfile to PW root if it does not exist
-    try {
-      $root = $this->wire->config->paths->root;
-      if (!is_file($root . "livereload.php")) {
-        $this->wire->files->copy(__DIR__ . "/stubs/livereload.php", $root);
-      }
-    } catch (\Throwable $th) {
-      $this->log($th->getMessage());
-    }
-
-    // add live reloading script
+    // add script that triggers stream on frontend
     $this->addLiveReloadScript();
   }
 

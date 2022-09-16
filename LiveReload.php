@@ -18,6 +18,7 @@ class LiveReload extends Wire
   {
     $config = $this->wire->config->livereload;
     if (is_bool($config)) $config = (int)$config; // convert true/false to int
+    if (is_int($config)) $config = ['interval' => $config]; // set interval
     if (is_float($config)) $config = ['interval' => $config]; // set interval
 
     // prepare config object
@@ -25,16 +26,17 @@ class LiveReload extends Wire
     $this->config->setArray([
       'interval' => 1,
       'includeDefaults' => [
-        $this->wire->config->paths->templates,
-        $this->wire->config->paths->classes,
-        $this->wire->config->paths->siteModules,
-        $this->wire->config->paths->assets,
+        $this->wire->config->paths->site,
       ],
       // user defined includes
       'include' => [],
       'excludeDefaults' => [
         $this->wire->config->paths->templates . 'uikit-*',
+        $this->wire->config->paths->assets . 'backups',
         $this->wire->config->paths->assets . 'cache',
+        $this->wire->config->paths->assets . 'files',
+        $this->wire->config->paths->assets . 'logs',
+        $this->wire->config->paths->assets . 'sessions',
         '.*/vendor',
         '.*/\.git',
         '.*/\.github',
@@ -44,7 +46,7 @@ class LiveReload extends Wire
       // user defined exclude regexes
       'exclude' => [],
     ]);
-    $this->config->setArray($config);
+    $this->config->setArray($config ?: []);
   }
 
   /**
@@ -118,6 +120,14 @@ class LiveReload extends Wire
   }
 
   /**
+   * Return secret from get variable
+   */
+  public function getSecret(): string
+  {
+    return (string)$_GET[RockFrontend::getParam];
+  }
+
+  /**
    * Has the file changed since given timestamp?
    */
   public function hasChanged($file, $since): bool
@@ -139,7 +149,7 @@ class LiveReload extends Wire
 
   public function validSecret()
   {
-    $secret = (string)$_GET[RockFrontend::getParam];
+    $secret = $this->getSecret();
     $cache = $this->wire->cache->get(RockFrontend::livereloadCacheName) ?: [];
     foreach ($cache as $k => $v) {
       if ($secret !== $v) continue;
@@ -166,7 +176,7 @@ class LiveReload extends Wire
       }
       while (ob_get_level() > 0) ob_end_flush();
       if (connection_aborted()) break;
-      $sleepSeconds = (int)$this->wire->config->livereload ?: 1;
+      $sleepSeconds = (float)$this->wire->config->livereload ?: 1;
       sleep($sleepSeconds);
     }
   }
