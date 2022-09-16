@@ -35,13 +35,15 @@ setTimeout(() => {
   startStream();
   console.log("RockFrontend is listening for file changes...");
 
-  // prevent error msg in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=833462
-  window.addEventListener("beforeunload", () => {
-    evtSource.close();
-    setTimeout(() => {
-      // we restart the stream because clicks on vscode links would
-      // otherwise stop the livereload watcher stream!
-      startStream();
-    }, 50);
-  });
+  // this causes livereload to break if vscode links are clicked
+  // TODO: find a better solution to fix the firefox issue
+  // // prevent error msg in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=833462
+  // window.addEventListener("beforeunload", () => {
+  //   evtSource.close();
+  //   setTimeout(() => {
+  //     // we restart the stream because clicks on vscode links would
+  //     // otherwise stop the livereload watcher stream!
+  //     startStream();
+  //   }, 50);
+  // });
 }, 1000);
