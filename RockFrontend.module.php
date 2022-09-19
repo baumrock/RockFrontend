@@ -432,6 +432,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   private function checkHealth()
   {
+    if (!$this->wire->user->isSuperuser()) return;
+
     // if rockmatrix is installed check that the version matches
     if ($this->wire->modules->isInstalled('RockMatrix')) {
       $v = $this->wire->modules->get('RockMatrix')->getModuleInfo()['version'];
