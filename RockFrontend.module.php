@@ -92,7 +92,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.21.0',
+      'version' => '1.21.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -202,7 +202,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // create secret and send it to js
           /** @var WireRandom $rand */
           $rand = $this->wire(new WireRandom());
-          $cache = $this->wire->cache->get(self::livereloadCacheName) ?: [];
+          $cache = $this->wire->cache->get(self::livereloadCacheName);
+          if (!is_array($cache)) $cache = [];
           $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
           $merged = array_merge($cache, [$secret]);
           $this->wire->cache->save(self::livereloadCacheName, $merged);
