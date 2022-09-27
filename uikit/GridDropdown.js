@@ -2,7 +2,7 @@
 
 /**
  * Grid Dropdown UIkit Component
- * v1.1
+ * v1.2
  */
 
 (function () {
@@ -347,10 +347,16 @@
 
   // reload all dropdowns on resize
   let timer;
+  let screenWidth = util.width(document);
   util.on(window, "resize", function () {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      dropdowns.reloadAll();
+      let _screenWidth = util.width(document);
+      // only reload windows if the screen width changed
+      if (_screenWidth != screenWidth) {
+        dropdowns.reloadAll();
+        screenWidth = _screenWidth;
+      }
     }, 250);
   });
 })();
