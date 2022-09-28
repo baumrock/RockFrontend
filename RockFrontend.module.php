@@ -92,7 +92,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.21.1',
+      'version' => '1.21.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -773,7 +773,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $file === $paths->siteModules . "RockFrontend/RockFrontend.module.php"
         and count($step['args'])
       ) {
-        return $step['args'][0];
+        $f = $step['args'][0];
+
+        // in case of alfredH args(0) is the block object
+        // in this case we continue and return the next entry
+        if (!is_string($f)) continue;
+
+        return $f;
       }
 
       // try next entry or return file
