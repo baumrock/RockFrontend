@@ -2,7 +2,7 @@
 
 /**
  * Grid Dropdown UIkit Component
- * v1.2
+ * v1.3
  */
 
 (function () {
@@ -311,7 +311,8 @@
   util.on(".rf-griddropdown-toggle", "click", function (e) {
     e.preventDefault();
     let dropdown = dropdowns.getDropdown(e.target);
-    dropdown.show();
+    if (dropdown.isOpen) dropdown.close();
+    else dropdown.show();
   });
 
   // listen to toggle closed events
@@ -329,6 +330,7 @@
     let el = e.target;
     if (!util.$(">div.rf-griddropdown-inner", el)) return;
     let dropdown = dropdowns.getDropdown(el);
+    dropdown.isOpen = true;
     util.addClass(dropdown.gridItem, "rf-griddropdown-open");
 
     // show close button
