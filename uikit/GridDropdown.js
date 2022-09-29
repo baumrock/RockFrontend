@@ -312,7 +312,10 @@
     e.preventDefault();
     let dropdown = dropdowns.getDropdown(e.target);
     if (dropdown.isOpen) dropdown.close();
-    else dropdown.show();
+    else {
+      dropdown.show();
+      util.scrollIntoView(dropdown.gridItem);
+    }
   });
 
   // listen to toggle closed events
