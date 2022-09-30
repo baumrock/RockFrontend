@@ -28,7 +28,7 @@ setTimeout(() => {
         console.log("detected change - reloading");
         reloading = true;
         document.location.reload(true);
-      } else if (!reloading) console.log("no change");
+      };
     };
   };
 
