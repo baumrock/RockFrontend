@@ -1,5 +1,9 @@
 # GridDropdown UIkit Component
 
+Show "read more" dropdowns below items of a uikit grid:
+
+<img src=https://i.imgur.com/epzTaHd.png height=300>
+
 Note that nested grids are not supported!
 
 ## Usage
