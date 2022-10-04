@@ -42,6 +42,7 @@ class LiveReload extends Wire
         '.*/\.github',
         '.*/\.vscode',
         '.*site/modules/TracyDebugger/tracy-.*',
+        '.*site/templates/bundle/*',
       ],
       // user defined exclude regexes
       'exclude' => [],
