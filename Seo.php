@@ -2,6 +2,7 @@
 
 namespace RockFrontend;
 
+use Exception;
 use ProcessWire\Page;
 use ProcessWire\Pageimage;
 use ProcessWire\Pageimages;
@@ -9,6 +10,7 @@ use ProcessWire\Paths;
 use ProcessWire\RockFrontend;
 use ProcessWire\Wire;
 use ProcessWire\WireData;
+use ProcessWire\WireHttp;
 
 class Seo extends Wire
 {
@@ -303,6 +305,10 @@ class Seo extends Wire
     // og:image
     $this->setMarkup('og:image', '<meta property="og:image" content="{value}">');
     $this->setValue('og:image', function (Page $page) {
+      try {
+        return $this->wire->pages->get(1)->get(RockFrontend::field_ogimage);
+      } catch (\Throwable $th) {
+      }
       try {
         return $this->wire->pages->get(1)->images->first();
       } catch (\Throwable $th) {

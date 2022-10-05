@@ -52,6 +52,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   const field_layout = self::prefix . "layout";
   const field_favicon = self::prefix . "favicon";
+  const field_ogimage = self::prefix . "ogimage";
 
   /** @var WireData */
   public $alfredCache;
@@ -96,7 +97,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
-      'icon' => 'code',
+      'icon' => 'paint-brush',
       // The module will work without RockMigrations but you will have to create
       // the layout field manually and add it to templates if you want to use it
       // I'm not using the layout field though, so this feature might be dropped
@@ -1001,6 +1002,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'label' => 'Favicon',
           'maxFiles' => 1,
           'descriptionRows' => 0,
+          'columnWidth' => 50,
           'extensions' => 'png',
           'maxSize' => 3, // max 3 megapixels
           'icon' => 'picture-o',
@@ -1008,9 +1010,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'description' => 'For best browser support and quality upload a high resolution PNG (min 512x512). You can use transparency in your favicon.',
           'notes' => '[See here](https://loqbooq.app/blog/add-favicon-modern-browser-guide) and [here](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/) to learn more about favicons'
         ],
+        self::field_ogimage => [
+          'type' => 'image',
+          'label' => 'og:image',
+          'maxFiles' => 1,
+          'descriptionRows' => 0,
+          'columnWidth' => 50,
+          'extensions' => 'png jpg svg',
+          'okExtensions' => ['svg'],
+          'maxSize' => 3, // max 3 megapixels
+          'icon' => 'picture-o',
+          'outputFormat' => FieldtypeFile::outputFormatSingle,
+          'description' => 'Here you can add the fallback og:image that will be used by RockFrontend\'s SEO-Tools.',
+        ],
       ],
     ]);
     $rm->addFieldToTemplate(self::field_favicon, 'home');
+    $rm->addFieldToTemplate(self::field_ogimage, 'home');
   }
 
   /**
