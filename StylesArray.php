@@ -1,10 +1,13 @@
-<?php namespace RockFrontend;
+<?php
+
+namespace RockFrontend;
 
 use ProcessWire\Less;
 use ProcessWire\RockFrontend;
 use ProcessWire\WireData;
 
-class StylesArray extends AssetsArray {
+class StylesArray extends AssetsArray
+{
 
   const cacheName = 'rockfrontend-stylesarray-cache';
   const comment = '<!-- rockfrontend-styles-head -->';
@@ -14,21 +17,24 @@ class StylesArray extends AssetsArray {
   /**
    * Add all files of folder to assets array
    *
-   * Depth is 2 to make it work with RockMatrix by default.
+   * Depth is 2 to make it work with RockPageBuilder by default.
    *
    * @return self
    */
-  public function addAll($path, $suffix = '', $levels = 2, $ext = ['css','less']) {
+  public function addAll($path, $suffix = '', $levels = 2, $ext = ['css', 'less'])
+  {
     return parent::addAll($path, $suffix, $levels, $ext);
   }
 
-  public function render($options = []) {
-    if(is_string($options)) $options = ['indent' => $options];
+  public function render($options = [])
+  {
+    if (is_string($options)) $options = ['indent' => $options];
 
     // TODO make API version of options to support hook injected assets
 
     // setup options
-    $opt = $this->wire(new WireData()); /** @var WireData $opt */
+    $opt = $this->wire(new WireData());
+    /** @var WireData $opt */
     $opt->setArray([
       'debug' => $this->wire->config->debug,
       'indent' => '  ',
@@ -41,13 +47,13 @@ class StylesArray extends AssetsArray {
 
     $indent = $opt->indent;
     $out = "\n";
-    if($opt->debug) {
+    if ($opt->debug) {
       $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
-      if($this->opt('autoload')) {
+      if ($this->opt('autoload')) {
         $out .= "$indent<!-- autoloading of default styles enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
       }
     }
-    $out .= $this->name == 'head' ? $indent.self::comment."\n" : '';
+    $out .= $this->name == 'head' ? $indent . self::comment . "\n" : '';
 
     // if there are any less files we render them at the beginning
     // this makes it possible to overwrite styles via plain CSS later
@@ -59,27 +65,27 @@ class StylesArray extends AssetsArray {
     $filesCnt = 0;
 
     // parse all less files
-    foreach($this as $asset) {
+    foreach ($this as $asset) {
       // bd($asset);
-      if($asset->ext !== 'less') continue;
-      if($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->{$asset->debug}\n";
-      if(!$less) {
+      if ($asset->ext !== 'less') continue;
+      if ($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->{$asset->debug}\n";
+      if (!$less) {
         $out .= "$indent<script>alert('install Less module for parsing {$asset->url}')</script>\n";
         continue;
       }
       $less->addFile($asset->path);
       $filesCnt++;
-      if($asset->m > $m) $m = $asset->m;
-      $lessCurrent .= $asset->path."|".$asset->m."--";
+      if ($asset->m > $m) $m = $asset->m;
+      $lessCurrent .= $asset->path . "|" . $asset->m . "--";
     }
-    if($less AND $filesCnt) {
-      $cssPath = $this->wire->config->paths->root.ltrim($opt->cssDir, "/");
-      $cssFile = $cssPath.$opt->cssName.".css";
+    if ($less and $filesCnt) {
+      $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
+      $cssFile = $cssPath . $opt->cssName . ".css";
 
       $recompile = false;
-      if(!is_file($cssFile)) $recompile = true;
-      elseif($lessCurrent !== $lessCache) $recompile = true;
-      elseif($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
+      if (!is_file($cssFile)) $recompile = true;
+      elseif ($lessCurrent !== $lessCache) $recompile = true;
+      elseif ($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
 
       // create css file
       $m = "?m=$m";
@@ -88,8 +94,8 @@ class StylesArray extends AssetsArray {
         $this->wire->config->urls->root,
         $cssFile
       );
-      if($recompile) {
-        if(!is_dir($cssPath)) $this->wire->files->mkdir($cssPath);
+      if ($recompile) {
+        if (!is_dir($cssPath)) $this->wire->files->mkdir($cssPath);
         $less->setOptions([
           'sourceMap' => $opt->sourcemaps,
         ]);
@@ -111,19 +117,19 @@ class StylesArray extends AssetsArray {
     }
 
     // render all assets
-    foreach($this as $asset) {
-      if($asset->ext === 'less') continue;
-      if($asset instanceof AssetComment) {
+    foreach ($this as $asset) {
+      if ($asset->ext === 'less') continue;
+      if ($asset instanceof AssetComment) {
         $out .= "$indent<!-- {$asset->comment} -->\n";
         continue;
       }
 
-      $m = $asset->m ? "?m=".$asset->m : "";
+      $m = $asset->m ? "?m=" . $asset->m : "";
 
       // add rel=stylesheet if no other relation is set
-      $suffix = " ".$asset->suffix;
+      $suffix = " " . $asset->suffix;
       $rel = " rel='stylesheet'";
-      if(strpos($suffix, " rel=")===false) $suffix .= $rel;
+      if (strpos($suffix, " rel=") === false) $suffix .= $rel;
 
       $debug = $opt->debug ? $asset->debug : '';
       $out .= "$indent<link href='{$asset->url}$m' $suffix>$debug\n";
@@ -136,10 +142,10 @@ class StylesArray extends AssetsArray {
    * Set a less variable
    * @return array
    */
-  public function setVar($key, $value) {
+  public function setVar($key, $value)
+  {
     $vars = $this->vars;
     $vars[$key] = $value;
     return $this->vars = $vars;
   }
-
 }

@@ -9,7 +9,7 @@ use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
 use RockFrontend\StylesArray;
-use RockMatrix\Block;
+use RockPageBuilder\Block;
 use Sabberworm\CSS\OutputFormat;
 use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
@@ -93,7 +93,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '1.22.0',
+      'version' => '2.0.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -276,7 +276,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Usage:
    * alfred($page, "title,images")
    *
-   * Usage with options array (for RockMatrix blocks)
+   * Usage with options array (for RockPageBuilder blocks)
    * alfred($page, [
    *   'trash' => false,
    *   'fields' => 'foo,bar',
@@ -305,7 +305,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->hasAlfred = true;
     $page = $page ? $this->wire->pages->get((string)$page) : false;
 
-    // is given page a widget block stored in field rockmatrix_widgets?
+    // is given page a widget block stored in field rockpagebuilder_widgets?
     $isWidget = false;
     if ($page instanceof Block and $page->isWidget()) $isWidget = true;
 
@@ -317,15 +317,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'path' => $this->getTplPath(), // path to edit file
       'edit' => true,
 
-      // setting specific to rockmatrix blocks
+      // setting specific to rockpagebuilder blocks
       'noBlock' => false, // prevent block icons if true
       'addTop' => null, // set to false to prevent icon
       'addBottom' => null, // set to false to prevent icon
       'addHorizontal' => null, // shortcut for addLeft + addRight
       'move' => true,
-      'isWidget' => $isWidget, // is block saved in rockmatrix_widgets?
+      'isWidget' => $isWidget, // is block saved in rockpagebuilder_widgets?
       'widgetStyle' => $isWidget, // make it orange
-      'trash' => true, // will set the trash icon for rockmatrix blocks
+      'trash' => true, // will set the trash icon for rockpagebuilder blocks
       'clone' => true, // can item be cloned?
       'widget' => !$isWidget, // can item be converted into a widget?
     ]);
@@ -349,16 +349,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           $opt->addRight = false;
         }
       }
-      if ($opt->addTop !== false) $opt->addTop = $widget->rmxUrl("/add/?block=$widget&above=1");
-      if ($opt->addBottom !== false) $opt->addBottom = $widget->rmxUrl("/add/?block=$widget");
+      if ($opt->addTop !== false) $opt->addTop = $widget->rpbUrl("/add/?block=$widget&above=1");
+      if ($opt->addBottom !== false) $opt->addBottom = $widget->rpbUrl("/add/?block=$widget");
       if ($opt->addHorizontal === true) {
         $opt->addTop = false;
         $opt->addBottom = false;
-        $opt->addLeft = $widget->rmxUrl("/add/?block=$widget&above=1");
-        $opt->addRight = $widget->rmxUrl("/add/?block=$widget");
+        $opt->addLeft = $widget->rpbUrl("/add/?block=$widget&above=1");
+        $opt->addRight = $widget->rpbUrl("/add/?block=$widget");
       }
 
-      $blockid = " data-rmxblock=$widget ";
+      $blockid = " data-rpbblock=$widget ";
     }
 
     $str = json_encode((object)[
@@ -416,7 +416,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $styles->addAll('/site/templates/layouts');
         $styles->addAll('/site/templates/sections');
         $styles->addAll('/site/templates/partials');
-        $styles->addAll('/site/assets/RockMatrix');
+        $styles->addAll('/site/assets/RockPageBuilder');
       }
     }
   }
@@ -435,15 +435,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function checkHealth()
   {
     if (!$this->wire->user->isSuperuser()) return;
-
-    // if rockmatrix is installed check that the version matches
-    if ($this->wire->modules->isInstalled('RockMatrix')) {
-      $v = $this->wire->modules->get('RockMatrix')->getModuleInfo()['version'];
-      $version = "2.5.0";
-      if (version_compare($v, $version) < 0) {
-        $this->warning("Please update RockMatrix to version $version+");
-      }
-    }
+    // removed version healthcheck as of v2.0.0
   }
 
   /**
@@ -653,7 +645,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       ];
     }
 
-    // add rockmatrix icons
+    // add rockpagebuilder icons
     if ($page and $page instanceof Block) $page->addAlfredIcons($icons, $opt);
 
     if ($this->wire->user->isSuperuser()) {
@@ -766,8 +758,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (strpos($file, $p) === 0) $skip = true;
       }
 
-      // special case: rockmatrix block
-      if ($file === $paths->siteModules . "RockMatrix/Block.php") {
+      // special case: rockpagebuilder block
+      if ($file === $paths->siteModules . "RockPageBuilder/Block.php") {
         // return the block view file instead of the block controller
         return $step['args'][0];
       } elseif (
@@ -1096,7 +1088,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * ]);
    *
    * Render a RepeaterMatrix field
-   * echo $rf->render($page->your_matrix_field);
+   * echo $rf->render($page->your_pagebuilder_field);
    *
    * Use render to render children of current page:
    * foreach($page->children() as $item) {
@@ -1120,7 +1112,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $page = $this->wire->page;
     if (!$vars) $vars = [];
 
-    // add support for rendering repeater matrix fields
+    // add support for rendering repeater pagebuilder fields
     if (!$path) return; // if field does not exist
     if ($path instanceof RepeaterMatrixPageArray) {
       return $this->renderMatrix($path, $vars, $options);

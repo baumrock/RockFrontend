@@ -88,10 +88,10 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   right: 0;
   text-align: right;
 }
-.alfred.rmx-widget:hover {
+.alfred.rpb-widget:hover {
   outline: 4px groove orange !important;
 }
-.alfred.rmx-widget .icon {
+.alfred.rpb-widget .icon {
   border: 3px solid orange !important;
 }
 .alfred:hover > .icons {

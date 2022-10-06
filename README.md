@@ -306,35 +306,35 @@ $wire->addHook("RockFrontend::renderFileFoo", function($event) {
 
 ## RockFrontend and RepeaterMatrix
 
-If your matrix-blocks are regular PHP files you can simply call `echo $page->your_matrix` and ProcessWire will render the field for you. But if you want to use LATTE files instead, you can use RockFrontend to do so!
+If your pagebuilder-blocks are regular PHP files you can simply call `echo $page->your_pagebuilder` and ProcessWire will render the field for you. But if you want to use LATTE files instead, you can use RockFrontend to do so!
 
-While you can always render repeater matrix fields manually RockFrontend has some nice helpers. This is the long and manual way of rendering a matrix field:
+While you can always render repeater pagebuilder fields manually RockFrontend has some nice helpers. This is the long and manual way of rendering a pagebuilder field:
 
 ```php
 // main.php
-foreach($page->your_matrix_field as $item) {
+foreach($page->your_pagebuilder_field as $item) {
   // render every block and make the $page variable be the current block
   // instead of the viewed page.
-  echo $rockfrontend->render("/matrix/".$item->type, ['page' => $item]);
+  echo $rockfrontend->render("/pagebuilder/".$item->type, ['page' => $item]);
 }
 
-// matrix type foo (/site/templates/matrix/foo.php)
+// pagebuilder type foo (/site/templates/pagebuilder/foo.php)
 <h1><?= $page->title ?></h1>
 ```
 
 Or simply use the shortcut:
 
 ```php
-echo $rockfrontend->render($page->your_matrix);
+echo $rockfrontend->render($page->your_pagebuilder);
 
 // or in a latte file
-{$rockfrontend->render($page->your_matrix)}
+{$rockfrontend->render($page->your_pagebuilder)}
 
-// example matrix block: /site/templates/fields/your_matrix/foo.latte
+// example pagebuilder block: /site/templates/fields/your_pagebuilder/foo.latte
 <h1>Foo block having id {$page->id}</h1>
 ```
 
-Note that when using $rockfrontend->render() to render matrix fields you can also use latte files for rendering and the `$page`variable in the view file will be the current matrix block instead of the currently viewed page. If you need to access the current page you can use`$wire->page` instead of `$page`.
+Note that when using $rockfrontend->render() to render pagebuilder fields you can also use latte files for rendering and the `$page`variable in the view file will be the current pagebuilder block instead of the currently viewed page. If you need to access the current page you can use`$wire->page` instead of `$page`.
 
 <img src=hr.svg>
 

@@ -34,7 +34,11 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 .alfred {
   position: relative;
 
-  .icons,.add-top,.add-bottom,.add-left,.add-right {
+  .icons,
+  .add-top,
+  .add-bottom,
+  .add-left,
+  .add-right {
     display: none;
     position: absolute;
     pointer-events: none;
@@ -86,19 +90,31 @@ body:not(.uk-offcanvas-container) .alfred:hover {
     text-align: right;
   }
 
-  // modifier for rockmatrix widgets
-  &.rmx-widget {
-    &:hover { outline: 4px groove orange !important; }
+  // modifier for rockpagebuilder widgets
+  &.rpb-widget {
+    &:hover {
+      outline: 4px groove orange !important;
+    }
     .icon {
       border: 3px solid orange !important;
     }
   }
 
   &:hover {
-    > .icons { display: inline-block; }
-    > .add-top { display: inline-block; }
-    > .add-bottom { display: inline-block; }
-    > .add-left { display: inline-block; }
-    > .add-right { display: inline-block; }
+    > .icons {
+      display: inline-block;
+    }
+    > .add-top {
+      display: inline-block;
+    }
+    > .add-bottom {
+      display: inline-block;
+    }
+    > .add-left {
+      display: inline-block;
+    }
+    > .add-right {
+      display: inline-block;
+    }
   }
 }
