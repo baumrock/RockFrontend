@@ -26,7 +26,7 @@ class AssetsArray extends \ProcessWire\WireArray
   public function add($file, $suffix = '')
   {
     $debug = $this->getDebugNote($file);
-    if (!$file instanceof AssetComment) $file = new Asset($file, $suffix);
+    if (is_string($file)) $file = new Asset($file, $suffix);
     $file->debug = $debug;
     parent::add($file);
     return $this;
@@ -34,6 +34,8 @@ class AssetsArray extends \ProcessWire\WireArray
 
   public function getDebugNote($file = null)
   {
+    if ($file instanceof Asset) return $file->debug;
+    if ($file instanceof AssetComment) return $file->debug;
     $trace = array_reverse(Debug::backtrace(['getFile' => 'basename']));
     $debug = '';
     foreach ($trace as $i => $item) {
@@ -74,7 +76,8 @@ class AssetsArray extends \ProcessWire\WireArray
    */
   public function addIf($file, $condition, $suffix = '')
   {
-    if ($condition) parent::add(new Asset($file, $suffix));
+    if (is_string($file)) $file = new Asset($file, $suffix);
+    if ($condition) parent::add($file);
     return $this;
   }
 
@@ -100,8 +103,8 @@ class AssetsArray extends \ProcessWire\WireArray
    */
   public function prepend($file, $suffix = '')
   {
+    if (is_string($file)) $file = new Asset($file, $suffix);
     $debug = $this->getDebugNote($file);
-    if (!$file instanceof AssetComment) $file = new Asset($file, $suffix);
     $file->debug = $debug;
     parent::prepend($file);
     return $this;

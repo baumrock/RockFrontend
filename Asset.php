@@ -1,9 +1,12 @@
-<?php namespace RockFrontend;
+<?php
+
+namespace RockFrontend;
 
 use ProcessWire\RockFrontend;
 use ProcessWire\WireData;
 
-class Asset extends WireData {
+class Asset extends WireData
+{
 
   public $debug;
   public $ext;
@@ -13,7 +16,8 @@ class Asset extends WireData {
   public $url;
   public $comment;
 
-  public function __construct($file, $suffix = '') {
+  public function __construct($file, $suffix = '')
+  {
     /** @var RockFrontend $rockfrontend */
     $rockfrontend = $this->wire->modules->get('RockFrontend');
     $this->path = $rockfrontend->getFile($file, true);
@@ -22,13 +26,24 @@ class Asset extends WireData {
     // inroot check prevents open basedir errors on files that are not found
     // but kept as url to get a 404 in the devtools network tab
     $inRoot = $this->wire->files->fileInPath($this->path, $this->wire->config->paths->root);
-    $this->m = ($inRoot AND is_file($this->path)) ? filemtime($this->path) : null;
+    $this->m = ($inRoot and is_file($this->path)) ? filemtime($this->path) : null;
 
     $this->suffix = $suffix;
     $this->ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
   }
 
-  public function __debugInfo() {
+  /**
+   * Set debug message or return debug message without html comments <!-- -->
+   */
+  public function debug($str = null): string
+  {
+    if ($str) return $this->debug = "<!-- $str -->";
+    if (!$this->debug) return '';
+    return substr($this->debug, 5, -4);
+  }
+
+  public function __debugInfo()
+  {
     return [
       'path' => $this->path,
       'url' => $this->url,
@@ -39,5 +54,4 @@ class Asset extends WireData {
       'debug' => $this->debug,
     ];
   }
-
 }

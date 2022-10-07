@@ -4,6 +4,7 @@ namespace RockFrontend;
 
 use ProcessWire\Less;
 use ProcessWire\RockFrontend;
+use ProcessWire\WireArray;
 use ProcessWire\WireData;
 
 class StylesArray extends AssetsArray
@@ -26,7 +27,7 @@ class StylesArray extends AssetsArray
     return parent::addAll($path, $suffix, $levels, $ext);
   }
 
-  private function addComment($opt)
+  private function addInfo($opt)
   {
     $indent = $opt->indent;
     $out = "\n";
@@ -40,33 +41,40 @@ class StylesArray extends AssetsArray
     return $out;
   }
 
+  /**
+   * Parse LESS files and add the generated CSS file to output
+   * If there are any less files we render them at the beginning.
+   * This makes it possible to overwrite styles via plain CSS later.
+   */
   private function parseLessFiles($opt)
   {
-    // if there are any less files we render them at the beginning
-    // this makes it possible to overwrite styles via plain CSS later
     /** @var Less $less */
     $less = $this->wire->modules->get('Less');
     $lessCache = $this->wire->cache->get(self::cacheName);
     $lessCurrent = ''; // string to store file info
     $m = 0;
-    $filesCnt = 0;
+    $parse = false;
+    $entries = new WireArray();
 
-    // parse all less files
-    $out = '';
-    $indent = $opt->indent;
+    // loop all less files and add them to the less parser
+    // this will also memorize the latest file timestamp to check for recompile
     foreach ($this as $asset) {
       if ($asset->ext !== 'less') continue;
-      if ($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->{$asset->debug}\n";
+      if ($opt->debug) {
+        $entries->add(new AssetComment("loading {$asset->url} ({$asset->debug()})"));
+      }
       if (!$less) {
-        $out .= "$indent<script>alert('install Less module for parsing {$asset->url}')</script>\n";
+        $entries->add(new AssetComment("install Less module for parsing {$asset->url}"));
         continue;
       }
       $less->addFile($asset->path);
-      $filesCnt++;
+      $parse = true;
       if ($asset->m > $m) $m = $asset->m;
       $lessCurrent .= $asset->path . "|" . $asset->m . "--";
     }
-    if ($less and $filesCnt) {
+
+    // we have a less parser installed and some less files to parse
+    if ($less and $parse) {
       $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
       $cssFile = $cssPath . $opt->cssName . ".css";
 
@@ -76,7 +84,6 @@ class StylesArray extends AssetsArray
       elseif ($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
 
       // create css file
-      $m = "?m=$m";
       $url = str_replace(
         $this->wire->config->paths->root,
         $this->wire->config->urls->root,
@@ -99,11 +106,13 @@ class StylesArray extends AssetsArray
         $this->wire->session->set(RockFrontend::recompile, false);
         $this->log("Recompiled RockFrontend $url");
       }
-      $debug = $opt->debug ? "<!-- less compiled by RockFrontend -->" : '';
-      $out .= "$indent<link rel='stylesheet' href='{$url}$m'>$debug\n";
-      $indent = '  ';
+
+      $asset = new Asset($cssFile);
+      $asset->debug('LESS compiled by RockFrontend');
+      $entries->add($asset);
     }
-    return $out;
+
+    foreach ($entries->reverse() as $entry) $this->prepend($entry);
   }
 
   public function render($options = [])
@@ -125,14 +134,20 @@ class StylesArray extends AssetsArray
     $opt->setArray($this->options);
     $opt->setArray($options);
 
-    $out = '';
-    $out .= $this->parseLessFiles($opt);
-    $out .= $this->renderAssets($opt);
-    if ($out) $out = $this->addComment($opt) . $out;
+    $this->parseLessFiles($opt);
+    foreach ($this as $asset) bd($asset);
+
+    $out = $this->renderAssets($opt);
+    if ($out) $out = $this->addInfo($opt) . $out;
+
+
     return $out;
   }
 
-  private function renderAssets($opt)
+  /**
+   * Create markup for including all assets
+   */
+  private function renderAssets($opt): string
   {
     $out = '';
     $indent = $opt->indent;
