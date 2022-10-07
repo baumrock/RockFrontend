@@ -111,6 +111,37 @@ class AssetsArray extends \ProcessWire\WireArray
   }
 
   /**
+   * Render script or styles tag
+   */
+  public function renderTag($asset, $opt, $type): string
+  {
+    $indent = $opt->indent;
+    if ($asset instanceof AssetComment) {
+      return "$indent<!-- {$asset->comment} -->\n";
+    }
+
+    // set defaults
+    $m = $asset->m ? "?m=" . $asset->m : "";
+    $suffix = " " . $asset->suffix;
+    $debug = $opt->debug ? $asset->debug : '';
+
+    if ($type == 'style') {
+      // add rel=stylesheet if no other relation is set
+      $rel = " rel='stylesheet'";
+      if (strpos($suffix, " rel=") === false) $suffix .= $rel;
+    }
+
+    $suffix = trim($suffix);
+    if ($suffix) $suffix = " $suffix";
+
+    if ($type == 'style') {
+      return "$indent<link href='{$asset->url}$m'$suffix>$debug\n";
+    } else {
+      return "$indent<script src='{$asset->url}$m'$suffix></script>$debug\n";
+    }
+  }
+
+  /**
    * Set options for rendering
    */
   public function setOptions(array $options): self

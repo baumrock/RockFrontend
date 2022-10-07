@@ -150,26 +150,9 @@ class StylesArray extends AssetsArray
   private function renderAssets($opt): string
   {
     $out = '';
-    $indent = $opt->indent;
     foreach ($this as $asset) {
       if ($asset->ext === 'less') continue;
-      if ($asset instanceof AssetComment) {
-        $out .= "$indent<!-- {$asset->comment} -->\n";
-        continue;
-      }
-
-      $m = $asset->m ? "?m=" . $asset->m : "";
-
-      // add rel=stylesheet if no other relation is set
-      $suffix = " " . $asset->suffix;
-      $rel = " rel='stylesheet'";
-      if (strpos($suffix, " rel=") === false) $suffix .= $rel;
-      $suffix = trim($suffix);
-      if ($suffix) $suffix = " $suffix";
-
-      $debug = $opt->debug ? $asset->debug : '';
-      $out .= "$indent<link href='{$asset->url}$m'$suffix>$debug\n";
-      $indent = '  ';
+      $out .= $this->renderTag($asset, $opt, 'style');
     }
     return $out;
   }
