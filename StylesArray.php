@@ -6,6 +6,7 @@ use ProcessWire\Less;
 use ProcessWire\RockFrontend;
 use ProcessWire\WireArray;
 use ProcessWire\WireData;
+use ProcessWire\WireException;
 
 class StylesArray extends AssetsArray
 {
@@ -115,6 +116,26 @@ class StylesArray extends AssetsArray
     foreach ($entries->reverse() as $entry) $this->prepend($entry);
   }
 
+  /**
+   * Add some postCSS magic to css files
+   */
+  public function postCSS($asset)
+  {
+    $markup = $asset->getPostCssMarkup();
+    if (!$markup) return $asset;
+    $rf = $this->rockfrontend();
+
+    // write markup to cached file
+    $newFile = $rf->assetPath("css/" . $asset->basename);
+    if ($rf->isNewer($asset->path, $newFile)) {
+      // asset has been changed, update cached file
+      $markup = $rf->postCSS($markup);
+      $rf->writeAsset($newFile, $markup);
+    }
+    $asset->setPath($newFile);
+    return $asset;
+  }
+
   public function render($options = [])
   {
     if (is_string($options)) $options = ['indent' => $options];
@@ -143,11 +164,12 @@ class StylesArray extends AssetsArray
   /**
    * Create markup for including all assets
    */
-  private function renderAssets($opt): string
+  public function ___renderAssets($opt): string
   {
     $out = '';
     foreach ($this as $asset) {
       if ($asset->ext === 'less') continue;
+      $asset = $this->postCSS($asset);
       $out .= $this->renderTag($asset, $opt, 'style');
     }
     return $out;

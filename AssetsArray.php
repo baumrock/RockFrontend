@@ -3,6 +3,7 @@
 namespace RockFrontend;
 
 use ProcessWire\Debug;
+use ProcessWire\RockFrontend;
 
 class AssetsArray extends \ProcessWire\WireArray
 {
@@ -139,6 +140,11 @@ class AssetsArray extends \ProcessWire\WireArray
     } else {
       return "$indent<script src='{$asset->url}$m'$suffix></script>$debug\n";
     }
+  }
+
+  public function rockfrontend(): RockFrontend
+  {
+    return $this->wire->modules->get('RockFrontend');
   }
 
   /**

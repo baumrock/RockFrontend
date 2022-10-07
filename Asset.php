@@ -10,6 +10,7 @@ class Asset extends WireData
 
   public $debug;
   public $ext;
+  public $basename;
   public $m;
   public $path;
   public $suffix;
@@ -18,10 +19,7 @@ class Asset extends WireData
 
   public function __construct($file, $suffix = '')
   {
-    /** @var RockFrontend $rockfrontend */
-    $rockfrontend = $this->wire->modules->get('RockFrontend');
-    $this->path = $rockfrontend->getFile($file, true);
-    $this->url = $rockfrontend->url($file);
+    $this->setPath($file);
 
     // inroot check prevents open basedir errors on files that are not found
     // but kept as url to get a 404 in the devtools network tab
@@ -30,6 +28,7 @@ class Asset extends WireData
 
     $this->suffix = $suffix;
     $this->ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
+    $this->basename = pathinfo($this->path, PATHINFO_BASENAME);
   }
 
   /**
@@ -42,9 +41,48 @@ class Asset extends WireData
     return substr($this->debug, 5, -4);
   }
 
+  /**
+   * Get postCSS markup
+   * Returns FALSE if no postcss markup was found
+   */
+  public function getPostCssMarkup()
+  {
+    if (!$this->path) return false;
+    $markup = $this->wire->files->fileGetContents($this->path);
+    if (!$this->hasPostCss($markup)) return false;
+    return $markup;
+  }
+
+  public function hasPostCss($markup): bool
+  {
+    foreach ($this->rockfrontend()->postCSS as $k => $v) {
+      if (strpos($markup, $k)) return true;
+    }
+    return false;
+  }
+
+  public function rockfrontend(): RockFrontend
+  {
+    return $this->wire->modules->get('RockFrontend');
+  }
+
+  /**
+   * Update path
+   * 
+   * This also updates the url but keeps comments etc.
+   * Needed by StylesArray::postCSS
+   */
+  public function setPath($path)
+  {
+    $rockfrontend = $this->rockfrontend();
+    $this->path = $rockfrontend->getFile($path, true);
+    $this->url = $rockfrontend->url($path);
+  }
+
   public function __debugInfo()
   {
     return [
+      'basename' => $this->basename,
       'path' => $this->path,
       'url' => $this->url,
       'm' => $this->m,

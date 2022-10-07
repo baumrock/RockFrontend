@@ -80,6 +80,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var string */
   public $path;
 
+  /** @var WireData */
+  public $postCSS;
+
+  /**
+   * REM base value (16px)
+   */
+  public $remBase;
+
   /** @var Seo */
   public $seo;
 
@@ -138,8 +146,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->alfredCache = $this->wire(new WireData());
 
     // JS defaults
+    $this->remBase = 16; // default base for px-->rem conversion
     $this->js('growMin', 400);
     $this->js('growMax', 1440);
+    $this->initPostCSS();
 
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
@@ -278,6 +288,52 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Add a custom postCSS callback
+   * 
+   * Usage:
+   * $rockfrontend->addPostCSS('foo', function($markup) {
+   *   return str_replace('foo', 'bar', $markup);
+   * });
+   */
+  public function addPostCSS($key, $callback)
+  {
+    $this->postCSS->set($key, $callback);
+  }
+
+  /**
+   * Apply postCSS rules to given string
+   */
+  public function postCSS($str): string
+  {
+    foreach ($this->postCSS as $callback) $str = $callback($str);
+    return $str;
+  }
+
+  /**
+   * Convert px to rem
+   */
+  public function rem($value): WireData
+  {
+    $value = strtolower(trim($value));
+    preg_match("/(.*?)([a-z]+)/", $value, $matches);
+    $val = trim($matches[1]);
+    $unit = trim($matches[2]);
+
+    $data = $this->wire(new WireData());
+    $data->val = $val;
+    $data->unit = $unit;
+
+    if ($unit !== 'pxrem') return $data;
+
+    // convert pixel to rem
+    $base = $this->rockfrontend()->remBase;
+    $data->val = round($val / $base, 3);
+    $data->unit = 'rem';
+
+    return $data;
+  }
+
+  /**
    * ALFRED - A Lovely FRontend EDitor
    *
    * Usage:
@@ -407,6 +463,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->wire->user->isSuperuser()) return true;
     if ($this->wire->user->hasPermission(self::permission_alfred)) return true;
     return false;
+  }
+
+  /**
+   * Return full asset path from given path
+   */
+  public function assetPath($path): string
+  {
+    $path = Paths::normalizeSeparators($path);
+    $dir = $this->wire->config->paths->assets . "RockFrontend/";
+    if (strpos($path, $dir) === 0) return $path;
+    return $dir . trim($path, "/");
   }
 
   /**
@@ -887,6 +954,32 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return '';
   }
 
+  public function initPostCSS()
+  {
+    $data = $this->wire(new WireData());
+
+    // rfGrow() postCSS replacer
+    $data->set("rfGrow(", function ($markup) {
+      return preg_replace_callback("/rfGrow\((.*?),(.*?)\)/", function ($match) {
+        // bd($match);
+        if (count($match) !== 3) return false;
+        try {
+          $min = $this->rem($match[1]);
+          $max = $this->rem($match[2]);
+          if ($min->unit !== $max->unit) throw new WireException(
+            "rfGrow(error: min and max value must have the same unit)"
+          );
+
+          $diff = $max->val - $min->val;
+          return "calc({$min->val}{$min->unit} + {$diff}{$min->unit} * var(--rf-grow))";
+        } catch (\Throwable $th) {
+          return $th->getMessage();
+        }
+      }, $markup);
+    });
+    $this->postCSS = $data;
+  }
+
   /**
    * Is the given page active in the menu?
    * @return bool
@@ -896,6 +989,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $page = $page ?: $this->wire->page;
     $active = $page->parents()->add($page);
     return $active->has($menuItem);
+  }
+
+  /**
+   * Is given file newer than the comparison file?
+   * Returns true if comparison file does not exist
+   * Returns false if file does not exist
+   */
+  public function isNewer($file, $comparison): bool
+  {
+    if (!is_file($file)) return false;
+    if (!is_file($comparison)) return true;
+    return filemtime($file) > filemtime($comparison);
   }
 
   /**
@@ -1077,6 +1182,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
+    $this->wire->files->rmdir(
+      $this->wire->config->paths->assets . "RockFrontend/css",
+      true
+    );
     $this->forceRecompile();
   }
 
@@ -1431,6 +1540,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $inRoot = $this->wire->files->fileInPath($path, $config->paths->root);
     $m = ($inRoot and is_file($path) and $cacheBuster) ? "?m=" . filemtime($path) : '';
     return str_replace($config->paths->root, $config->urls->root, $path . $m);
+  }
+
+  /**
+   * Write content to asset
+   */
+  public function writeAsset($path, $content)
+  {
+    $files = $this->wire->files;
+    $file = $this->assetPath($path);
+    $files->mkdir(dirname($file), true);
+    $comment = $files->fileGetContents($this->path . "AssetInfo.txt");
+    $files->filePutContents($file, $comment . $content);
+    return $file;
   }
 
   /**

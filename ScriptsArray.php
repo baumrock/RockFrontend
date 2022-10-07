@@ -45,7 +45,7 @@ class ScriptsArray extends AssetsArray
   /**
    * Create markup for including all assets
    */
-  private function renderAssets($opt): string
+  public function ___renderAssets($opt): string
   {
     $out = '';
     foreach ($this as $asset) {

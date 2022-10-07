@@ -582,3 +582,94 @@ RockFrontend comes with a handy method `isActive()` to keep your menu markup cle
   </div>
 </nav>
 ```
+
+## Grow feature
+
+RockFrontend will automatically add the `--rf-grow` CSS variable to the pages root element. You can use this variable to easily scale fonts/paddings/margins along with the users viewport width.
+
+### Examples using REM
+
+```css
+h1 {
+  /* min size = 3rem */
+  /* max size = 5rem */
+  font-size: calc(3rem + 2rem * var(--rf-grow));
+}
+h2 {
+  /* min size = 2rem */
+  /* max size = 3rem */
+  font-size: calc(2rem + 1rem * var(--rf-grow));
+}
+section {
+  /* min padding: 3rem */
+  /* max padding: 6rem */
+  padding-top: calc(3rem + 3rem * var(--rf-grow));
+  padding-bottom: calc(3rem + 3rem * var(--rf-grow));
+}
+```
+
+By default the minimum width is set to `400` and the maximum is set to `1440`. You can set custom min/max values like this:
+
+```php
+// somewhere in ready.php or _main.php
+$rockfrontend->js('growMin', 800);
+$rockfrontend->js('growMax', 1000);
+```
+
+### Setting min/max values as PX
+
+If you want hardcoded pixel values in your CSS you can do this:
+
+```css
+h1 {
+  font-size: calc(10px + 30px * var(--rf-grow));
+}
+```
+
+The problem is that <a href=https://uxdesign.cc/why-designers-should-move-from-px-to-rem-and-how-to-do-that-in-figma-c0ea23e07a15>PX units are not always the best option for the web</a>. Though you'll likely get font size information from designers in PX units. For example the design might have H1 headlines on mobile in 30px and on desktop in 50px. Same goes for line-height etc.
+
+Transforming those PX values into REM units is tedious and you'll end up with weird numbers like 1.234rem which is not easy to read by humans. That's why RockFrontend comes
+with a helper that you can use in any CSS or LESS file and that will transform this:
+
+```css
+h2 {
+  font-size: rfGrow(10pxrem, 30pxrem);
+  line-height: rfGrow(15pxrem, 35pxrem);
+  border-bottom: rfGrow(1px, 10px) solid red;
+}
+```
+
+Into that:
+
+```css
+h2 {
+  font-size: calc(0.625rem + 1.25rem * var(--rf-grow));
+  line-height: calc(0.938rem + 1.25rem * var(--rf-grow));
+  border-bottom: calc(1px + 9px * var(--rf-grow)) solid red;
+}
+```
+
+## PostCSS
+
+All the above is done with some postCSS magic. You can have a look at `RockFrontend::addPostCSS()` how it is done.
+
+You can also add custom postCSS rules quite easily:
+
+```php
+// eg in site/ready.php
+$rockfrontend->addPostCSS('foo', function($markup) {
+  return str_replace('foo', 'bar', $markup);
+});
+```
+
+Will modify this CSS file:
+
+```css
+/* This is a foo + foo comment */
+```
+
+Into that output:
+
+```css
+/* This is a bar + bar comment */
+```
