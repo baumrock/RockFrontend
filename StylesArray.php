@@ -164,9 +164,11 @@ class StylesArray extends AssetsArray
       $suffix = " " . $asset->suffix;
       $rel = " rel='stylesheet'";
       if (strpos($suffix, " rel=") === false) $suffix .= $rel;
+      $suffix = trim($suffix);
+      if ($suffix) $suffix = " $suffix";
 
       $debug = $opt->debug ? $asset->debug : '';
-      $out .= "$indent<link href='{$asset->url}$m' $suffix>$debug\n";
+      $out .= "$indent<link href='{$asset->url}$m'$suffix>$debug\n";
       $indent = '  ';
     }
     return $out;
