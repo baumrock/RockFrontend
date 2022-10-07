@@ -137,6 +137,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->wire('home', $this->home);
     $this->alfredCache = $this->wire(new WireData());
 
+    // JS defaults
+    $this->js('growMin', 400);
+    $this->js('growMax', 1440);
+
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
 
@@ -182,6 +186,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function addAssets()
   {
     $rockfrontend = $this;
+
+    // we add RockFrontend.js by default because we want the rf-grow feature
+    $rockfrontend->scripts()->add(__DIR__ . "/RockFrontend.js");
 
     // hook after page render to add script
     // this will also replace alfred tags
@@ -371,8 +378,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
 
     // save markup to cache and generate alfred tag
-    // the tag will be replaced on page rander
-    // this is to make it possible to use alfred() without |noescape filter :))
+    // the tag will be replaced on page render
+    // this is to make it possible to use alfred() without |noescape filter)
     $id = "i" . uniqid();
     $str = "$blockid alfred='$str'";
     $this->alfredCache->set($id, $str);

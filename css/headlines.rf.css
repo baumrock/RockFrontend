@@ -1,0 +1,40 @@
+/**
+ * Pixel REM (base 16px)
+ * 1px   0.06rem
+ * 2px   0.13rem
+ * 3px   0.19rem
+ * 4px   0.3rem
+ * 5px   0.3rem
+ * 6px   0.4rem
+ * 8px   0.5rem
+ * 10px  0.6rem
+ * 12px  0.8rem
+ * 14px  0.9rem
+ * 15px  0.9rem
+ * 16px  1rem
+ * 18px  1.1rem
+ * 20px  1.3rem
+ * 24px  1.5rem
+ * 25px  1.6rem
+ * 28px  1.8rem
+ * 32px  2rem
+ * 36px  2rem
+ * 40px  3rem
+ * 44px  3rem
+ * 48px  3rem
+ * 50px  3rem
+ * 56px  4rem
+ * 64px  4rem
+ * 72px  5rem
+ * 75px  5rem
+ * 80px  5rem
+ * 90px  6rem
+ * 100px 6rem
+ */
+h2 {
+  font-size: calc(2rem + 2rem * var(--rf-grow));
+}
+h3 {
+  outline: 2px solid red;
+  font-size: rfgrow(10px, 40px);
+}

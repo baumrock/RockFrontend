@@ -26,25 +26,8 @@ class StylesArray extends AssetsArray
     return parent::addAll($path, $suffix, $levels, $ext);
   }
 
-  public function render($options = [])
+  private function addComment($opt)
   {
-    if (is_string($options)) $options = ['indent' => $options];
-
-    // TODO make API version of options to support hook injected assets
-
-    // setup options
-    $opt = $this->wire(new WireData());
-    /** @var WireData $opt */
-    $opt->setArray([
-      'debug' => $this->wire->config->debug,
-      'indent' => '  ',
-      'cssDir' => "/site/templates/bundle/",
-      'cssName' => $this->name,
-      'sourcemaps' => $this->wire->config->debug,
-    ]);
-    $opt->setArray($this->options);
-    $opt->setArray($options);
-
     $indent = $opt->indent;
     $out = "\n";
     if ($opt->debug) {
@@ -53,8 +36,12 @@ class StylesArray extends AssetsArray
         $out .= "$indent<!-- autoloading of default styles enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
       }
     }
-    $out .= $this->name == 'head' ? $indent . self::comment . "\n" : '';
+    if ($this->name == 'head') $out .= $indent . self::comment . "\n";
+    return $out;
+  }
 
+  private function parseLessFiles($opt)
+  {
     // if there are any less files we render them at the beginning
     // this makes it possible to overwrite styles via plain CSS later
     /** @var Less $less */
@@ -65,8 +52,9 @@ class StylesArray extends AssetsArray
     $filesCnt = 0;
 
     // parse all less files
+    $out = '';
+    $indent = $opt->indent;
     foreach ($this as $asset) {
-      // bd($asset);
       if ($asset->ext !== 'less') continue;
       if ($opt->debug) $out .= "$indent<!-- loading {$asset->path} -->{$asset->debug}\n";
       if (!$less) {
@@ -115,8 +103,39 @@ class StylesArray extends AssetsArray
       $out .= "$indent<link rel='stylesheet' href='{$url}$m'>$debug\n";
       $indent = '  ';
     }
+    return $out;
+  }
 
-    // render all assets
+  public function render($options = [])
+  {
+    if (is_string($options)) $options = ['indent' => $options];
+
+    // TODO make API version of options to support hook injected assets
+
+    // setup options
+    $opt = $this->wire(new WireData());
+    /** @var WireData $opt */
+    $opt->setArray([
+      'debug' => $this->wire->config->debug,
+      'indent' => '  ',
+      'cssDir' => "/site/templates/bundle/",
+      'cssName' => $this->name,
+      'sourcemaps' => $this->wire->config->debug,
+    ]);
+    $opt->setArray($this->options);
+    $opt->setArray($options);
+
+    $out = '';
+    $out .= $this->parseLessFiles($opt);
+    $out .= $this->renderAssets($opt);
+    if ($out) $out = $this->addComment($opt) . $out;
+    return $out;
+  }
+
+  private function renderAssets($opt)
+  {
+    $out = '';
+    $indent = $opt->indent;
     foreach ($this as $asset) {
       if ($asset->ext === 'less') continue;
       if ($asset instanceof AssetComment) {
