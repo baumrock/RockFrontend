@@ -13,7 +13,7 @@ body {
  * grow <main> so that footer is sticky at the bottom of the page
  * add this class to your <body> element to make the <main> element grow
  */
- .tmg-main-grow {
+.tmg-main-grow {
   display: flex;
   flex-direction: column;
 
@@ -23,15 +23,41 @@ body {
   min-height: 100vh;
 
   // grow <main> section so that footer sticks to bottom
-  main { flex-grow: 1; }
+  main {
+    flex-grow: 1;
+  }
 }
 
 /**
- * boxed layout
+ * boxed layout with outer and inner box
+ *
+ * By default the outer box is 1920px wide. This is intended to be the maximum
+ * outer width of the design. Everything outside this container will be blank
+ * or whatever color or background image/pattern you like. I like to use the
+ * uikit card shadow (using uk-card-default on the outer box element).
+
+ * The inner box is 1440px wide and inteded to be used in every section as inner
+ * container to fit the sections content. Note that the INNER width is 1440px
+ * and it will add 20px of spacing left and right, to make sure that content is
+ * 1440px wide on large screens but has 20px padding on screens < 1440px
  */
-.tmg-boxed {
+@tmg-box-outer: 1920px;
+@tmg-box-inner: 1440px;
+@tmg-box-padding: 20px; // inner box padding
+.tmg-box-outer {
+  outline: 2px solid blue;
   width: 100%;
-  max-width: 800px;
+  max-width: @tmg-box-outer;
   margin-left: auto;
   margin-right: auto;
+}
+.tmg-box-inner {
+  outline: 2px solid red;
+  width: 100%;
+  max-width: calc(@tmg-box-inner + 2 * @tmg-box-padding);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: @tmg-box-padding;
+  padding-right: @tmg-box-padding;
+  box-sizing: border-box;
 }
