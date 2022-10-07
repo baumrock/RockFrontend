@@ -135,12 +135,8 @@ class StylesArray extends AssetsArray
     $opt->setArray($options);
 
     $this->parseLessFiles($opt);
-    foreach ($this as $asset) bd($asset);
-
     $out = $this->renderAssets($opt);
     if ($out) $out = $this->addInfo($opt) . $out;
-
-
     return $out;
   }
 
