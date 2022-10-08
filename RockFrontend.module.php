@@ -101,11 +101,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.0',
+      'version' => '2.0.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
       'icon' => 'paint-brush',
+      'requires' => [
+        'PHP>=8.0',
+      ],
       // The module will work without RockMigrations but you will have to create
       // the layout field manually and add it to templates if you want to use it
       // I'm not using the layout field though, so this feature might be dropped
