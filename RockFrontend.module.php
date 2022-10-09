@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.2',
+      'version' => '2.0.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -359,7 +359,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return string
    */
-  public function alfred($page = null, $options = [])
+  public function alfred(Page $page = null, $options = [])
   {
     if (!$this->alfredAllowed()) return;
 
