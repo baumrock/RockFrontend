@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.1',
+      'version' => '2.0.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -985,11 +985,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Is the given page active in the menu?
+   * 
+   * The root page will only be active if itself is viewed (not any descendant)
+   * 
    * @return bool
    */
   public function isActive($menuItem, $page = null)
   {
     $page = $page ?: $this->wire->page;
+
+    // special treatment for the homepage (root page)
+    // the "home" menu item is only marked as active if the
+    // currently viewed page is really the homepage
+    if ($menuItem->id === 1) return $page->id === 1;
+
+    // all other menu items are marked as active if we are
+    // either on that page or on one of its descendants
     $active = $page->parents()->add($page);
     return $active->has($menuItem);
   }
