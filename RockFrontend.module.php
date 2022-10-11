@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.4',
+      'version' => '2.0.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1196,10 +1196,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
-    $this->wire->files->rmdir(
-      $this->wire->config->paths->assets . "RockFrontend/css",
-      true
-    );
+    $dir = $this->wire->config->paths->assets . "RockFrontend/css";
+    if (is_dir($dir)) $this->wire->files->rmdir($dir, true);
     $this->forceRecompile();
   }
 
