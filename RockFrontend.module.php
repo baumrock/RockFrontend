@@ -238,9 +238,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           $this->addAlfredStyles();
 
           // replace alfred cache markup
-          if (strpos($html, "#alfredcache-")) {
+          // if alfred was added without |noescape it has quotes around
+          if (strpos($html, '"#alfredcache-')) {
             foreach ($this->alfredCache as $key => $str) {
               $html = str_replace("\"$key\"", $str, $html);
+            }
+          }
+          // if alfred was added with |noescape filter we don't have quotes
+          if (strpos($html, '#alfredcache-')) {
+            foreach ($this->alfredCache as $key => $str) {
+              $html = str_replace("$key", $str, $html);
             }
           }
         }
