@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.5',
+      'version' => '2.0.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -236,10 +236,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           $this->js("rootUrl", $this->wire->config->urls->root);
           $this->scripts()->add($this->path . "Alfred.js");
           $this->addAlfredStyles();
-          $html = preg_replace_callback("/data-alfred-(.*?)=1/", function ($match) {
-            $id = $match[1];
-            return $this->alfredCache->get($id);
-          }, $html);
+
+          // replace alfred cache markup
+          if (strpos($html, "#alfredcache-")) {
+            foreach ($this->alfredCache as $key => $str) {
+              $html = str_replace("\"$key\"", $str, $html);
+            }
+          }
         }
 
         // autoload scripts and styles
@@ -439,10 +442,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // save markup to cache and generate alfred tag
     // the tag will be replaced on page render
     // this is to make it possible to use alfred() without |noescape filter)
-    $id = "i" . uniqid();
+    $id = uniqid();
     $str = "$blockid alfred='$str'";
-    $this->alfredCache->set($id, $str);
-    return "data-alfred-$id=1";
+    $key = "#alfredcache-$id";
+    $this->alfredCache->set($key, $str);
+    return $key;
   }
 
   /**
