@@ -235,7 +235,7 @@
       // we do not click the button to open the modal!
       if ($alfred.find("*:not(.alfred) .pw-editing").length) return;
       if ($alfred.find("*:not(.alfred) .pw-edited").length) return;
-      $alfred.find("> .icons > a.alfred-edit").click();
+      $alfred.find("> .alfredelements > .icons > a.alfred-edit").click();
     });
   });
 })();
