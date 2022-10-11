@@ -104,6 +104,8 @@ class Manifest extends Wire
     $arr = array_merge($this->getArray(), $merge);
     unset($arr['filepath']);
     unset($arr['filename']);
+    // this prevents null value warnings in the console
+    foreach ($arr as $k => $v) if ($v === null) $arr[$k] = '';
     $str = json_encode($arr);
     $str = trim($str, "{}");
     $str = str_replace(',"', ",\n  \"", $str);
