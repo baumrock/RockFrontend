@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.6',
+      'version' => '2.0.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -121,6 +121,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->wire->config->ajax) return;
     $this->addHookBefore("Session::init", function (HookEvent $event) {
       if (!array_key_exists(self::getParam, $_GET)) return;
+
+      // disable tracy for the SSE stream
+      $event->wire->config->tracy = ['enabled' => false];
+
+      // get livereload instance
       $live = $this->getLiveReload();
 
       // return silently if secret does not match
@@ -1207,7 +1212,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
-    $dir = $this->wire->config->paths->assets . "RockFrontend/css";
+    $dir = $this->wire->config->paths->assets . "RockFrontend/css/";
     if (is_dir($dir)) $this->wire->files->rmdir($dir, true);
     $this->forceRecompile();
   }
