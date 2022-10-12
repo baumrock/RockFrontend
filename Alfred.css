@@ -94,18 +94,18 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 .alfred.rpb-widget .icon {
   border: 3px solid orange !important;
 }
-.alfred:hover .alfredelements > .icons {
+.alfred:hover > .alfredelements > .icons {
   display: inline-block;
 }
-.alfred:hover .alfredelements > .add-top {
+.alfred:hover > .alfredelements > .add-top {
   display: inline-block;
 }
-.alfred:hover .alfredelements > .add-bottom {
+.alfred:hover > .alfredelements > .add-bottom {
   display: inline-block;
 }
-.alfred:hover .alfredelements > .add-left {
+.alfred:hover > .alfredelements > .add-left {
   display: inline-block;
 }
-.alfred:hover .alfredelements > .add-right {
+.alfred:hover > .alfredelements > .add-right {
   display: inline-block;
 }
