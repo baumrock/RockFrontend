@@ -22,7 +22,7 @@ setTimeout(() => {
             message: "Unsaved changes prevent reload",
             status: "warning",
             pos: "top-center",
-            timeout: 10000,
+            timeout: 0,
           });
           return;
         }
@@ -32,7 +32,7 @@ setTimeout(() => {
             message: "Open panel prevents reload",
             status: "warning",
             pos: "top-center",
-            timeout: 10000,
+            timeout: 0,
           });
           return;
         }
