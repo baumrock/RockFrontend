@@ -28,6 +28,12 @@ setTimeout(() => {
         }
         if (document.querySelectorAll("#pw-panel-shade").length) {
           console.log("detected change - open panel prevents reload");
+          UIkit.notification({
+            message: "Open panel prevents reload",
+            status: "warning",
+            pos: "top-center",
+            timeout: 10000,
+          });
           return;
         }
         // all fine, reload page
