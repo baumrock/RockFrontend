@@ -32,17 +32,21 @@
    * on window resize and have a value between 0 and 1. You can use this variable
    * to grow fonts or section paddings based on the current viewport width.
    */
-  let setGrow = function () {
-    let root = document.documentElement;
+  let root = document.documentElement;
+  let ro = new ResizeObserver(() => {
     let w = window.innerWidth; // viewport width
-    let min = RF.growMin;
-    let max = RF.growMax;
+    let min = RF.growMin || 400;
+    let max = RF.growMax || 1440;
     let grow = 0;
     if (w <= min) grow = 0;
     else if (w >= max) grow = 1;
     else grow = ((w - min) / (max - min)).toFixed(3);
     root.style.setProperty("--rf-grow", grow);
-  };
-  window.addEventListener("resize", setGrow);
-  setGrow();
+  });
+  ro.observe(document.querySelector("html"));
+  setTimeout(() => {
+    let val = root.style.getPropertyValue("--rf-grow");
+    if (val) return;
+    root.style.setProperty("--rf-grow", 0.5);
+  }, 0);
 })();
