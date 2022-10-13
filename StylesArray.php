@@ -121,6 +121,8 @@ class StylesArray extends AssetsArray
    */
   public function postCSS($asset)
   {
+    if (!$this->rockfrontend()->isEnabled('postCSS')) return $asset;
+
     $markup = $asset->getPostCssMarkup();
     if (!$markup) return $asset;
     $rf = $this->rockfrontend();

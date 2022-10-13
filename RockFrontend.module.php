@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.10',
+      'version' => '2.1.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -205,8 +205,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $rockfrontend = $this;
 
-    // we add RockFrontend.js by default because we want the rf-grow feature
-    $rockfrontend->scripts()->add(__DIR__ . "/RockFrontend.js");
+    // add all assets that are enabled in the module's settings
+    foreach ($this->loadScripts ?: [] as $script) {
+      $rockfrontend->scripts()->add(__DIR__ . "/scripts/$script");
+    }
 
     // hook after page render to add script
     // this will also replace alfred tags
@@ -1615,6 +1617,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->message('Installed Module PageFrontEdit');
   }
 
+  /** ##### module config ##### */
+
   /**
    * Config inputfields
    * @param InputfieldWrapper $inputfields
@@ -1637,10 +1641,75 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $inputfields->add($warn);
     }
 
+    $this->wire->config->styles->add($this->wire->config->urls($this) . "RockFrontend.module.css");
+    $this->configSettings($inputfields);
+    $this->configTools($inputfields);
+    return $inputfields;
+  }
+
+  private function addUikitNote(InputfieldSelect $f)
+  {
+    $note = '';
+    foreach (scandir($this->wire->config->paths->templates) as $p) {
+      if (strpos($p, "uikit-") !== 0) continue;
+      $note .= "\nFound /site/templates/$p";
+    }
+    $f->notes .= $note;
+  }
+
+  private function configSettings($inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "Settings";
+
+    $f = new InputfieldMarkup();
+    $f->label = 'LiveReload';
+    if ($live = $this->wire->config->livereload) {
+      if (is_numeric($live)) $value = "LiveReload is enabled (via config.php) - Interval: $live";
+      else $value = var_export($live, true);
+    } else $value = 'LiveReload is disabled. To enable it set $config->livereload = 1; in your config.php';
+    $f->value = $value;
+    $fs->add($f);
+
+    $f = $this->wire->modules->get('InputfieldCheckboxes');
+    $f->name = 'features';
+    $f->label = "Features";
+    $f->addOption('postCSS', 'Use the internel postCSS feature (eg to use rfGrow() syntax)');
+    $f->value = (array)$this->features;
+    $fs->add($f);
+
+    $f = $this->wire->modules->get('InputfieldCheckboxes');
+    $f->name = 'loadScripts';
+    $f->entityEncodeText = false;
+    $f->label = 'Javascript Snippets';
+    $f->notes = 'All selected snippets will be added to the head scripts() array';
+    $f->wrapClass = 'script-checkboxes';
+    foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
+      $name = basename($script);
+      $js = $this->wire->files->fileGetContents($script);
+      $label = $name;
+      preg_match("/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/", $js, $matches);
+      if (count($matches)) {
+        $label .= $this->drop($matches[0]);
+      }
+      $f->addOption($name, $label);
+    }
+    $f->value = (array)$this->loadScripts;
+    $fs->add($f);
+
+    $inputfields->add($fs);
+  }
+
+  private function configTools(&$inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "Tools";
+
     $this->profileExecute();
     $f = new InputfieldSelect();
     $f->label = "Install Profile";
     $f->name = 'profile';
+    $f->collapsed = Inputfield::collapsedYes;
     $accordion = '<p>Available Profiles (click to see details):</p><ul uk-accordion>';
     foreach ($this->profiles() as $path => $label) {
       $text = $this->wire->sanitizer->entitiesMarkdown(
@@ -1655,58 +1724,61 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->prependMarkup = "<p class='uk-text-warning'>WARNING: This will overwrite existing files - make sure to have backups or use GIT for version controlling your project!</p>";
     $f->prependMarkup .= $accordion;
     $f->notes = $this->profileInstalledNote();
-    $inputfields->add($f);
+    $fs->add($f);
 
     // download uikit
     $this->downloadUikit();
     $f = new InputfieldSelect();
     $f->name = 'uikit';
     $f->label = 'Download UIkit';
+    $f->collapsed = Inputfield::collapsedYes;
     $f->notes = "Will be downloaded to /site/templates/";
     foreach ($this->getUikitVersions() as $k => $v) $f->addOption($k);
-    $inputfields->add($f);
+    $fs->add($f);
     $this->addUikitNote($f);
+
+    $f = new InputfieldText();
+    $f->name = 'webfont';
+    $f->label = 'Webfont-Downloader';
+    $f->collapsed = Inputfield::collapsedYes;
+    $f->description = 'Using webfonts might be illegal in your country due to GDPR regulations!';
+    $f->notes = 'Enter URL to download webfont from, eg https://fonts.googleapis.com/css?family=Baloo+2:800|Open+Sans&display=swap
+        Font files will be downloaded to /site/templates/fonts/';
+    $fs->add($f);
 
     $this->downloadCDN();
     $f = new InputfieldMarkup();
     $f->name = 'cdn';
     $f->label = 'CDN-Downloader';
+    $f->collapsed = Inputfield::collapsedYes;
     $f->description = 'Loading assets via CDN might be illegal in your country due to GDPR regulations!';
     $f->notes = 'Files will be downloaded to /site/templates/assets/
-      Need more presets? Let me know in the forum!';
+        Need more presets? Let me know in the forum!';
     $f->value = "
-      Presets:
-      <ul class='presets'>
-        <li><a href=# data-cdn='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js' data-filename='alpine.js'>AlpineJS</a></li>
-      </ul>
-      <style>.cdntable td {padding: 0;margin:0}</style>
-      <table class='uk-table cdntable'>
-        <tr><td>CDN Url</td><td><input type='text' name='cdn'></td></tr>
-        <tr><td>Local filename</td><td><input type='text' name='filename'></td></tr>
-      </table>
-      <script>
-      (function() {
-        let util = UIkit.util;
-        util.on('.presets a', 'click', function(e) {
-          e.preventDefault();
-          let a = e.target.closest('a');
-          let cdn = util.data(a, 'cdn');
-          let filename = util.data(a, 'filename');
-          util.$('input[name=cdn]').value = cdn;
-          util.$('input[name=filename]').value = filename;
-        });
-      })()
-      </script>
-      ";
-    $inputfields->add($f);
-
-    $f = new InputfieldText();
-    $f->name = 'webfont';
-    $f->label = 'Webfont-Downloader';
-    $f->description = 'Using webfonts might be illegal in your country due to GDPR regulations!';
-    $f->notes = 'Enter URL to download webfont from, eg https://fonts.googleapis.com/css?family=Baloo+2:800|Open+Sans&display=swap
-      Font files will be downloaded to /site/templates/fonts/';
-    $inputfields->add($f);
+        Presets:
+        <ul class='presets'>
+          <li><a href=# data-cdn='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js' data-filename='alpine.js'>AlpineJS</a></li>
+        </ul>
+        <style>.cdntable td {padding: 0;margin:0}</style>
+        <table class='uk-table cdntable'>
+          <tr><td>CDN Url</td><td><input type='text' name='cdn'></td></tr>
+          <tr><td>Local filename</td><td><input type='text' name='filename'></td></tr>
+        </table>
+        <script>
+        (function() {
+          let util = UIkit.util;
+          util.on('.presets a', 'click', function(e) {
+            e.preventDefault();
+            let a = e.target.closest('a');
+            let cdn = util.data(a, 'cdn');
+            let filename = util.data(a, 'filename');
+            util.$('input[name=cdn]').value = cdn;
+            util.$('input[name=filename]').value = filename;
+          });
+        })()
+        </script>
+        ";
+    $fs->add($f);
 
     // webfont downloader
     $data = $this->downloadWebfont();
@@ -1714,10 +1786,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $f = new InputfieldMarkup();
       $f->label = 'Suggested CSS';
       $f->description = "You can copy&paste the created CSS into your stylesheet. The paths expect it to live in /site/templates/layouts/ - change the path to your needs!
-        See [https://css-tricks.com/snippets/css/using-font-face-in-css/](https://css-tricks.com/snippets/css/using-font-face-in-css/) for details!";
+          See [https://css-tricks.com/snippets/css/using-font-face-in-css/](https://css-tricks.com/snippets/css/using-font-face-in-css/) for details!";
       $f->value = "<pre style='max-height:400px;'><code>{$data->suggestedCss}</code></pre>";
       $f->notes = "Data above is stored in the current session and will be reset on logout";
-      $inputfields->add($f);
+      $fs->add($f);
     }
     if ($data->rawCss) {
       $f = new InputfieldMarkup();
@@ -1725,20 +1797,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $f->value = "<pre style='max-height:400px;'><code>{$data->rawCss}</code></pre>";
       $f->notes = "Data above is stored in the current session and will be reset on logout";
       $f->collapsed = Inputfield::collapsedYes;
-      $inputfields->add($f);
+      $fs->add($f);
     }
-
-    return $inputfields;
-  }
-
-  private function addUikitNote(InputfieldSelect $f)
-  {
-    $note = '';
-    foreach (scandir($this->wire->config->paths->templates) as $p) {
-      if (strpos($p, "uikit-") !== 0) continue;
-      $note .= "\nFound /site/templates/$p";
-    }
-    $f->notes .= $note;
+    $inputfields->add($fs);
   }
 
   private function downloadCDN()
@@ -1759,6 +1820,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $content = $this->wire->files->fileGetContents($file);
       $this->wire->files->filePutContents($file, "// $url\n$content");
     }
+  }
+
+  private function drop($str)
+  {
+    return "<div class='uk-inline'>
+      <span uk-icon='info' class='uk-margin-small-left'></span>
+      <div class='uk-card uk-card-body uk-card-default' uk-drop>"
+      . nl2br($this->wire->sanitizer->entities($str))
+      . "</div>
+    </div>";
+  }
+
+  public function isEnabled($feature): bool
+  {
+    if (!is_array($this->features)) return false;
+    return in_array($feature, $this->features);
   }
 
   public function profileInstalledNote()
