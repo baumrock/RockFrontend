@@ -385,9 +385,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
     $page = $page ? $this->wire->pages->get((string)$page) : false;
-    if (!$page instanceof Page) {
-      throw new WireException("First argument must be a page (or int/selector)");
-    }
 
     // is given page a widget block stored in field rockpagebuilder_widgets?
     $isWidget = false;
