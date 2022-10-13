@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.0.7',
+      'version' => '2.0.8',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -374,7 +374,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return string
    */
-  public function alfred(Page $page = null, $options = [])
+  public function alfred($page = null, $options = [])
   {
     if (!$this->alfredAllowed()) return;
 
@@ -385,6 +385,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
     $page = $page ? $this->wire->pages->get((string)$page) : false;
+    if (!$page instanceof Page) {
+      throw new WireException("First argument must be a page (or int/selector)");
+    }
 
     // is given page a widget block stored in field rockpagebuilder_widgets?
     $isWidget = false;
