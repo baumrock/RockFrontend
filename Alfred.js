@@ -231,8 +231,11 @@
     // edit block on double click
     $(document).on("dblclick", function (e) {
       let $alfred = $(e.target).closest(".alfred");
+      console.log($alfred);
       // if we are currently inline-editing somthing in this block
       // we do not click the button to open the modal!
+      if ($alfred.find("> .pw-editing").length) return;
+      if ($alfred.find("> .pw-edited").length) return;
       if ($alfred.find("*:not(.alfred) .pw-editing").length) return;
       if ($alfred.find("*:not(.alfred) .pw-edited").length) return;
       $alfred.find("> .alfredelements > .icons > a.alfred-edit").click();
