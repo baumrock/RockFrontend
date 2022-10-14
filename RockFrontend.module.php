@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.0',
+      'version' => '2.1.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -141,6 +141,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
+
+    if (!is_array($this->features)) $this->features = [];
+    if (!is_array($this->migrations)) $this->migrations = [];
 
     require_once($this->path . "Asset.php");
     require_once($this->path . "AssetComment.php");
@@ -1117,12 +1120,43 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function migrate()
   {
+    $this->migrateFavicon();
+    $this->migrateOgImage();
+    $this->migrateLayoutField();
+  }
+
+  public function migrateFavicon()
+  {
+    if (!in_array("favicon", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
+        self::field_favicon => [
+          'type' => 'image',
+          'label' => 'Favicon',
+          'maxFiles' => 1,
+          'descriptionRows' => 0,
+          'extensions' => 'png',
+          'maxSize' => 3, // max 3 megapixels
+          'icon' => 'picture-o',
+          'outputFormat' => FieldtypeFile::outputFormatSingle,
+          'description' => 'For best browser support and quality upload a high resolution PNG (min 512x512). You can use transparency in your favicon.',
+          'notes' => '[See here](https://loqbooq.app/blog/add-favicon-modern-browser-guide) and [here](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/) to learn more about favicons',
+          'tags' => self::tags,
+        ],
+      ],
+    ]);
+    $rm->addFieldToTemplate(self::field_favicon, 'home');
+  }
+
+  public function migrateLayoutField()
+  {
+    if (!in_array("layoutfield", $this->migrations)) return;
     $rm = $this->rm();
     $rm->migrate([
       'fields' => [
         self::field_layout => [
           'type' => 'text',
-          'tags' => self::tags,
           'label' => 'Layout',
           'icon' => 'cubes',
           'collapsed' => Inputfield::collapsedYes,
@@ -1133,20 +1167,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'tagsUrl' => self::tagsUrl,
           'closeAfterSelect' => 0, // dont use false
           'flags' => Field::flagSystem,
+          'tags' => self::tags,
         ],
-        self::field_favicon => [
-          'type' => 'image',
-          'label' => 'Favicon',
-          'maxFiles' => 1,
-          'descriptionRows' => 0,
-          'columnWidth' => 50,
-          'extensions' => 'png',
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatSingle,
-          'description' => 'For best browser support and quality upload a high resolution PNG (min 512x512). You can use transparency in your favicon.',
-          'notes' => '[See here](https://loqbooq.app/blog/add-favicon-modern-browser-guide) and [here](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/) to learn more about favicons'
-        ],
+      ],
+    ]);
+  }
+
+  public function migrateOgImage()
+  {
+    if (!in_array("ogimage", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
         self::field_ogimage => [
           'type' => 'image',
           'label' => 'og:image',
@@ -1159,10 +1191,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'icon' => 'picture-o',
           'outputFormat' => FieldtypeFile::outputFormatSingle,
           'description' => 'Here you can add the fallback og:image that will be used by RockFrontend\'s SEO-Tools.',
+          'tags' => self::tags,
         ],
       ],
     ]);
-    $rm->addFieldToTemplate(self::field_favicon, 'home');
     $rm->addFieldToTemplate(self::field_ogimage, 'home');
   }
 
@@ -1625,6 +1657,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function getModuleConfigInputfields($inputfields)
   {
+    $this->migrate();
 
     $video = new InputfieldMarkup();
     $video->label = 'processwire-rocks.com';
@@ -1676,6 +1709,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Features";
     $f->addOption('postCSS', 'Use the internel postCSS feature (eg to use rfGrow() syntax)');
     $f->value = (array)$this->features;
+    $fs->add($f);
+
+    $f = $this->wire->modules->get('InputfieldCheckboxes');
+    $f->name = 'migrations';
+    $f->label = "Migrations";
+    $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
+    $f->addOption('ogimage', 'og:image - Create an image field for an og:image and add it to the home template');
+    $f->addOption('layoutfield', 'layoutfield - Create the layout field that can override layout rendering');
+    $f->value = (array)$this->migrations;
     $fs->add($f);
 
     $f = $this->wire->modules->get('InputfieldCheckboxes');
