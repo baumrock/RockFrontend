@@ -1,4 +1,7 @@
-<?php namespace ProcessWire;
+<?php
+
+namespace ProcessWire;
+
 /** @var RockFrontend $rockfrontend */
 $rockfrontend->styles()
   // add uikit theme from wire folder
@@ -12,19 +15,21 @@ $rockfrontend->styles()
   // some styles are added by default, see RockFrontend::ready() for details
 
   // you can include any custom css files as you wish
-  ->add('/site/templates/bundle/main.css')
-  ;
+  // ->add('/site/templates/bundle/main.css')
+;
 $rockfrontend->scripts()
-  ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/js/uikit.min.js')
-  ;
-?><!DOCTYPE html>
+  ->add('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/js/uikit.min.js');
+?>
+<!DOCTYPE html>
 <html lang="de">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <?= $rockfrontend->seo() ?>
 </head>
+
 <body>
   <?= $rockfrontend->renderLayout($page) ?>
   <?php
@@ -36,4 +41,5 @@ $rockfrontend->scripts()
     ->render();
   ?>
 </body>
+
 </html>
