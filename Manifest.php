@@ -24,6 +24,14 @@ class Manifest extends Wire
   /**
    * @return self
    */
+  public function backgroundColor($color)
+  {
+    return $this->bgColor($color);
+  }
+
+  /**
+   * @return self
+   */
   public function bgColor($color)
   {
     $this->bgColor = $color;
