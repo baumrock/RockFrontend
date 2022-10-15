@@ -91,7 +91,7 @@ class Manifest extends Wire
     return [
       'name' => $this->name,
       'short_name' => $this->shortname ?: $this->name,
-      'background-color' => $this->bgColor,
+      'background_color' => $this->bgColor,
       'theme_color' => $this->themeColor,
       'display' => $this->display,
       'filename' => $this->filename,
