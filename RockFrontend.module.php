@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.4',
+      'version' => '2.1.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -119,8 +119,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     if (!$this->wire->config->livereload) return;
     if ($this->wire->config->ajax) return;
+    if (!array_key_exists(self::getParam, $_GET)) return;
     $this->addHookBefore("Session::init", function (HookEvent $event) {
-      if (!array_key_exists(self::getParam, $_GET)) return;
 
       // disable tracy for the SSE stream
       $event->wire->config->tracy = ['enabled' => false];
@@ -312,7 +312,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Add a custom postCSS callback
-   * 
+   *
    * Usage:
    * $rockfrontend->addPostCSS('foo', function($markup) {
    *   return str_replace('foo', 'bar', $markup);
@@ -1017,9 +1017,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Is the given page active in the menu?
-   * 
+   *
    * The root page will only be active if itself is viewed (not any descendant)
-   * 
+   *
    * @return bool
    */
   public function isActive($menuItem, $page = null)
