@@ -64,6 +64,7 @@ class AssetsArray extends \ProcessWire\WireArray
     /** @var RockFrontend $rf */
     $rf = $this->wire('modules')->get('RockFrontend');
     $path = $rf->getPath($path);
+    if (!$path) return $this;
     $files = $this->wire->files->find($path, [
       'recursive' => $levels,
       'extensions' => $ext,
