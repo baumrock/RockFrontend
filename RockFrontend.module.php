@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.10',
+      'version' => '2.1.11',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -195,6 +195,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
     $this->addHookAfter("Modules::refresh", $this, "refreshModules");
     $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
+    $this->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
 
     // health checks
     $this->checkHealth();
@@ -521,6 +522,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $styles->addAll('/site/templates/partials');
         $styles->addAll('/site/assets/RockMatrix');
         $styles->addAll('/site/assets/RockPageBuilder');
+
+        // add the webfonts.css file if it exists
+        $styles->add('/site/templates/fonts/webfonts.css');
       }
     }
   }
@@ -1716,6 +1720,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = "Settings";
 
+    $f = new InputfieldText();
+    $f->label = 'Webfonts';
+    $f->name = 'webfonts';
+    $f->description = "Enter url to webfonts. These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths.";
+    $f->value = $this->webfonts;
+    $f->notes = $this->showFontFileSize();
+    $fs->add($f);
+
     $f = new InputfieldMarkup();
     $f->label = 'LiveReload';
     if ($live = $this->wire->config->livereload) {
@@ -1801,7 +1813,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addUikitNote($f);
 
     $f = new InputfieldText();
-    $f->name = 'webfont';
+    $f->name = 'webfont-downloader';
     $f->label = 'Webfont-Downloader';
     $f->entityEncodeText = false;
     $f->collapsed = Inputfield::collapsedYes;
@@ -1911,7 +1923,35 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /** ##### webfont downloader ##### */
 
-  private function createCssSuggestion($data): string
+  public function createWebfontsFile(HookEvent $event)
+  {
+    if ($event->process != "ProcessModule") return;
+    if ($this->wire->input->get('name', 'string') != 'RockFrontend') return;
+    $url = $this->wire->input->post->webfonts;
+    if ($this->webfonts == $url) return; // no change
+    $css = $this->downloadWebfontFiles($url);
+    $this->wire->files->filePutContents(
+      $this->wire->config->paths->templates . "fonts/webfonts.css",
+      $css
+    );
+  }
+
+  public function downloadWebfontFiles($url)
+  {
+    $data = $this->getFontData();
+    /** @var WireHttp $http */
+    $http = $this->wire(new WireHttp());
+    foreach (self::webfont_agents as $format => $agent) {
+      $data->rawCss .= "/* requesting format '$format' by using user agent '$agent' */\n";
+      $http->setHeader("user-agent", $agent);
+      $result = $http->get($url);
+      $data->rawCss .= $result;
+      $data = $this->parseResult($result, $format, $data);
+    }
+    return trim($this->createCssSuggestion($data, false), "\n");
+  }
+
+  private function createCssSuggestion($data, $deep = true): string
   {
     // bd($data->files, 'files');
     $css = "/* suggestion for practical level of browser support */";
@@ -1941,6 +1981,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
       $css .= "\n" . $set->render($data->parserformat);
     }
+
+    if (!$deep) return $css;
 
     $css .= "\n\n/* suggestion for deepest possible browser support */";
     foreach ($data->fonts as $name => $set) {
@@ -1982,7 +2024,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function downloadWebfont(): WireData
   {
-    $url = $this->wire->input->post('webfont', 'string');
+    $url = $this->wire->input->post('webfont-downloader', 'string');
     if (!$url) {
       // get data from session and return it
       $sessiondata = (array)json_decode((string)$this->wire->session->webfontdata);
@@ -2106,6 +2148,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
     // db($data, 'data');
     return $data;
+  }
+
+  private function showFontFileSize(): string
+  {
+    $out = "Filesize of all .woff2 files in /site/templates/fonts: {size}";
+    $size = 0;
+    foreach (glob($this->wire->config->paths->templates . "fonts/*.woff2") as $file) {
+      $size += filesize($file);
+      $out .= "\n" . basename($file);
+    }
+    return str_replace("{size}", wireBytesStr($size, true), $out);
   }
 
   /** ##### END webfont downloader ##### */
