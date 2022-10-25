@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.6',
+      'version' => '2.1.7',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -133,12 +133,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       if (!$live->validSecret()) return;
 
       $event->object->sessionAllow = false;
+      $this->isLiveReload = true;
       $live->watch();
     });
   }
 
   public function init()
   {
+    // early exit if we are on a livereload stream
+    // if we dont do that livereload will trigger CSS creation of assets
+    // and alfred styles are missing in head.css
+    if ($this->isLiveReload) return;
+
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
 
