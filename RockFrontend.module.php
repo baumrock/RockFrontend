@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.7',
+      'version' => '2.1.8',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1011,7 +1011,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // convert pxrem to px
     // font-size: 20pxrem; --> font-size: 1.25rem;
     $data->set("pxrem", function ($markup) {
-      return preg_replace_callback("/([0-9]+)(pxrem)/", function ($matches) {
+      return preg_replace_callback("/([0-9\.]+)(pxrem)/", function ($matches) {
         $px = $matches[1];
         $rem = round($px / $this->remBase, 3);
         return $rem . "rem";
