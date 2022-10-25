@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.5',
+      'version' => '2.1.6',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1359,7 +1359,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // if render() was called from within a latte file we return a HTML object
     // so that we dont need to use the |noescape filter
-    if (strpos(Debug::backtrace()[0]['file'], "/site/assets/cache/Latte/") === 0) {
+    if (
+      // this works for $rockfrontend->render()
+      strpos(Debug::backtrace()[0]['file'], "/site/assets/cache/Latte/") === 0
+      // this works for $rockfrontend->renderIf()
+      or strpos(Debug::backtrace()[1]['file'], "/site/assets/cache/Latte/") === 0
+    ) {
       return $this->html($html);
     }
 
