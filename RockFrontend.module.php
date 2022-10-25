@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.8',
+      'version' => '2.1.9',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -835,7 +835,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     foreach ($this->folders as $f) {
       $dir = $f . ltrim($path, '/');
-      if (is_dir($dir)) return rtrim($dir, '/') . '/';
+      if ($inRoot and is_dir($dir)) return rtrim($dir, '/') . '/';
     }
 
     if ($forcePath) return rtrim($path, '/') . '/';
