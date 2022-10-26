@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.12',
+      'version' => '2.1.13',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1369,11 +1369,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // if render() was called from within a latte file we return a HTML object
     // so that we dont need to use the |noescape filter
+    $cache = $this->wire->config->urls->cache;
     if (
       // this works for $rockfrontend->render()
-      strpos(Debug::backtrace()[0]['file'], "/site/assets/cache/Latte/") === 0
+      strpos(Debug::backtrace()[0]['file'], $cache . "Latte/") === 0
       // this works for $rockfrontend->renderIf()
-      or strpos(Debug::backtrace()[1]['file'], "/site/assets/cache/Latte/") === 0
+      or strpos(Debug::backtrace()[1]['file'], $cache . "Latte/") === 0
     ) {
       return $this->html($html);
     }
@@ -1723,7 +1724,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = new InputfieldText();
     $f->label = 'Webfonts';
     $f->name = 'webfonts';
-    $f->description = "Enter url to webfonts. These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths.";
+    $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed.";
     $f->value = $this->webfonts;
     $f->notes = $this->showFontFileSize();
     $fs->add($f);
@@ -1939,6 +1940,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function downloadWebfontFiles($url)
   {
     $data = $this->getFontData();
+
+    // reset fonts path to remove unused font files
+    $fontsdir = $this->wire->config->paths->templates . "fonts";
+    $this->wire->files->rmdir($fontsdir, true);
+    $this->wire->files->mkdir($fontsdir);
+
     /** @var WireHttp $http */
     $http = $this->wire(new WireHttp());
     foreach (self::webfont_agents as $format => $agent) {
@@ -1954,7 +1961,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function createCssSuggestion($data, $deep = true): string
   {
     // bd($data->files, 'files');
-    $css = "/* suggestion for practical level of browser support */";
+    $fontsdir = $this->wire->config->urls->templates . "fonts/";
+    $css = $deep ? "/* suggestion for practical level of browser support */" : '';
     foreach ($data->fonts as $name => $set) {
       /** @var AtRuleSet $set */
       // bd('create suggestion for name '.$name);
@@ -1973,7 +1981,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $comment = self::webfont_comments[$file->format];
         // comment needs to be first!
         // last comma will be trimmed and css render() will add ; at the end!
-        $src .= "\n    $comment\n    url('/site/templates/fonts/{$file->name}') format('{$file->format}'),";
+        $src .= "\n    $comment\n    url('$fontsdir{$file->name}') format('{$file->format}'),";
       }
       $src = rtrim($src, ",\n ");
       $rule->setValue($src);
@@ -2001,8 +2009,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       // see https://css-tricks.com/snippets/css/using-font-face-in-css/#practical-level-of-browser-support
       $eot = $files->get("format=eot");
       if ($eot) {
-        $src .= "url('/site/templates/fonts/{$eot->name}'); /* IE9 Compat Modes */\n  ";
-        $src .= "src: url('/site/templates/fonts/{$eot->name}?#iefix') format('embedded-opentype'), /* IE6-IE8 */\n  ";
+        $src .= "url('$fontsdir{$eot->name}'); /* IE9 Compat Modes */\n  ";
+        $src .= "src: url('$fontsdir{$eot->name}?#iefix') format('embedded-opentype'), /* IE6-IE8 */\n  ";
       }
       foreach ($files->find("format!=eot") as $file) {
         $format = $file->format;
@@ -2010,7 +2018,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $comment = self::webfont_comments[$file->format];
         // comment needs to be first!
         // last comma will be trimmed and css render() will add ; at the end!
-        $src .= "\n    $comment\n    url('/site/templates/fonts/{$file->name}') format('{$file->format}'),";
+        $src .= "\n    $comment\n    url('$fontsdir{$file->name}') format('{$file->format}'),";
       }
       $src = trim($src, ",\n ");
       $rule->setValue($src);
