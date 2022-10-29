@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.13',
+      'version' => '2.1.14',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -140,10 +140,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
-    // early exit if we are on a livereload stream
-    // if we dont do that livereload will trigger CSS creation of assets
-    // and alfred styles are missing in head.css
-    if ($this->isLiveReload) return;
 
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
@@ -156,6 +152,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     require_once($this->path . "AssetsArray.php");
     require_once($this->path . "StylesArray.php");
     require_once($this->path . "ScriptsArray.php");
+
+    // early exit if we are on a livereload stream
+    // if we dont do that livereload will trigger CSS creation of assets
+    // and alfred styles are missing in head.css
+    // it is important though to load all php files above!
+    if ($this->isLiveReload) return;
 
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
