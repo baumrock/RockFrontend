@@ -526,7 +526,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $styles->addAll('/site/assets/RockPageBuilder');
 
         // add the webfonts.css file if it exists
-        $styles->add('/site/templates/fonts/webfonts.css');
+        $file = $this->getFile('/site/templates/webfonts/webfonts.css');
+        if (is_file($file)) $styles->add($file);
       }
     }
   }
@@ -1815,17 +1816,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs->add($f);
     $this->addUikitNote($f);
 
-    $f = new InputfieldText();
-    $f->name = 'webfont-downloader';
-    $f->label = 'Webfont-Downloader';
-    $f->entityEncodeText = false;
-    $f->collapsed = Inputfield::collapsedYes;
-    $f->description = 'Using webfonts might be illegal in your country due to GDPR regulations!';
-    $f->description .= "\nGo to <a href=https://fonts.google.com target=_blank>fonts.google.com</a> and copy the link to your font.";
-    $f->notes = 'Enter URL to download webfont from, eg https://fonts.googleapis.com/css?family=Baloo+2:800|Open+Sans&display=swap
-        Font files will be downloaded to /site/templates/fonts/';
-    $fs->add($f);
-
     $this->downloadCDN();
     $f = new InputfieldMarkup();
     $f->name = 'cdn';
@@ -1934,7 +1924,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->webfonts == $url) return; // no change
     $css = $this->downloadWebfontFiles($url);
     $this->wire->files->filePutContents(
-      $this->wire->config->paths->templates . "fonts/webfonts.css",
+      $this->wire->config->paths->templates . "webfonts/webfonts.css",
       $css
     );
   }
@@ -1944,7 +1934,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $data = $this->getFontData();
 
     // reset fonts path to remove unused font files
-    $fontsdir = $this->wire->config->paths->templates . "fonts";
+    $fontsdir = $this->wire->config->paths->templates . "webfonts";
     $this->wire->files->rmdir($fontsdir, true);
     $this->wire->files->mkdir($fontsdir);
 
@@ -1963,7 +1953,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function createCssSuggestion($data, $deep = true): string
   {
     // bd($data->files, 'files');
-    $fontsdir = $this->wire->config->urls->templates . "fonts/";
+    $fontsdir = $this->wire->config->urls->templates . "webfonts/";
     $css = $deep ? "/* suggestion for practical level of browser support */" : '';
     foreach ($data->fonts as $name => $set) {
       /** @var AtRuleSet $set */
@@ -2081,7 +2071,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $data->parserformat = $of;
 
     // create fonts dir
-    $dir = $this->wire->config->paths->templates . "fonts/";
+    $dir = $this->wire->config->paths->templates . "webfonts/";
     $this->wire->files->mkdir($dir);
     $data->fontdir = $dir;
 
@@ -2162,9 +2152,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function showFontFileSize(): string
   {
-    $out = "Filesize of all .woff2 files in /site/templates/fonts: {size}";
+    $out = "Filesize of all .woff2 files in /site/templates/webfonts: {size}";
     $size = 0;
-    foreach (glob($this->wire->config->paths->templates . "fonts/*.woff2") as $file) {
+    foreach (glob($this->wire->config->paths->templates . "webfonts/*.woff2") as $file) {
       $size += filesize($file);
       $out .= "\n" . basename($file);
     }
