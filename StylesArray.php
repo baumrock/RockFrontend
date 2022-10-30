@@ -83,6 +83,12 @@ class StylesArray extends AssetsArray
       if (!is_file($cssFile)) $recompile = true;
       elseif ($lessCurrent !== $lessCache) $recompile = true;
       elseif ($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
+      else {
+        // check if any of the less files in RockFrontend module folder have changed
+        foreach (glob(__DIR__ . "/less/*.less") as $f) {
+          if (filemtime($f) > filemtime($cssFile)) $recompile = true;
+        }
+      }
 
       // create css file
       $url = str_replace(
