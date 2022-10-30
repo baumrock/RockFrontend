@@ -1,0 +1,22 @@
+@rf-boxed: 1920px;
+@rf-boxed-inner: 1440px;
+@rf-boxed-padding: 20px; // inner box padding
+
+// boxed container
+.rf-boxed {
+  // outline: 2px solid blue;
+  width: 100%;
+  max-width: @rf-boxed;
+  margin-left: auto;
+  margin-right: auto;
+}
+.rf-boxed-inner {
+  // outline: 2px solid red;
+  width: 100%;
+  max-width: calc(@rf-boxed-inner + 2 * @rf-boxed-padding);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: @rf-boxed-padding;
+  padding-right: @rf-boxed-padding;
+  box-sizing: border-box;
+}
