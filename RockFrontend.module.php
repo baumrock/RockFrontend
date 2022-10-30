@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.1.15',
+      'version' => '2.2.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -270,9 +270,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
             }
           }
         }
-
-        // autoload scripts and styles
-        $rockfrontend->autoload($page);
 
         // at the very end we inject the js variables
         $assets = '';
@@ -506,30 +503,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $dir = $this->wire->config->paths->assets . "RockFrontend/";
     if (strpos($path, $dir) === 0) return $path;
     return $dir . trim($path, "/");
-  }
-
-  /**
-   * Autoload scripts and styles
-   */
-  public function autoload($page)
-  {
-    $styles = $this->styles();
-    $scripts = $this->scripts();
-
-    if ($page->template != 'admin') {
-      // frontend
-      if ($styles->opt('autoload')) {
-        $styles->addAll('/site/templates/layouts');
-        $styles->addAll('/site/templates/sections');
-        $styles->addAll('/site/templates/partials');
-        $styles->addAll('/site/assets/RockMatrix');
-        $styles->addAll('/site/assets/RockPageBuilder');
-
-        // add the webfonts.css file if it exists
-        $file = $this->getFile('/site/templates/webfonts/webfonts.css');
-        if (is_file($file)) $styles->add($file);
-      }
-    }
   }
 
   /**

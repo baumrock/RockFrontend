@@ -6,7 +6,6 @@ use ProcessWire\Less;
 use ProcessWire\RockFrontend;
 use ProcessWire\WireArray;
 use ProcessWire\WireData;
-use ProcessWire\WireException;
 
 class StylesArray extends AssetsArray
 {
@@ -26,6 +25,27 @@ class StylesArray extends AssetsArray
   public function addAll($path, $suffix = '', $levels = 2, $ext = ['css', 'less'])
   {
     return parent::addAll($path, $suffix, $levels, $ext);
+  }
+
+  /**
+   * @return self
+   */
+  public function addDefaultFolders()
+  {
+    if ($this->wire->page->template == 'admin') return $this;
+
+    // add all style files in the following folders
+    $this->addAll('/site/templates/layouts');
+    $this->addAll('/site/templates/sections');
+    $this->addAll('/site/templates/partials');
+    $this->addAll('/site/assets/RockMatrix');
+    $this->addAll('/site/assets/RockPageBuilder');
+
+    // add the webfonts.css file if it exists
+    $file = $this->getFile('/site/templates/webfonts/webfonts.css');
+    if (is_file($file)) $this->add($file);
+
+    return $this;
   }
 
   private function addInfo($opt)
