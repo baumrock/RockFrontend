@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.2.0',
+      'version' => '2.3.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -166,8 +166,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // JS defaults
     $this->remBase = 16; // default base for px-->rem conversion
-    $this->js('growMin', 400);
-    $this->js('growMax', 1440);
     $this->initPostCSS();
 
     // watch this file and run "migrate" on change or refresh
@@ -341,14 +339,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Convert px to rem
    */
-  public function rem($value): WireData
+  public function rem($value): RemData
   {
+    require_once __DIR__ . "/RemData.php";
     $value = strtolower(trim($value));
     preg_match("/(.*?)([a-z]+)/", $value, $matches);
     $val = trim($matches[1]);
     $unit = trim($matches[2]);
 
-    $data = $this->wire(new WireData());
+    $data = $this->wire(new RemData());
     $data->val = $val;
     $data->unit = $unit;
 
@@ -970,9 +969,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // rfGrow() postCSS replacer
     $data->set("rfGrow(", function ($markup) {
-      return preg_replace_callback("/rfGrow\((.*?),(.*?)\)/", function ($match) {
+      return preg_replace_callback("/rfGrow\((.*?),(.*?)(,(.*?))?(,(.*?))?\)/", function ($match) {
         // bd($match);
-        if (count($match) !== 3) return false;
+        if (count($match) < 3) return false;
         try {
           $min = $this->rem($match[1]);
           $max = $this->rem($match[2]);
@@ -980,8 +979,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
             "rfGrow(error: min and max value must have the same unit)"
           );
 
+          // setup minimum and maximum viewport settings
+          // we use either values set in config
+          // or we use default values (400/1440)
+          // or we use values set in rfGrow(10, 100, 600, 800)
+          // that means min value = 10 @ 600px, max = 100 @ 800px viewport
+          $growMin = $this->wire->config->growMin ?: 400;
+          if (count($match) > 4) $growMin = $match[4];
+          $growMax = $this->wire->config->growMax ?: 1440;
+          if (count($match) > 6) $growMax = $match[6];
+
           $diff = $max->val - $min->val;
-          return "calc({$min->val}{$min->unit} + {$diff}{$min->unit} * var(--rf-grow))";
+          $grow = "$min + $diff * ((100vw - {$growMin}px) / ($growMax - $growMin))";
+
+          return "clamp($min, $grow, $max)";
         } catch (\Throwable $th) {
           return $th->getMessage();
         }
