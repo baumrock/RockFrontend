@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.3.0',
+      'version' => '2.3.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -990,8 +990,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           if (count($match) > 6) $growMax = $match[6];
 
           $diff = $max->val - $min->val;
+          if ($max->unit == 'rem') $diff = $diff * $this->remBase;
           $grow = "$min + $diff * ((100vw - {$growMin}px) / ($growMax - $growMin))";
 
+          // return "calc($grow)"; // debugging
           return "clamp($min, $grow, $max)";
         } catch (\Throwable $th) {
           return $th->getMessage();
