@@ -1,3 +1,6 @@
+{* we need the rf-toggle javascript for the menu toggles so we add it to the scripts *}
+{$rockfrontend->scripts()->add('/site/modules/RockFrontend/scripts/rf-toggle.js', 'defer')}
+
 <header {alfred($page)}>
   <div class="rf-boxed-inner">
     <nav class="uk-navbar-container uk-navbar-transparent" uk-navbar>
@@ -23,31 +26,39 @@
           {$rockfrontend->editLinks()}
 
           {* define block that is used for recursion *}
-          {define items, $items, $first}
+          {define mainmenu, $items, $first}
             {foreach $items as $item}{* loop all items*}
               {* define variables for inside the loop *}
+              {var $show = ($rockfrontend->isActive($item) or $item->parents->count()===1)}
               {var $inDropdown = $item->parents->count()>1}
               {var $active = $inDropdown ? $item==$page : $rockfrontend->isActive($item)}
-              {var $subid = "tm-menu-".$item->id}
+              {var $subid = "menu-".$item->id}
               {var $numc = ($item->numChildren() && $item!==$first) }
               {* list item markup *}
               <li n:class="$active ? 'uk-active'">
-                <a href="{$item->url}">
-                  {for $i=2;$i<$item->parents->count();$i++}-{/for}
+                <a href="{$item->url}" n:attr="rf-toggle: ($inDropdown and $numc) ? '#'.$subid">
                   {$item->title}
-                  <svg n:if="$numc && !$inDropdown" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--tabler" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg>
+                  <svg n:if="$numc" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--tabler" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg>
                 </a>
                 {* list for child-items *}
                 <div n:if="$numc" n:tag-if="!$inDropdown" class="uk-navbar-dropdown">
-                  <ul id="{$subid}" class="uk-nav uk-navbar-dropdown-nav">
-                    {include items, $item->children(), $item}
+                  <ul
+                    id="{$subid}"
+                    class="uk-nav uk-navbar-dropdown-nav uk-margin-left"
+                    {!$show?'hidden'}
+                  >
+                    {include
+                      mainmenu,
+                      $inDropdown ? $item->children()->prepend($item) : $item->children(),
+                      $item
+                    }
                   </ul>
                 </div>
               </li>
             {/foreach}
           {/define}
           {* now include the block for the first level of items *}
-          {include items, $home->children()}
+          {include mainmenu, $home->children()}
         </ul>
 
         {* burger *}
@@ -66,7 +77,6 @@
 </header>
 
 {* mobile menu *}
-{$rockfrontend->scripts()->add('/site/modules/RockFrontend/scripts/rf-toggle.js', 'defer')}
 <div id="mobile-menu" uk-offcanvas="flip: true; overlay: true">
   <div class="uk-offcanvas-bar rf-offcanvas">
 
@@ -74,7 +84,7 @@
 
     <ul class="uk-nav uk-nav-primary uk-margin-top uk-margin-large-bottom">
       {* define block that is used for recursion *}
-      {define mobile, $items, $first}
+      {define mobilemenu, $items, $first}
         {foreach $items as $item}{* loop all items*}
           {* define variables for inside the loop *}
           {var $show = $rockfrontend->isActive($item)}
@@ -94,13 +104,13 @@
               class="uk-nav-sub"
               {!$show?'hidden'}
             >
-              {include mobile, $item->children()->prepend($item), $item}
+              {include mobilemenu, $item->children()->prepend($item), $item}
             </ul>
           </li>
         {/foreach}
       {/define}
       {* now include the block for the first level of items *}
-      {include mobile, $home->children()}
+      {include mobilemenu, $home->children()}
     </ul>
 
   </div>
