@@ -10,6 +10,7 @@ $rockfrontend->styles()
   ->add('/site/modules/RockFrontend/less/defaults.less')
   ->add('/site/modules/RockFrontend/less/boxed-layout.less')
   ->add('/site/modules/RockFrontend/less/sticky-footer.less')
+  ->add('/site/modules/RockFrontend/less/headlines.less')
   ->addDefaultFolders(); // finally autoload styles in sections, partials, etc
 $rockfrontend->scripts()
   ->add('/site/templates/uikit-3.15.11/dist/js/uikit.min.js');
