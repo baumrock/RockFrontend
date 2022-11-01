@@ -17,6 +17,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   box-sizing: content-box;
   display: inline-block;
   text-align: center;
+  position: relative;
 }
 .alfred {
   position: relative;
@@ -58,6 +59,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   box-sizing: content-box;
   display: inline-block;
   text-align: center;
+  position: relative;
 }
 .alfred .add-top {
   top: -30px;
@@ -93,6 +95,35 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 }
 .alfred.rpb-widget .icon {
   border: 3px solid orange !important;
+}
+.alfred .vspace {
+  width: 100%;
+  background: white;
+  border-left: 3px solid #ececec;
+  border-right: 3px solid #ececec;
+  position: absolute;
+  left: -3px;
+  top: 30px;
+  z-index: 2;
+}
+.alfred .vspace input[type="range"] {
+  writing-mode: bt-lr;
+  /* IE */
+  -webkit-appearance: slider-vertical;
+  /* Chromium */
+  width: 8px;
+  height: 100px;
+  padding: 0;
+  margin-top: 5px;
+}
+.alfred .vspace {
+  height: 0px;
+  transition: height 0.3s ease;
+  overflow: hidden;
+}
+.alfred .icons > a:hover .vspace {
+  height: 145px;
+  border-bottom: 3px solid #ececec;
 }
 .alfred:hover > .alfredelements > .icons {
   display: inline-block;

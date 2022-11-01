@@ -12,10 +12,10 @@
   Alfred.prototype.addIcons = function (el, icons) {
     let html = "<div class=icons>";
     icons.forEach(function (icon) {
+      // console.log(icon);
       html +=
-        "<a href='" +
-        (icon.href ? icon.href : "#") +
-        "' " +
+        "<a " +
+        Alfred.href(icon) +
         (icon.tooltip ? " title='" + icon.tooltip + "'" : "") +
         "class='icon " +
         icon.class +
@@ -29,10 +29,42 @@
         "site/modules/RockFrontend/icons/" +
         icon.icon +
         ".svg'></span>" +
+        Alfred.vspace(icon) +
         "</a>";
     });
     html += "</div>";
     $(el).append(html);
+  };
+
+  Alfred.prototype.icon = function (name) {
+    return (
+      "<img src='" +
+      RockFrontend.rootUrl +
+      "site/modules/RockFrontend/icons/" +
+      name +
+      ".svg'>"
+    );
+  };
+
+  Alfred.prototype.href = function (icon) {
+    if (icon.type == "vspacetop") return;
+    if (icon.type == "vspacebottom") return;
+    return "href='" + (icon.href ? icon.href : "#") + "'";
+  };
+
+  Alfred.prototype.vspace = function (icon) {
+    let show = false;
+    if (icon.type == "vspacetop") show = true;
+    if (icon.type == "vspacebottom") show = true;
+    if (!show) return "";
+    return (
+      "<div class='vspace'>" +
+      "<input type=range min=0 max=5 value=1 step=0.1 class='rpb-vspace " +
+      icon.type +
+      "'><div class='vspace-reset'>" +
+      Alfred.icon("reload") +
+      "</div></div>"
+    );
   };
 
   Alfred.prototype.init = function () {
@@ -147,6 +179,10 @@
   // actions to do when alfred and jquery are ready
   Alfred.ready(function () {
     console.log("ALFRED is ready :)");
+
+    // trigger event
+    var event = new CustomEvent("AlfredReady", Alfred);
+    document.dispatchEvent(event);
 
     // reload page when modal is closed
     $(document).on(

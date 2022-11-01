@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.3.1',
+      'version' => '2.4.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -973,28 +973,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         // bd($match);
         if (count($match) < 3) return false;
         try {
-          $min = $this->rem($match[1]);
-          $max = $this->rem($match[2]);
-          if ($min->unit !== $max->unit) throw new WireException(
-            "rfGrow(error: min and max value must have the same unit)"
-          );
-
-          // setup minimum and maximum viewport settings
-          // we use either values set in config
-          // or we use default values (400/1440)
-          // or we use values set in rfGrow(10, 100, 600, 800)
-          // that means min value = 10 @ 600px, max = 100 @ 800px viewport
-          $growMin = $this->wire->config->growMin ?: 400;
-          if (count($match) > 4) $growMin = $match[4];
-          $growMax = $this->wire->config->growMax ?: 1440;
-          if (count($match) > 6) $growMax = $match[6];
-
-          $diff = $max->val - $min->val;
-          if ($max->unit == 'rem') $diff = $diff * $this->remBase;
-          $grow = "$min + $diff * ((100vw - {$growMin}px) / ($growMax - $growMin))";
-
-          // return "calc($grow)"; // debugging
-          return "clamp($min, $grow, $max)";
+          $data = [
+            'min' => $match[1],
+            'max' => $match[2],
+          ];
+          if (count($match) > 4) $data['growMin'] = $match[4];
+          if (count($match) > 6) $data['growMax'] = $match[6];
+          return $this->rfGrow($data);
         } catch (\Throwable $th) {
           return $th->getMessage();
         }
@@ -1012,6 +997,35 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     });
 
     $this->postCSS = $data;
+  }
+
+  public function rfGrow($_data): string
+  {
+    $data = new WireData();
+    $data->setArray([
+      'min' => null,
+      'max' => null,
+      'growMin' => $this->wire->config->growMin ?: 400,
+      'growMax' => $this->wire->config->growMax ?: 1440,
+      'scale' => 1,
+    ]);
+    $data->setArray($_data);
+    $scale = $data->scale;
+    $growMin = $data->growMin;
+    $growMax = $data->growMax;
+
+    $min = $this->rem($data->min);
+    $max = $this->rem($data->max);
+    if ($min->unit !== $max->unit) throw new WireException(
+      "rfGrow(error: min and max value must have the same unit)"
+    );
+
+    $diff = $max->val - $min->val;
+    if ($max->unit == 'rem') $diff = $diff * $this->remBase;
+    $grow = "$min + $diff * $scale * ((100vw - {$growMin}px) / ($growMax - $growMin))";
+
+    // return "calc($grow)"; // debugging
+    return "clamp($min * $scale, $grow, $max * $scale)";
   }
 
   /**
