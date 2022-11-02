@@ -89,6 +89,7 @@
       if (config.addLeft) $elements.append(this.plus("left", config.addLeft));
       if (config.addRight)
         $elements.append(this.plus("right", config.addRight));
+      $(el).removeAttr("alfred");
     } catch (error) {
       alert(
         "invalid json in alfred - dont forget |noescape filter when working with latte files"
