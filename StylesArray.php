@@ -42,7 +42,7 @@ class StylesArray extends AssetsArray
     $this->addAll('/site/assets/RockPageBuilder');
 
     // add the webfonts.css file if it exists
-    $file = $this->getFile('/site/templates/webfonts/webfonts.css');
+    $file = $this->rockfrontend()->getFile('/site/templates/webfonts/webfonts.css');
     if (is_file($file)) $this->add($file);
 
     return $this;
