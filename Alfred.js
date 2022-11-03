@@ -16,24 +16,34 @@
       html +=
         "<a " +
         Alfred.href(icon) +
-        (icon.tooltip ? " title='" + icon.tooltip + "'" : "") +
-        "class='icon " +
+        " class='icon " +
         icon.class +
         "'" +
         (icon.confirm ? " data-confirm='" + icon.confirm + "'" : "") +
-        " uk-tooltip data-barba-prevent " +
+        " data-barba-prevent " +
         (icon.suffix || "") +
         ">" +
         "<img src='" +
         RockFrontend.rootUrl +
         "site/modules/RockFrontend/icons/" +
         icon.icon +
-        ".svg'></span>" +
+        ".svg' " +
+        ">" +
         Alfred.vspace(icon) +
+        Alfred.tooltip(icon) +
         "</a>";
     });
     html += "</div>";
     $(el).append(html);
+  };
+
+  Alfred.prototype.tooltip = function (icon) {
+    if (!icon.tooltip) return "";
+    return (
+      "<span class='alfred-cover' title='" +
+      icon.tooltip +
+      "' uk-tooltip></span>"
+    );
   };
 
   Alfred.prototype.icon = function (name) {

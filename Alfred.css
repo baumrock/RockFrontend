@@ -140,3 +140,10 @@ body:not(.uk-offcanvas-container) .alfred:hover {
 .alfred:hover > .alfredelements > .add-right {
   display: inline-block;
 }
+.alfred-cover {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
