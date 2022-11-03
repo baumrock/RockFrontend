@@ -92,7 +92,7 @@
     try {
       let config = JSON.parse($(el).attr("alfred"));
       this.addIcons($elements, config.icons);
-      if (config.widgetStyle) $(el).addClass("rmx-widget");
+      if (config.widgetStyle) $(el).addClass("rpb-widget");
       if (config.addTop) $elements.append(this.plus("top", config.addTop));
       if (config.addBottom)
         $elements.append(this.plus("bottom", config.addBottom));
