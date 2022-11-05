@@ -53,6 +53,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const field_layout = self::prefix . "layout";
   const field_favicon = self::prefix . "favicon";
   const field_ogimage = self::prefix . "ogimage";
+  const field_footerlinks = self::prefix . "footerlinks";
 
   /** @var WireData */
   public $alfredCache;
@@ -101,7 +102,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.5.1',
+      'version' => '2.5.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1144,10 +1145,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->migrateFavicon();
     $this->migrateOgImage();
+    $this->migrateFooterlinks();
     $this->migrateLayoutField();
   }
 
-  public function migrateFavicon()
+  private function migrateFavicon()
   {
     if (!in_array("favicon", $this->migrations)) return;
     $rm = $this->rm();
@@ -1171,7 +1173,27 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->addFieldToTemplate(self::field_favicon, 'home');
   }
 
-  public function migrateLayoutField()
+  private function migrateFooterlinks()
+  {
+    if (!in_array("footerlinks", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
+        self::field_footerlinks => [
+          'type' => 'page',
+          'label' => 'Footer-Menu',
+          'derefAsPage' => FieldtypePage::derefAsPageArray,
+          'inputfield' => 'InputfieldPageListSelectMultiple',
+          'findPagesSelector' => 'id>0,template!=admin',
+          'labelFieldName' => 'title',
+          'tags' => self::tags,
+        ],
+      ],
+    ]);
+    $rm->addFieldToTemplate(self::field_footerlinks, 'home');
+  }
+
+  private function migrateLayoutField()
   {
     if (!in_array("layoutfield", $this->migrations)) return;
     $rm = $this->rm();
@@ -1195,7 +1217,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
   }
 
-  public function migrateOgImage()
+  private function migrateOgImage()
   {
     if (!in_array("ogimage", $this->migrations)) return;
     $rm = $this->rm();
@@ -1753,6 +1775,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Migrations";
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
     $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
+    $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
     $f->addOption('layoutfield', 'layoutfield - Create the layout field that can override layout rendering');
     $f->value = (array)$this->migrations;
     $fs->add($f);
