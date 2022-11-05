@@ -91,6 +91,40 @@ class AssetsArray extends \ProcessWire\WireArray
   }
 
   /**
+   * Auto-create minified version of asset
+   * See docs here: https://github.com/baumrock/RockFrontend/wiki/Auto-Minify-Feature
+   */
+  public function minify(Asset $asset): Asset
+  {
+    if (!$this->rockfrontend()->isEnabled('minify')) return $asset;
+
+    // check file type
+    if ($asset->ext == 'js') $search = ".min.js";
+    elseif ($asset->ext == 'css') $search = ".min.css";
+    else return $asset;
+
+    // check file ending
+    $ending = substr($asset->basename, -1 * strlen($search));
+    if ($ending !== $search) return $asset;
+
+    // prepare paths
+    $min = $asset->path;
+    $nomin = substr($min, 0, strlen($min) - strlen($ending)) . "." . $asset->ext;
+
+    // if no unminified file exists we return instantly
+    if (!is_file($nomin)) return $asset;
+
+    // a non-minified file exists, so we check if it has been updated
+    if ($this->rockfrontend()->isNewer($nomin, $min)) {
+      if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
+      else $minify = new \MatthiasMullie\Minify\CSS($nomin);
+      $minify->minify($min);
+    }
+
+    return $asset;
+  }
+
+  /**
    * Get options value
    * @return mixed
    */

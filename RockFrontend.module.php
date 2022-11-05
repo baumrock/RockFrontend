@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.4.3',
+      'version' => '2.5.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -301,7 +301,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     // we only add live reloading to the frontend
     if ($this->wire->page->template == 'admin') return;
-    $this->scripts('head')->add($this->path . "livereload.js");
+    $this->scripts()->add($this->path . "livereload.min.js", "defer");
   }
 
   /**
@@ -1751,6 +1751,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'features';
     $f->label = "Features";
     $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax)');
+    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Auto-Minify-Feature))');
     $f->value = (array)$this->features;
     $fs->add($f);
 
@@ -1771,6 +1772,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->wrapClass = 'script-checkboxes';
     foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
       $name = basename($script);
+      if (substr($name, -7) == '.min.js') continue;
       $js = $this->wire->files->fileGetContents($script);
       $label = $name;
       preg_match("/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/", $js, $matches);

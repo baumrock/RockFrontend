@@ -50,6 +50,7 @@ class ScriptsArray extends AssetsArray
     $out = '';
     foreach ($this as $asset) {
       if ($asset->ext === 'less') continue;
+      $asset = $this->minify($asset);
       $out .= $this->renderTag($asset, $opt, 'script');
     }
     return $out;

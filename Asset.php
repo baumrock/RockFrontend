@@ -68,7 +68,7 @@ class Asset extends WireData
 
   /**
    * Update path
-   * 
+   *
    * This also updates the url but keeps comments etc.
    * Needed by StylesArray::postCSS
    */
@@ -77,6 +77,12 @@ class Asset extends WireData
     $rockfrontend = $this->rockfrontend();
     $this->path = $rockfrontend->getFile($path, true);
     $this->url = $rockfrontend->url($path);
+
+    // if path and url are the same that means that we requested a file that does not exist
+    // in that case we prepend the root path to the url
+    if ($this->path and $this->path == $this->url) {
+      $this->path = $this->wire->config->paths->root . ltrim($this->url, "/");
+    }
   }
 
   public function __debugInfo()
