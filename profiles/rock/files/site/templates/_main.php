@@ -4,7 +4,7 @@ namespace ProcessWire;
 
 /** @var RockFrontend $rockfrontend */
 $rockfrontend->styles()
-  ->add('/site/templates/uikit-3.15.11/src/less/uikit.theme.less')
+  ->add('/site/templates/uikit-3.15.12/src/less/uikit.theme.less')
   ->add('/site/modules/RockFrontend/uikit/defaults.less')
   ->add('/site/modules/RockFrontend/uikit/offcanvas.less')
   ->add('/site/modules/RockFrontend/less/defaults.less')
@@ -13,7 +13,7 @@ $rockfrontend->styles()
   ->add('/site/modules/RockFrontend/less/headlines.less')
   ->addDefaultFolders(); // finally autoload styles in sections, partials, etc
 $rockfrontend->scripts()
-  ->add('/site/templates/uikit-3.15.11/dist/js/uikit.min.js');
+  ->add('/site/templates/uikit-3.15.12/dist/js/uikit.min.js');
 ?>
 <!DOCTYPE html>
 <html lang="de">

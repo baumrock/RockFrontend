@@ -1,78 +1,80 @@
 {* we need the rf-toggle javascript for the menu toggles so we add it to the scripts *}
-{$rockfrontend->scripts()->add('/site/modules/RockFrontend/scripts/rf-toggle.js', 'defer')}
+{$rockfrontend->scripts()->add('/site/modules/RockFrontend/scripts/rf-toggle.min.js', 'defer')}
 
 <header {alfred($page)}>
   <div class="rf-boxed-inner">
-    <nav class="uk-navbar-container uk-navbar-transparent" uk-navbar>
+    <div class="rf-inner-padding-large">
+      <nav class="uk-navbar-container uk-navbar-transparent" uk-navbar>
 
-      {* navbar left - logo *}
-      <div class="uk-navbar-left">
-        <a
-          href="/"
-          class="uk-navbar-item uk-logo"
-          aria-label="Back to Home"
-          title="Back to Home"
-          uk-tooltip
-        >
-          {$rockfrontend->svg("/site/modules/RockFrontend/baumrock.svg")}
-        </a>
-      </div>
+        {* navbar left - logo *}
+        <div class="uk-navbar-left">
+          <a
+            href="/"
+            class="uk-navbar-item uk-logo"
+            aria-label="Back to Home"
+            title="Back to Home"
+            uk-tooltip
+          >
+            {$rockfrontend->svg("/site/modules/RockFrontend/baumrock.svg")}
+          </a>
+        </div>
 
-      {* navbar right *}
-      <div class="uk-navbar-right">
+        {* navbar right *}
+        <div class="uk-navbar-right">
 
-        {* main menu *}
-        <ul class="uk-navbar-nav uk-visible@m">
-          {$rockfrontend->editLinks()}
+          {* main menu *}
+          <ul class="uk-navbar-nav uk-visible@m">
+            {$rockfrontend->editLinks()}
 
-          {* define block that is used for recursion *}
-          {define mainmenu, $items, $first}
-            {foreach $items as $item}{* loop all items*}
-              {* define variables for inside the loop *}
-              {var $show = ($rockfrontend->isActive($item) or $item->parents->count()===1)}
-              {var $inDropdown = $item->parents->count()>1}
-              {var $active = $inDropdown ? $item==$page : $rockfrontend->isActive($item)}
-              {var $subid = "menu-".$item->id}
-              {var $numc = ($item->numChildren() && $item!==$first) }
-              {* list item markup *}
-              <li n:class="$active ? 'uk-active'">
-                <a href="{$item->url}" n:attr="rf-toggle: ($inDropdown and $numc) ? '#'.$subid">
-                  {$item->title}
-                  <svg n:if="$numc" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--tabler" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg>
-                </a>
-                {* list for child-items *}
-                <div n:if="$numc" n:tag-if="!$inDropdown" class="uk-navbar-dropdown">
-                  <ul
-                    id="{$subid}"
-                    class="uk-nav uk-navbar-dropdown-nav uk-margin-left"
-                    {!$show?'hidden'}
-                  >
-                    {include
-                      mainmenu,
-                      $inDropdown ? $item->children()->prepend($item) : $item->children(),
-                      $item
-                    }
-                  </ul>
-                </div>
-              </li>
-            {/foreach}
-          {/define}
-          {* now include the block for the first level of items *}
-          {include mainmenu, $home->children()}
-        </ul>
+            {* define block that is used for recursion *}
+            {define mainmenu, $items, $first}
+              {foreach $items as $item}{* loop all items*}
+                {* define variables for inside the loop *}
+                {var $show = ($rockfrontend->isActive($item) or $item->parents->count()===1)}
+                {var $inDropdown = $item->parents->count()>1}
+                {var $active = $inDropdown ? $item==$page : $rockfrontend->isActive($item)}
+                {var $subid = "menu-".$item->id}
+                {var $numc = ($item->numChildren() && $item!==$first) }
+                {* list item markup *}
+                <li n:class="$active ? 'uk-active'">
+                  <a href="{$item->url}" n:attr="rf-toggle: ($inDropdown and $numc) ? '#'.$subid">
+                    {$item->title}
+                    <svg n:if="$numc" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--tabler" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg>
+                  </a>
+                  {* list for child-items *}
+                  <div n:if="$numc" n:tag-if="!$inDropdown" class="uk-navbar-dropdown">
+                    <ul
+                      id="{$subid}"
+                      class="uk-nav uk-navbar-dropdown-nav uk-margin-left"
+                      {!$show?'hidden'}
+                    >
+                      {include
+                        mainmenu,
+                        $inDropdown ? $item->children()->prepend($item) : $item->children(),
+                        $item
+                      }
+                    </ul>
+                  </div>
+                </li>
+              {/foreach}
+            {/define}
+            {* now include the block for the first level of items *}
+            {include mainmenu, $home->children()}
+          </ul>
 
-        {* burger *}
-        <ul class="uk-navbar-nav">
-          <li>
-            <a href="#mobile-menu" uk-toggle>
-              <svg width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </a>
-          </li>
-        </ul>
+          {* burger *}
+          <ul class="uk-navbar-nav">
+            <li>
+              <a href="#mobile-menu" uk-toggle>
+                <svg width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+              </a>
+            </li>
+          </ul>
 
-      </div>
+        </div>
 
-    </nav>
+      </nav>
+    </div>
   </div>
 </header>
 
