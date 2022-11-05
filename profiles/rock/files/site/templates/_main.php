@@ -25,7 +25,7 @@ $rockfrontend->scripts()
   <?= $rockfrontend->seo() ?>
 </head>
 
-<body class="rf-boxed rf-sticky-footer uk-card-default">
+<body class="rf-boxed-outer rf-sticky-footer uk-card-default">
   <?= $rockfrontend->renderLayout($page) ?>
 </body>
 
