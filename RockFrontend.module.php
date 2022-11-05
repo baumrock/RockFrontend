@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.4.2',
+      'version' => '2.4.3',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1750,7 +1750,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = $this->wire->modules->get('InputfieldCheckboxes');
     $f->name = 'features';
     $f->label = "Features";
-    $f->addOption('postCSS', 'Use the internel postCSS feature (eg to use rfGrow() syntax)');
+    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax)');
     $f->value = (array)$this->features;
     $fs->add($f);
 
@@ -1758,7 +1758,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'migrations';
     $f->label = "Migrations";
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
-    $f->addOption('ogimage', 'og:image - Create an image field for an og:image and add it to the home template');
+    $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
     $f->addOption('layoutfield', 'layoutfield - Create the layout field that can override layout rendering');
     $f->value = (array)$this->migrations;
     $fs->add($f);
