@@ -101,7 +101,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.5.0',
+      'version' => '2.5.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -213,18 +213,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function addAssets()
   {
-    $rockfrontend = $this;
-
-    // add all assets that are enabled in the module's settings
-    foreach ($this->loadScripts ?: [] as $script) {
-      $rockfrontend->scripts()->add(__DIR__ . "/scripts/$script");
-    }
-
     // hook after page render to add script
     // this will also replace alfred tags
     $this->addHookAfter(
       "Page::render",
-      function (HookEvent $event) use ($rockfrontend) {
+      function (HookEvent $event) {
         $page = $event->object;
         $html = $event->return;
         $styles = $this->styles();
@@ -1764,12 +1757,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->value = (array)$this->migrations;
     $fs->add($f);
 
-    $f = $this->wire->modules->get('InputfieldCheckboxes');
-    $f->name = 'loadScripts';
+    $f = $this->wire->modules->get('InputfieldMarkup');
     $f->entityEncodeText = false;
     $f->label = 'Javascript Snippets';
-    $f->notes = 'All selected snippets will be added to the head scripts() array';
+    $f->notes = 'To use snippets just add them to $rockfrontend->scripts()->add(...) in your main markup file.';
     $f->wrapClass = 'script-checkboxes';
+    $f->value = '';
     foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
       $name = basename($script);
       if (substr($name, -7) == '.min.js') continue;
@@ -1779,9 +1772,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       if (count($matches)) {
         $label .= $this->drop($matches[0]);
       }
-      $f->addOption($name, $label);
+      $f->value .= "<div>$label</div>";
     }
-    $f->value = (array)$this->loadScripts;
     $fs->add($f);
 
     $inputfields->add($fs);

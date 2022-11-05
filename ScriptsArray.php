@@ -15,9 +15,6 @@ class ScriptsArray extends AssetsArray
     $out = "\n";
     if ($opt->debug) {
       $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->scripts()->setOptions(['debug'=>false]) -->\n";
-      if ($this->opt('autoload')) {
-        $out .= "$indent<!-- autoloading of default scripts enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
-      }
     }
     $out .= $this->name == 'head' ? $indent . self::comment . "\n" : '';
     return $out;

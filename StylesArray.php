@@ -54,9 +54,6 @@ class StylesArray extends AssetsArray
     $out = "\n";
     if ($opt->debug) {
       $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
-      if ($this->opt('autoload')) {
-        $out .= "$indent<!-- autoloading of default styles enabled - disable using ->setOptions(['autoload'=>false]) -->\n";
-      }
     }
     if ($this->name == 'head') $out .= $indent . self::comment . "\n";
     return $out;
