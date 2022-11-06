@@ -34,7 +34,7 @@
                 {var $inDropdown = $item->parents->count()>1}
                 {var $active = $inDropdown ? $item==$page : $rockfrontend->isActive($item)}
                 {var $subid = "menu-".$item->id}
-                {var $numc = ($item->numChildren() && $item!==$first) }
+                {var $numc = ($item->children()->count() && $item!==$first) }
                 {* list item markup *}
                 <li n:class="$active ? 'uk-active'">
                   <a href="{$item->url}" n:attr="rf-toggle: ($inDropdown and $numc) ? '#'.$subid">
@@ -92,7 +92,7 @@
           {var $show = $rockfrontend->isActive($item)}
           {var $active = $item==$page}
           {var $subid = "mobile-".$item->id}
-          {var $numc = ($item->numChildren() && $item!==$first) }
+          {var $numc = ($item->children()->count() && $item!==$first) }
           {* list item markup *}
           <li n:class="$active ? 'uk-active'">
             <a href="{$item->url}" n:attr="rf-toggle: $numc ? '#'.$subid">
