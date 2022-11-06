@@ -102,7 +102,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.6.1',
+      'version' => '2.6.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -999,7 +999,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $data->setArray([
       'min' => null,
       'max' => null,
-      'growMin' => $this->wire->config->growMin ?: 400,
+      'growMin' => $this->wire->config->growMin ?: 375,
       'growMax' => $this->wire->config->growMax ?: 1440,
       'scale' => 1,
     ]);
@@ -1009,7 +1009,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // prepare growmin and growmax values
     // we remove px to make sure we can use less variables in rfGrow()
-    // eg: @min = 400px; @max = 1440px;
+    // eg: @min = 375px; @max = 1440px;
     // rfGrow(20, 50, @min, @max);
     $growMin = str_replace("px", "", $data->growMin);
     $growMax = str_replace("px", "", $data->growMax);
@@ -1022,10 +1022,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $diff = $max->val - $min->val;
     if ($max->unit == 'rem') $diff = $diff * $this->remBase;
-    $grow = "$min + $diff * $scale * ((100vw - {$growMin}px) / ($growMax - $growMin))";
+    // return $min;
 
-    // return "calc($grow)"; // debugging
-    return "clamp($min * $scale, $grow, $max * $scale)";
+    if ($scale != 1) {
+      $grow = "$min + $diff * $scale * ((100vw - {$growMin}px) / ($growMax - $growMin))";
+      return "clamp($min * $scale, $grow, $max * $scale)";
+    }
+    $grow = "$min + $diff * ((100vw - {$growMin}px) / ($growMax - $growMin))";
+    return "clamp($min, $grow, $max)";
   }
 
   /**
