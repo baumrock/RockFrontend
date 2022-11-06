@@ -1715,7 +1715,33 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $video = new InputfieldMarkup();
     $video->label = 'processwire-rocks.com';
-    $video->value = '<iframe width="560" height="315" src="https://www.youtube.com/embed/7CoIj--u4ps" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    $video->value = '
+      <style>
+      .flex-videos {
+        gap: 20px;
+      }
+      .flex-videos > div {
+        width: 300px;
+      }
+      .video-responsive{
+        overflow:hidden;
+        padding-bottom:56.25%;
+        position:relative;
+        height:0;
+      }
+      .video-responsive iframe{
+        left:0;
+        top:0;
+        height:100%;
+        width:100%;
+        position:absolute;
+      }
+      </style>
+      <div class="uk-flex uk-flex-wrap flex-videos">
+        <div><div class="video-responsive"><iframe src="https://www.youtube.com/embed/7CoIj--u4ps" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
+        <div><div class="video-responsive"><iframe src="https://www.youtube.com/embed/6ld4daFDQlY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
+      </div>
+    ';
     $inputfields->add($video);
 
     /** @var RockMigrations $rm */
