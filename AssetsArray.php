@@ -116,6 +116,7 @@ class AssetsArray extends \ProcessWire\WireArray
 
     // a non-minified file exists, so we check if it has been updated
     if ($this->rockfrontend()->isNewer($nomin, $min)) {
+      require_once __DIR__ . "/vendor/autoload.php";
       if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
       else $minify = new \MatthiasMullie\Minify\CSS($nomin);
       $minify->minify($min);
