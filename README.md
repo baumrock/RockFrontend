@@ -4,7 +4,9 @@
 
 See the video here:
 
-<a href="https://www.youtube.com/watch?v=7CoIj--u4ps"><img src=thumb.jpg></a>
+<a href="https://www.youtube.com/watch?v=7CoIj--u4ps"><img src=thumb.jpg height=300></a>
+<a href="https://www.youtube.com/watch?v=6ld4daFDQlY"><img src=https://user-images.githubusercontent.com/8488586/200658445-641f8127-7c22-4d41-8eb1-6c00bc0fccba.png height=300></a>
+
 
 <br>
 
