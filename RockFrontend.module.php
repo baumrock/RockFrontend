@@ -35,6 +35,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const cache = 'rockfrontend-uikit-versions';
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
+  const defaultVspaceScale = 0.66;
 
   const webfont_agents = [
     'woff2' => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0', // very modern browsers
@@ -102,7 +103,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.7.0',
+      'version' => '2.7.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -245,6 +246,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         // load alfred?
         if ($this->loadAlfred()) {
           $this->js("rootUrl", $this->wire->config->urls->root);
+          $this->js("defaultVspaceScale", self::defaultVspaceScale);
           $this->scripts()->add($this->path . "Alfred.js");
           $this->addAlfredStyles();
 
