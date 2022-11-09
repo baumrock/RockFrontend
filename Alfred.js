@@ -63,18 +63,8 @@
   };
 
   Alfred.prototype.vspace = function (icon) {
-    let show = false;
-    if (icon.type == "vspacetop") show = true;
-    if (icon.type == "vspacebottom") show = true;
-    if (!show) return "";
-    return (
-      "<div class='vspace'>" +
-      "<input type=range min=0 max=5 value=1 step=0.1 class='rpb-vspace " +
-      icon.type +
-      "'><div class='vspace-reset'>" +
-      Alfred.icon("reload") +
-      "</div></div>"
-    );
+    if (!RockFrontend.vspaceGUI) return "";
+    return RockFrontend.vspaceGUI(icon);
   };
 
   Alfred.prototype.init = function () {
@@ -186,6 +176,7 @@
   };
 
   var Alfred = new Alfred();
+  RockFrontend.Alfred = Alfred;
 
   // actions to do when alfred and jquery are ready
   Alfred.ready(function () {

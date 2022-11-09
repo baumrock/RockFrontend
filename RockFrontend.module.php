@@ -102,7 +102,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.6.5',
+      'version' => '2.7.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1024,12 +1024,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($max->unit == 'rem') $diff = $diff * $this->remBase;
     // return $min;
 
-    if ($scale != 1) {
-      $grow = "$min + $diff * $scale * ((100vw - {$growMin}px) / ($growMax - $growMin))";
-      return "clamp($min * $scale, $grow, $max * $scale)";
-    }
-    $grow = "$min + $diff * ((100vw - {$growMin}px) / ($growMax - $growMin))";
-    return "clamp($min, $grow, $max)";
+    $percent = "((100vw - {$growMin}px) / ($growMax - $growMin))";
+    $grow = "$min * $scale + $diff * $scale * $percent";
+    return "clamp($min * $scale, $grow, $max * $scale)";
   }
 
   /**
