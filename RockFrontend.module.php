@@ -1001,7 +1001,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $data->setArray([
       'min' => null,
       'max' => null,
-      'growMin' => $this->wire->config->growMin ?: 375,
+      'growMin' => $this->wire->config->growMin ?: 360,
       'growMax' => $this->wire->config->growMax ?: 1440,
       'scale' => 1,
     ]);
@@ -1011,7 +1011,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // prepare growmin and growmax values
     // we remove px to make sure we can use less variables in rfGrow()
-    // eg: @min = 375px; @max = 1440px;
+    // eg: @min = 360px; @max = 1440px;
     // rfGrow(20, 50, @min, @max);
     $growMin = str_replace("px", "", $data->growMin);
     $growMax = str_replace("px", "", $data->growMax);
