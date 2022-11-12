@@ -13,6 +13,9 @@
     if (el.closest("[rf-toggle]")) return;
     if (el.closest("[uk-lightbox]")) return;
     if (el.closest(".uk-lightbox")) return;
+    if (el.closest(".alfredelements")) return;
+    if (el.closest("a.pw-modal")) return;
+    if (el.closest("a.pw-panel")) return;
 
     // no fade link?
     if (util.hasClass(el, "rf-no-fade")) return;
