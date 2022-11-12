@@ -16,6 +16,7 @@
     if (el.closest(".alfredelements")) return;
     if (el.closest("a.pw-modal")) return;
     if (el.closest("a.pw-panel")) return;
+    if (el.closest(".tracy-panel")) return;
 
     // no fade link?
     if (util.hasClass(el, "rf-no-fade")) return;
