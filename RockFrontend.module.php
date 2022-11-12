@@ -1394,19 +1394,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       }
     }
 
-    // if render() was called from within a latte file we return a HTML object
-    // so that we dont need to use the |noescape filter
-    $cache = $this->wire->config->urls->cache;
-    if (
-      // this works for $rockfrontend->render()
-      strpos(Debug::backtrace()[0]['file'], $cache . "Latte/") === 0
-      // this works for $rockfrontend->renderIf()
-      or strpos(Debug::backtrace()[1]['file'], $cache . "Latte/") === 0
-    ) {
-      return $this->html($html);
-    }
-
-    return $html;
+    return $this->html($html);
   }
 
   /**
