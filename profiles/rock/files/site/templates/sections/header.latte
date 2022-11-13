@@ -117,3 +117,7 @@
 
   </div>
 </div>
+
+{* Reset page cache so that following $page->children() calls dont return
+false results that have prepended items from the built menu *}
+{$pages->uncacheAll()}
