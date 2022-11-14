@@ -18,7 +18,8 @@
     if (el.closest("a.pw-panel")) return;
     if (el.closest(".tracy-panel")) return;
     if (el.closest(".cke")) return; // ckeditor
-    if (el.closest(".uk-slider-nav")) return; // ckeditor
+    if (el.closest(".uk-slider-nav")) return;
+    if (el.closest(".pw-edit")) return; // frontend-edit
 
     // no fade link?
     if (util.hasClass(el, "rf-no-fade")) return;
