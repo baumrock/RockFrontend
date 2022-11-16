@@ -1232,7 +1232,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'maxFiles' => 1,
           'descriptionRows' => 0,
           'columnWidth' => 50,
-          'extensions' => 'png jpg svg',
+          'extensions' => 'png jpg jpeg webp svg',
           'okExtensions' => ['svg'],
           'maxSize' => 3, // max 3 megapixels
           'icon' => 'picture-o',
