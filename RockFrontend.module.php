@@ -103,7 +103,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.8.0',
+      'version' => '2.8.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1232,8 +1232,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'maxFiles' => 1,
           'descriptionRows' => 0,
           'columnWidth' => 50,
-          'extensions' => 'png jpg jpeg webp svg',
-          'okExtensions' => ['svg'],
+          'extensions' => 'png jpg jpeg',
           'maxSize' => 3, // max 3 megapixels
           'icon' => 'picture-o',
           'outputFormat' => FieldtypeFile::outputFormatSingle,
