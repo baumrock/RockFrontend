@@ -103,7 +103,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.8.1',
+      'version' => '2.8.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -389,7 +389,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // set flag to show that at least one alfred tag is on the page
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
-    $page = $page ? $this->wire->pages->get((string)$page) : false;
+    $page = ($page and $page->id)
+      ? $this->wire->pages->get((string)$page)
+      : false;
 
     // is given page a widget block stored in field rockpagebuilder_widgets?
     $isWidget = false;
