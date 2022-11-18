@@ -2,6 +2,7 @@
 
 namespace RockFrontend;
 
+use Latte\Runtime\Html;
 use ProcessWire\Less;
 use ProcessWire\RockFrontend;
 use ProcessWire\WireArray;
@@ -182,7 +183,11 @@ class StylesArray extends AssetsArray
     $this->parseLessFiles($opt);
     $out = $this->renderAssets($opt);
     if ($out) $out = $this->addInfo($opt) . $out;
-    return $out;
+    try {
+      return new Html($out);
+    } catch (\Throwable $th) {
+      return $out;
+    }
   }
 
   /**
