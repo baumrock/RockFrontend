@@ -34,7 +34,10 @@
                 {var $numc = ($item->children()->count() && $item!==$first) }
                 {* list item markup *}
                 <li n:class="$active ? 'uk-active'">
-                  <a href="{$item->url}" n:attr="uk-toggle: ($inDropdown and $numc) ? '#'.$subid">
+                  <a
+                    href="{($inDropdown and $numc) ? '#' : $item->url}"
+                    n:attr="uk-toggle: ($inDropdown and $numc) ? 'target: #'.$subid.'; animation: uk-animation-fade'"
+                  >
                     {$item->title}
                     <svg n:if="$numc" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--tabler" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg>
                   </a>
@@ -92,7 +95,10 @@
           {var $numc = ($item->children()->count() && $item!==$first) }
           {* list item markup *}
           <li n:class="$active ? 'uk-active'">
-            <a href="{$item->url}" n:attr="uk-toggle: $numc ? '#'.$subid">
+            <a
+              href="{$numc ? '#' : $item->url}"
+              n:attr="uk-toggle: $numc ? 'target: #'.$subid.'; animation: uk-animation-fade'"
+            >
               {$item->title}
               <svg n:if="$numc" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--tabler" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg>
             </a>
