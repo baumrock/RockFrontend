@@ -11,6 +11,7 @@
 
     // early exits
     if (el.closest("[rf-toggle]")) return;
+    if (el.closest("[uk-toggle]")) return;
     if (el.closest("[uk-lightbox]")) return;
     if (el.closest(".uk-lightbox")) return;
     if (el.closest(".alfredelements")) return;
