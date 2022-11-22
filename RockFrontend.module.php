@@ -67,6 +67,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var bool */
   public $hasAlfred = false;
 
+  public $isLiveReload = false;
+
   /** @var array */
   protected $js = [];
 
@@ -154,12 +156,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     require_once($this->path . "AssetsArray.php");
     require_once($this->path . "StylesArray.php");
     require_once($this->path . "ScriptsArray.php");
-
-    // early exit if we are on a livereload stream
-    // if we dont do that livereload will trigger CSS creation of assets
-    // and alfred styles are missing in head.css
-    // it is important though to load all php files above!
-    if ($this->isLiveReload) return;
 
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);

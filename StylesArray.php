@@ -97,7 +97,9 @@ class StylesArray extends AssetsArray
       $cssFile = $cssPath . $opt->cssName . ".css";
 
       $recompile = false;
-      if (!is_file($cssFile)) $recompile = true;
+      // if it is a livereload stream we do not recompile
+      if ($this->rockfrontend()->isLiveReload) $recompile = false;
+      elseif (!is_file($cssFile)) $recompile = true;
       elseif ($lessCurrent !== $lessCache) $recompile = true;
       elseif ($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
       else {
