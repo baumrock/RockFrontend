@@ -385,9 +385,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // set flag to show that at least one alfred tag is on the page
     // this flag is used to load the PW frontend editing assets
     $this->hasAlfred = true;
+
+    // set the page to be edited
     $page = ($page and $page->id)
       ? $this->wire->pages->get((string)$page)
       : false;
+
+    // check if the current page is a RPB block
+    // that can happen if RPB blocks are used as regular pages (nfkinder)
+    // without this check we'd end up with RPB hover GUI for every
+    // alfred($page) call which is not what we want
+    if ($page instanceof Block and $page->id === $this->wire->page->id) {
+      $page = false;
+    }
 
     // is given page a widget block stored in field rockpagebuilder_widgets?
     $isWidget = false;
