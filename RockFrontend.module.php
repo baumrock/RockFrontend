@@ -105,7 +105,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.8.4',
+      'version' => '2.8.5',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -395,7 +395,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // that can happen if RPB blocks are used as regular pages (nfkinder)
     // without this check we'd end up with RPB hover GUI for every
     // alfred($page) call which is not what we want
-    if ($page instanceof Block and $page->id === $this->wire->page->id) {
+    // you can force showing the edit icon by alfred($page, ['noBlock' => true])
+    // eg for editing a single images field of the current page without showing other icons
+    $noBlock = array_key_exists('noBlock', $options);
+    if (!$noBlock and $page instanceof Block and $page->id === $this->wire->page->id) {
       $page = false;
     }
 
@@ -706,7 +709,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // prepare fields suffix
     $fields = '';
-    if ($opt->fields) {
+    if ($page and $opt->fields) {
       if (is_array($opt->fields)) $opt->fields = implode(",", $opt->fields);
 
       // check if the requested fields are available on that page
