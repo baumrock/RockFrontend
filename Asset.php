@@ -48,6 +48,9 @@ class Asset extends WireData
   public function getPostCssMarkup()
   {
     if (!$this->path) return false;
+    // if it is not a regular file we return false
+    // this is for css files loaded from CDN for example
+    if (!is_file($this->path)) return false;
     $markup = $this->wire->files->fileGetContents($this->path);
     if (!$this->hasPostCss($markup)) return false;
     return $markup;
