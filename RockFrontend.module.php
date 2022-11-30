@@ -105,7 +105,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.8.6',
+      'version' => '2.9.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -993,6 +993,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       }, $markup);
     });
 
+    // rfShrink() postCSS replacer
+    $data->set("rfShrink(", function ($markup) {
+      return preg_replace_callback("/rfShrink\((.*?),(.*?)(,(.*?))?(,(.*?))?\)/", function ($match) {
+        // bd($match);
+        if (count($match) < 3) return false;
+        try {
+          $data = [
+            'min' => $match[2],
+            'max' => $match[1],
+          ];
+          if (count($match) > 4) $data['growMin'] = $match[4];
+          if (count($match) > 6) $data['growMax'] = $match[6];
+          return $this->rfGrow($data, true);
+        } catch (\Throwable $th) {
+          return $th->getMessage();
+        }
+      }, $markup);
+    });
+
     // convert pxrem to px
     // font-size: 20pxrem; --> font-size: 1.25rem;
     $data->set("pxrem", function ($markup) {
@@ -1006,7 +1025,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->postCSS = $data;
   }
 
-  public function rfGrow($_data): string
+  public function rfGrow($_data, $shrink = false): string
   {
     $data = new WireData();
     $data->setArray([
@@ -1038,8 +1057,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // return $min;
 
     $percent = "((100vw - {$growMin}px) / ($growMax - $growMin))";
-    $grow = "$min * $scale + $diff * $scale * $percent";
-    return "clamp($min * $scale, $grow, $max * $scale)";
+    if ($shrink) {
+      $grow = "$max - $diff * $percent";
+      return "clamp($min, $grow, $max)";
+    } else {
+      $grow = "$min * $scale + $diff * $scale * $percent";
+      return "clamp($min * $scale, $grow, $max * $scale)";
+    }
   }
 
   /**
