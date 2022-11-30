@@ -35,13 +35,8 @@
     // scroll + fade
     e.preventDefault();
     let body = util.$("body");
-    util.removeClass(body, "uk-animation-fade");
-    setTimeout(() => {
-      util.addClass(body, "uk-animation-fade uk-animation-reverse");
-    }, 0);
-    util.scrollIntoView(body);
-    setTimeout(() => {
+    util.scrollIntoView(body).then(function () {
       window.location.href = href;
-    }, 500);
+    });
   });
 })();
