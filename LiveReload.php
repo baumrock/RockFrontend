@@ -37,6 +37,8 @@ class LiveReload extends Wire
         $this->wire->config->paths->assets . 'files',
         $this->wire->config->paths->assets . 'logs',
         $this->wire->config->paths->assets . 'sessions',
+        $this->wire->config->paths->assets . 'ProCache-*',
+        $this->wire->config->paths->assets . 'pwpc',
         '.*/vendor',
         '.*/\.git',
         '.*/\.github',
