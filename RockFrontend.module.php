@@ -105,7 +105,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.9.0',
+      'version' => '2.9.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -242,7 +242,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         // load alfred?
         if ($this->loadAlfred()) {
           $this->js("rootUrl", $this->wire->config->urls->root);
-          $this->js("defaultVspaceScale", self::defaultVspaceScale);
+          $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
           $this->scripts()->add($this->path . "Alfred.js");
           $this->addAlfredStyles();
 
