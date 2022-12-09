@@ -586,7 +586,7 @@ RockFrontend comes with a handy method `isActive()` to keep your menu markup cle
 
 ## Grow/Shrink feature
 
-TBD
+<a href="https://www.youtube.com/watch?v=6ld4daFDQlY"><img src=https://user-images.githubusercontent.com/8488586/200658445-641f8127-7c22-4d41-8eb1-6c00bc0fccba.png height=300></a>
 
 ## PostCSS
 
