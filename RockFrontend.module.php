@@ -1466,7 +1466,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     try {
       require_once $this->wire->config->paths->root . 'vendor/autoload.php';
       $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
-      $twig = new \Twig\Environment($loader);
+      $twig = new \Twig\Environment($loader, [
+        'debug' => true,
+      ]);
+      $twig->addExtension(new \Twig\Extension\DebugExtension());
       $relativePath = str_replace(
         $this->wire->config->paths->root,
         $this->wire->config->urls->root,
