@@ -28,6 +28,8 @@ class AssetsArray extends \ProcessWire\WireArray
   {
     $debug = $this->getDebugNote($file);
     if (is_string($file)) $file = new Asset($file, $suffix);
+    // prevent adding file multiple times
+    if ($this->get('path=' . $file->path)) return $this;
     $file->debug = $debug;
     parent::add($file);
     return $this;
