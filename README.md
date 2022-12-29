@@ -15,9 +15,7 @@ https://processwire.com/talk/topic/27417-rockfrontend-%F0%9F%9A%80%F0%9F%9A%80-t
 
 # Donations
 
-<a href=https://github.com/sponsors/baumrock><img src=donate.svg></a>
-
-😎🤗👍
+https://github.com/sponsors/baumrock 😎🤗👍
 
 <img src=hr.svg>
 
