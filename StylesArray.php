@@ -37,6 +37,7 @@ class StylesArray extends AssetsArray
 
     // add all style files in the following folders
     $this->addAll('/site/templates/layouts');
+    $this->addAll('/site/templates/less');
     $this->addAll('/site/templates/sections');
     $this->addAll('/site/templates/partials');
     $this->addAll('/site/assets/RockMatrix');
