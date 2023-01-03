@@ -39,10 +39,21 @@ class HomePage extends Page
   public function migrate()
   {
     $rm = $this->rockmigrations();
+    $rm->installModule("RockPageBuilder");
     $rm->migrate([
       'fields' => [],
       'templates' => [
-        self::tpl => [],
+        self::tpl => [
+          'fields' => [
+            'title',
+            RockPageBuilder::field_blocks,
+            RockPageBuilder::field_widgets,
+
+            RockFrontend::field_favicon,
+            RockFrontend::field_ogimage,
+            RockFrontend::field_footerlinks,
+          ],
+        ],
       ],
     ]);
   }
