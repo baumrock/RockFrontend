@@ -1,3 +1,12 @@
+# [2.10.0](https://github.com/baumrock/RockFrontend/compare/v2.9.1...v2.10.0) (2023-01-03)
+
+
+### Features
+
+* add less folder to defaults ([b736e5b](https://github.com/baumrock/RockFrontend/commit/b736e5b2d7f0ae481aae30c1763fee5794212406))
+
+
+
 ## [2.9.1](https://github.com/baumrock/RockFrontend/compare/v2.9.0...v2.9.1) (2022-12-04)
 
 
