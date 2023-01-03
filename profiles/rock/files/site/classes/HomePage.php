@@ -8,6 +8,8 @@ class HomePage extends Page
 {
   use MagicPage;
 
+  const tpl = 'home';
+
   /** magic */
 
   public function editForm($form)
@@ -31,6 +33,17 @@ class HomePage extends Page
     ], [
       'label' => 'Global Site Settings',
       'collapsed' => Inputfield::collapsedYes,
+    ]);
+  }
+
+  public function migrate()
+  {
+    $rm = $this->rockmigrations();
+    $rm->migrate([
+      'fields' => [],
+      'templates' => [
+        self::tpl => [],
+      ],
     ]);
   }
 }
