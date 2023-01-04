@@ -1,3 +1,12 @@
+## [2.10.1](https://github.com/baumrock/RockFrontend/compare/v2.10.0...v2.10.1) (2023-01-04)
+
+
+### Bug Fixes
+
+* remove console.log() ([54f50a8](https://github.com/baumrock/RockFrontend/commit/54f50a8da2cb4a52432938453654980bc2cd5a0f))
+
+
+
 # [2.10.0](https://github.com/baumrock/RockFrontend/compare/v2.9.1...v2.10.0) (2023-01-03)
 
 
