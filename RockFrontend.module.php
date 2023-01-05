@@ -194,6 +194,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookAfter("Modules::refresh", $this, "refreshModules");
     $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
     $this->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
+    $this->addHookBefore("Inputfield::render", $this, "addFooterlinksNote");
 
     // health checks
     $this->checkHealth();
@@ -287,6 +288,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ___addAlfredStyles()
   {
     $this->styles()->add($this->path . "Alfred.css");
+  }
+
+  /**
+   * Add note for superusers on footerlinks inputfield
+   */
+  public function addFooterlinksNote(HookEvent $event)
+  {
+    if (!$this->wire->user->isSuperuser()) return;
+    $f = $event->object;
+    if ($f->name != self::field_footerlinks) return;
+    if ($f->notes) $f->notes .= "\n";
+    $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
   }
 
   private function addLiveReloadScript()
@@ -639,6 +652,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
     // bd($suggestions);
     return $suggestions;
+  }
+
+  /**
+   * Get all footerlinks
+   */
+  public function footerlinks(): PageArray
+  {
+    return $this->wire->pages->get(1)->get(self::field_footerlinks . "[]");
   }
 
   /**
