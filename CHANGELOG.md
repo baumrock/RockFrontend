@@ -1,3 +1,12 @@
+# [2.11.0](https://github.com/baumrock/RockFrontend/compare/v2.10.1...v2.11.0) (2023-01-06)
+
+
+### Features
+
+* move rockpagebuilder logic to rpb module ([2b71dd8](https://github.com/baumrock/RockFrontend/commit/2b71dd8ae06b3f380ff214ac35f235362d6042e9))
+
+
+
 ## [2.10.1](https://github.com/baumrock/RockFrontend/compare/v2.10.0...v2.10.1) (2023-01-04)
 
 
@@ -31,10 +40,6 @@
 ### Features
 
 * add rfShrink() ([6ea9cb9](https://github.com/baumrock/RockFrontend/commit/6ea9cb9543f570432557a01bc317c9eddf920c17))
-
-
-
-## 2.8.6 (2022-11-30)
 
 
 
