@@ -105,7 +105,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.10.0',
+      'version' => '2.11.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -415,61 +415,32 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $page = false;
     }
 
-    // is given page a widget block stored in field rockpagebuilder_widgets?
-    $isWidget = false;
-    if ($page instanceof Block and $page->isWidget()) $isWidget = true;
-
     // setup options
-    $opt = $this->wire(new WireData());
     /** @var WireData $opt */
+    $opt = $this->wire(new WireData());
     $opt->setArray([
       'fields' => '', // fields to edit
       'path' => $this->getTplPath(), // path to edit file
       'edit' => true,
-
-      // setting specific to rockpagebuilder blocks
-      'noBlock' => false, // prevent block icons if true
-      'addTop' => null, // set to false to prevent icon
-      'addBottom' => null, // set to false to prevent icon
-      'addHorizontal' => null, // shortcut for addLeft + addRight
-      'move' => true,
-      'isWidget' => $isWidget, // is block saved in rockpagebuilder_widgets?
-      'widgetStyle' => $isWidget, // make it orange
-      'trash' => true, // will set the trash icon for rockpagebuilder blocks
-      'clone' => true, // can item be cloned?
-      'widget' => !$isWidget, // can item be converted into a widget?
+      'blockid' => null,
     ]);
     $opt->setArray($options);
+
+
+    // add quick-add-icons for rockpagebuilder
+    if ($rpb = $this->wire->modules->get("RockPageBuilder")) {
+      /** @var RockPageBuilder $rpb */
+      $data = $this->wire(new WireData());
+      $data->page = $page;
+      $data->opt = $opt;
+      $data->options = $options;
+      $opt = $rpb->addAlfredOptions($data);
+    }
+    // bd($opt, 'opt after');
 
     // icons
     $icons = $this->getIcons($page, $opt);
     if (!count($icons)) return;
-
-    // setup links for add buttons
-    $blockid = '';
-    if ($page instanceof Block) {
-      // see explanation about widget above
-      $widget = $page->_widget ?: $page;
-
-      if ($opt->noBlock) {
-        if ($opt->addTop !== true) $opt->addTop = false;
-        if ($opt->addBottom !== true) $opt->addBottom = false;
-        if ($opt->addHorizontal !== true) {
-          $opt->addLeft = false;
-          $opt->addRight = false;
-        }
-      }
-      if ($opt->addTop !== false) $opt->addTop = $widget->rpbUrl("/add/?block=$widget&above=1");
-      if ($opt->addBottom !== false) $opt->addBottom = $widget->rpbUrl("/add/?block=$widget");
-      if ($opt->addHorizontal === true) {
-        $opt->addTop = false;
-        $opt->addBottom = false;
-        $opt->addLeft = $widget->rpbUrl("/add/?block=$widget&above=1");
-        $opt->addRight = $widget->rpbUrl("/add/?block=$widget");
-      }
-
-      $blockid = " data-rpbblock=$widget ";
-    }
 
     $str = json_encode((object)[
       'icons' => $icons,
@@ -484,9 +455,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // the tag will be replaced on page render
     // this is to make it possible to use alfred() without |noescape filter)
     $id = uniqid();
-    $str = "$blockid alfred='$str'";
+    $str = " {$opt->blockid} alfred='$str'";
     $key = "#alfredcache-$id";
     $this->alfredCache->set($key, $str);
+
     return $key;
   }
 
@@ -757,9 +729,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     // add rockpagebuilder icons
-    if ($page and $page instanceof Block) $page->addAlfredIcons($icons, $opt);
+    if ($page) {
+      $rpb = $this->wire->modules->get("RockPageBuilder");
+      if ($page instanceof Block) $page->addAlfredIcons($icons, $opt);
+      elseif ($page instanceof RepeaterPage and $rpb) {
+        $rpb->addAlfredIcons($page, $icons, $opt);
+      }
+    }
 
-    if ($this->wire->user->isSuperuser()) {
+    if ($this->wire->user->isSuperuser() and $page instanceof Block) {
       $tracy = $this->wire->config->tracy;
       if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
         $root = $tracy['localRootPath'];
