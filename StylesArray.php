@@ -183,6 +183,14 @@ class StylesArray extends AssetsArray
     $opt->setArray($this->options);
     $opt->setArray($options);
 
+    // make sure that cssDir is a relative path
+    // if a path was provided we strip the pw root
+    $opt->cssDir = str_replace(
+      $this->wire->config->paths->root,
+      $this->wire->config->urls->root,
+      $opt->cssDir
+    );
+
     $this->parseLessFiles($opt);
     $out = $this->renderAssets($opt);
     if ($out) $out = $this->addInfo($opt) . $out;
