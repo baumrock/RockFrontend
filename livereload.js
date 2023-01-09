@@ -6,6 +6,12 @@ setTimeout(() => {
   if (isModal) return;
   let reloading = false;
 
+  // timeout after file change was detected
+  // you can set this to 5000 if you see multiple redirects
+  // that means that something triggers another reload on reload
+  // monitor the devtools console - it will show the detected file change
+  let redirecttimeout = 0;
+
   let evtSource;
   let startStream = function () {
     let rf = RockFrontend;
@@ -39,7 +45,9 @@ setTimeout(() => {
         // all fine, reload page
         console.log("detected change - reloading");
         reloading = true;
-        document.location.reload(true);
+        setTimeout(() => {
+          document.location.reload(true);
+        }, redirecttimeout);
       }
     };
   };

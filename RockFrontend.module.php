@@ -2,6 +2,7 @@
 
 namespace ProcessWire;
 
+use Latte\Bridges\Tracy\LattePanel;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use RockFrontend\LiveReload;
@@ -105,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.11.0',
+      'version' => '2.12.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1440,6 +1441,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       try {
         require_once $this->path . "vendor/autoload.php";
         $latte = new Engine();
+        if ($this->modules->isInstalled("TracyDebugger")) {
+          LattePanel::initialize($latte);
+        }
         $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
         $this->latte = $latte;
       } catch (\Throwable $th) {

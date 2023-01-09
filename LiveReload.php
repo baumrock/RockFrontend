@@ -45,6 +45,7 @@ class LiveReload extends Wire
         '.*/\.vscode',
         '.*/site/modules/TracyDebugger/tracy-.*',
         '.*/site/templates/bundle/*',
+        '.*/site/assets/RockFrontend/.*.css',
         '.*/site/assets/RockPdfDumps/*',
         '.*/site/modules/RockBlocks/blocks/.*.css',
       ],
