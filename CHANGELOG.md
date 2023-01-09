@@ -1,3 +1,14 @@
+# [2.12.0](https://github.com/baumrock/RockFrontend/compare/v2.11.0...v2.12.0) (2023-01-09)
+
+
+### Features
+
+* support cssDir paths ([77f9e05](https://github.com/baumrock/RockFrontend/commit/77f9e0520a5f9762b570e251e02655f4e36bbcff))
+* tweak livereload and add latte bar to tracy ([907add4](https://github.com/baumrock/RockFrontend/commit/907add42dbed9d8133e80d2f107568e0e72fb786))
+* update exclude regexes ([5c2436e](https://github.com/baumrock/RockFrontend/commit/5c2436eef78b1d92d61493d6f73298581bc7a35f))
+
+
+
 # [2.11.0](https://github.com/baumrock/RockFrontend/compare/v2.10.1...v2.11.0) (2023-01-06)
 
 
@@ -31,15 +42,6 @@
 ### Bug Fixes
 
 * weird vspace scale value ([bffaf73](https://github.com/baumrock/RockFrontend/commit/bffaf734585cec89e75cd93e735ac2fceee271d4))
-
-
-
-# [2.9.0](https://github.com/baumrock/RockFrontend/compare/v2.8.6...v2.9.0) (2022-11-30)
-
-
-### Features
-
-* add rfShrink() ([6ea9cb9](https://github.com/baumrock/RockFrontend/commit/6ea9cb9543f570432557a01bc317c9eddf920c17))
 
 
 
