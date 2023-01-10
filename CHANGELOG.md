@@ -1,3 +1,12 @@
+# [2.13.0](https://github.com/baumrock/RockFrontend/compare/v2.12.0...v2.13.0) (2023-01-10)
+
+
+### Features
+
+* add improved box-layout ([cc3d10e](https://github.com/baumrock/RockFrontend/commit/cc3d10e1acdd2f997a25275a73169b0d127615f2))
+
+
+
 # [2.12.0](https://github.com/baumrock/RockFrontend/compare/v2.11.0...v2.12.0) (2023-01-09)
 
 
@@ -33,15 +42,6 @@
 ### Features
 
 * add less folder to defaults ([b736e5b](https://github.com/baumrock/RockFrontend/commit/b736e5b2d7f0ae481aae30c1763fee5794212406))
-
-
-
-## [2.9.1](https://github.com/baumrock/RockFrontend/compare/v2.9.0...v2.9.1) (2022-12-04)
-
-
-### Bug Fixes
-
-* weird vspace scale value ([bffaf73](https://github.com/baumrock/RockFrontend/commit/bffaf734585cec89e75cd93e735ac2fceee271d4))
 
 
 
