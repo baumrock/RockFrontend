@@ -27,3 +27,22 @@
   margin-right: auto;
   box-sizing: border-box;
 }
+
+// new version that does not need nested divs
+// use this instead of rf-boxed + rf-boxed-padding
+.rf-box {
+  // outline: 2px solid red;
+
+  // use content box to apply max-width only to content
+  box-sizing: content-box;
+  max-width: @rf-boxed;
+  // max-width: rfGrow(@rf-boxed, 1800px, @rf-boxed, @rf-boxed);
+
+  // center the box
+  margin-left: auto;
+  margin-right: auto;
+
+  // apply paddings
+  padding-left: rfGrow(20px, 40px, @rfgrow-min, @rf-boxed);
+  padding-right: rfGrow(20px, 40px, @rfgrow-min, @rf-boxed);
+}
