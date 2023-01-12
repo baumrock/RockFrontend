@@ -1,6 +1,6 @@
 {* here you can exclude items from main + mobile menu, eg template!=blogitem *}
-{$wire->mainMenuSelector = ""}
-{$wire->mobileMenuSelector = $wire->mainMenuSelector}
+{do $wire->mainMenuSelector = ""}
+{do $wire->mobileMenuSelector = $wire->mainMenuSelector}
 
 <header {alfred($page)}>
   <div class="rf-boxed">
