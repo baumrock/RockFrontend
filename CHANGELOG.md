@@ -1,3 +1,12 @@
+## [2.14.1](https://github.com/baumrock/RockFrontend/compare/v2.14.0...v2.14.1) (2023-01-12)
+
+
+### Bug Fixes
+
+* header outputting selector ([2c3b9e1](https://github.com/baumrock/RockFrontend/commit/2c3b9e103c6327b866c7888226529928e269d67b))
+
+
+
 # [2.14.0](https://github.com/baumrock/RockFrontend/compare/v2.13.1...v2.14.0) (2023-01-12)
 
 
@@ -33,15 +42,6 @@
 * support cssDir paths ([77f9e05](https://github.com/baumrock/RockFrontend/commit/77f9e0520a5f9762b570e251e02655f4e36bbcff))
 * tweak livereload and add latte bar to tracy ([907add4](https://github.com/baumrock/RockFrontend/commit/907add42dbed9d8133e80d2f107568e0e72fb786))
 * update exclude regexes ([5c2436e](https://github.com/baumrock/RockFrontend/commit/5c2436eef78b1d92d61493d6f73298581bc7a35f))
-
-
-
-# [2.11.0](https://github.com/baumrock/RockFrontend/compare/v2.10.1...v2.11.0) (2023-01-06)
-
-
-### Features
-
-* move rockpagebuilder logic to rpb module ([2b71dd8](https://github.com/baumrock/RockFrontend/commit/2b71dd8ae06b3f380ff214ac35f235362d6042e9))
 
 
 
