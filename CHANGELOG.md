@@ -1,3 +1,12 @@
+# [2.14.0](https://github.com/baumrock/RockFrontend/compare/v2.13.1...v2.14.0) (2023-01-12)
+
+
+### Features
+
+* add selector to rock profile header.latte ([b6e2c00](https://github.com/baumrock/RockFrontend/commit/b6e2c00c9cda5271562639d65d5fe06cc511ef8b))
+
+
+
 ## [2.13.1](https://github.com/baumrock/RockFrontend/compare/v2.13.0...v2.13.1) (2023-01-12)
 
 
@@ -33,15 +42,6 @@
 ### Features
 
 * move rockpagebuilder logic to rpb module ([2b71dd8](https://github.com/baumrock/RockFrontend/commit/2b71dd8ae06b3f380ff214ac35f235362d6042e9))
-
-
-
-## [2.10.1](https://github.com/baumrock/RockFrontend/compare/v2.10.0...v2.10.1) (2023-01-04)
-
-
-### Bug Fixes
-
-* remove console.log() ([54f50a8](https://github.com/baumrock/RockFrontend/commit/54f50a8da2cb4a52432938453654980bc2cd5a0f))
 
 
 
