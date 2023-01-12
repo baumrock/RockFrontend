@@ -1,3 +1,12 @@
+## [2.13.1](https://github.com/baumrock/RockFrontend/compare/v2.13.0...v2.13.1) (2023-01-12)
+
+
+### Bug Fixes
+
+* alfred icons only shown on pagebuilder blocks ([811a296](https://github.com/baumrock/RockFrontend/commit/811a29685e693eb2bae373c6c288da9e54e18818))
+
+
+
 # [2.13.0](https://github.com/baumrock/RockFrontend/compare/v2.12.0...v2.13.0) (2023-01-10)
 
 
@@ -33,15 +42,6 @@
 ### Bug Fixes
 
 * remove console.log() ([54f50a8](https://github.com/baumrock/RockFrontend/commit/54f50a8da2cb4a52432938453654980bc2cd5a0f))
-
-
-
-# [2.10.0](https://github.com/baumrock/RockFrontend/compare/v2.9.1...v2.10.0) (2023-01-03)
-
-
-### Features
-
-* add less folder to defaults ([b736e5b](https://github.com/baumrock/RockFrontend/commit/b736e5b2d7f0ae481aae30c1763fee5794212406))
 
 
 
