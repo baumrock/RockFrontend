@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.13.0',
+      'version' => '2.13.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -718,6 +718,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       }
     }
 
+    // icon to edit page
     if ($page and $page->editable() and $opt->edit) {
       $icons[] = (object)[
         'icon' => 'edit',
@@ -738,7 +739,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       }
     }
 
-    if ($this->wire->user->isSuperuser() and $page instanceof Block) {
+    if ($this->wire->user->isSuperuser()) {
       $tracy = $this->wire->config->tracy;
       if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
         $root = $tracy['localRootPath'];
@@ -755,7 +756,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
       $ext = pathinfo($link, PATHINFO_EXTENSION);
 
-      // controller edit link
+      // php file edit link
       $php = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".php";
       if (is_file($php)) {
         $php = str_replace($this->wire->config->paths->root, $root, $php);

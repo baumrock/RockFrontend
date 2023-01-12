@@ -27,11 +27,12 @@
             {define mainmenu, $items, $first}
               {foreach $items as $item}{* loop all items*}
                 {* define variables for inside the loop *}
+                {var $selector = ""} {* exclude child items here *}
                 {var $show = ($rockfrontend->isActive($item) or $item->parents->count()===1)}
                 {var $inDropdown = $item->parents->count()>1}
                 {var $active = $inDropdown ? $item==$page : $rockfrontend->isActive($item)}
                 {var $subid = "menu-".$item->id}
-                {var $numc = ($item->children()->count() && $item!==$first) }
+                {var $numc = ($item->children($selector)->count() && $item!==$first) }
                 {* list item markup *}
                 <li n:class="$active ? 'uk-active'">
                   <a
@@ -50,7 +51,9 @@
                     >
                       {include
                         mainmenu,
-                        $inDropdown ? $item->children()->prepend($item) : $item->children(),
+                        $inDropdown
+                          ? $item->children($selector)->prepend($item)
+                          : $item->children($selector),
                         $item
                       }
                     </ul>
