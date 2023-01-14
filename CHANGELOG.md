@@ -1,3 +1,12 @@
+# [2.15.0](https://github.com/baumrock/RockFrontend/compare/v2.14.1...v2.15.0) (2023-01-14)
+
+
+### Features
+
+* add topbar feature (mobile preview + edit links) ([a4ee4cf](https://github.com/baumrock/RockFrontend/commit/a4ee4cfd5eb8dd149db8839a73088271713fb616))
+
+
+
 ## [2.14.1](https://github.com/baumrock/RockFrontend/compare/v2.14.0...v2.14.1) (2023-01-12)
 
 
@@ -31,17 +40,6 @@
 ### Features
 
 * add improved box-layout ([cc3d10e](https://github.com/baumrock/RockFrontend/commit/cc3d10e1acdd2f997a25275a73169b0d127615f2))
-
-
-
-# [2.12.0](https://github.com/baumrock/RockFrontend/compare/v2.11.0...v2.12.0) (2023-01-09)
-
-
-### Features
-
-* support cssDir paths ([77f9e05](https://github.com/baumrock/RockFrontend/commit/77f9e0520a5f9762b570e251e02655f4e36bbcff))
-* tweak livereload and add latte bar to tracy ([907add4](https://github.com/baumrock/RockFrontend/commit/907add42dbed9d8133e80d2f107568e0e72fb786))
-* update exclude regexes ([5c2436e](https://github.com/baumrock/RockFrontend/commit/5c2436eef78b1d92d61493d6f73298581bc7a35f))
 
 
 
