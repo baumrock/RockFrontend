@@ -68,6 +68,10 @@
   };
 
   Alfred.prototype.init = function () {
+    // early exit when in mobile preview iframe
+    if (document.querySelector("body").classList.contains("rpb-preview")) {
+      return;
+    }
     let items = document.querySelectorAll("[alfred]:not(.alfred)");
     if (!items.length) return;
     items.forEach(function (item) {

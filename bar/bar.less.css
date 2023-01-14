@@ -1,0 +1,128 @@
+body.overflow-hidden {
+  overflow: hidden;
+}
+#rpb-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  outline: 1px solid #e9e9e9;
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+  padding: 5px;
+  border-radius: 0 0 5px 0;
+  z-index: 99;
+}
+#rpb-topbar #rpb-logo {
+  height: 20px;
+  margin-right: 10px;
+}
+#rpb-topbar a {
+  color: inherit;
+  text-decoration: none;
+}
+#rpb-topbar a svg {
+  transition: all 0.3s ease;
+}
+#rpb-topbar a:hover svg {
+  transform: translateY(-2px);
+}
+#rpb-topbar svg {
+  height: 20px;
+  width: 20px;
+  margin: 0 5px;
+}
+body.rpb-preview #rpb-topbar {
+  display: none;
+}
+#rpb-device-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  z-index: 98;
+  transition: all 0.5s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: radial-gradient(
+      circle at center center,
+      transparent,
+      #ffffff
+    ),
+    linear-gradient(
+      309deg,
+      rgba(90, 90, 90, 0.05) 0%,
+      rgba(90, 90, 90, 0.05) 50%,
+      rgba(206, 206, 206, 0.05) 50%,
+      rgba(206, 206, 206, 0.05) 100%
+    ),
+    linear-gradient(
+      39deg,
+      rgba(13, 13, 13, 0.05) 0%,
+      rgba(13, 13, 13, 0.05) 50%,
+      rgba(189, 189, 189, 0.05) 50%,
+      rgba(189, 189, 189, 0.05) 100%
+    ),
+    linear-gradient(
+      144deg,
+      rgba(249, 249, 249, 0.05) 0%,
+      rgba(249, 249, 249, 0.05) 50%,
+      rgba(111, 111, 111, 0.05) 50%,
+      rgba(111, 111, 111, 0.05) 100%
+    ),
+    linear-gradient(
+      166deg,
+      rgba(231, 231, 231, 0.05) 0%,
+      rgba(231, 231, 231, 0.05) 50%,
+      rgba(220, 220, 220, 0.05) 50%,
+      rgba(220, 220, 220, 0.05) 100%
+    ),
+    linear-gradient(
+      212deg,
+      rgba(80, 80, 80, 0.05) 0%,
+      rgba(80, 80, 80, 0.05) 50%,
+      rgba(243, 243, 243, 0.05) 50%,
+      rgba(243, 243, 243, 0.05) 100%
+    ),
+    radial-gradient(circle at center center, #ffffff, #ffffff);
+}
+#rpb-device-preview.show {
+  height: 100%;
+}
+#rpb-device-preview.show iframe {
+  opacity: 1 !important;
+}
+#rpb-device-preview .rpb-devices a {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: white;
+  display: inline-block;
+  color: inherit;
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+#rpb-device-preview .rpb-devices a:hover {
+  transform: translateY(-2px);
+}
+#rpb-device-preview .iframe-wrapper {
+  transition: width 1s ease;
+  width: 375px;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 20px auto 1fr 20px;
+  gap: 10px;
+}
+#rpb-device-preview .iframe-wrapper > div {
+  text-align: center;
+}
+#rpb-device-preview .iframe-wrapper iframe {
+  background-color: white;
+  box-shadow: 0px 0px 50px 0px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 1s ease;
+}

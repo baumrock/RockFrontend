@@ -1,3 +1,5 @@
+<img src=RockFrontend.svg height=80><br><br>
+
 # Take your ProcessWire Frontend Development to the Next Level 🚀🚀
 
 <br>
@@ -210,14 +212,8 @@ href=/site/assets/files/1/favicon.192x192.png> <link rel='apple-touch-icon'
 type='image/png' sizes='167x167' href=/site/assets/files/1/favicon.167x167.png>
 <link rel='apple-touch-icon' type='image/png' sizes='180x180'
 href=/site/assets/files/1/favicon.180x180.png>
-<link
-  rel="manifest"
-  href="/website.webmanifest"
-/>
-<meta
-  name="theme-color"
-  content="#074589"
-/>
+<link rel="manifest" href="/website.webmanifest" />
+<meta name="theme-color" content="#074589" />
 ```
 
 ### Adding a manifest file to your project
@@ -549,11 +545,7 @@ You can even provide variables to replace, so you can create completely dynamic 
 RockFrontend comes with a handy method `isActive()` to keep your menu markup clean. Using `latte` you'll get super simple markup without if-else-hell:
 
 ```html
-<nav
-  id="tm-menu"
-  class="tm-boxed-padding"
-  uk-navbar
->
+<nav id="tm-menu" class="tm-boxed-padding" uk-navbar>
   <div class="uk-navbar-center uk-visible@m">
     <ul class="uk-navbar-nav">
       <li n:foreach="$home->children() as $item">
@@ -563,10 +555,7 @@ RockFrontend comes with a handy method `isActive()` to keep your menu markup cle
         >
           {$item->title}
         </a>
-        <div
-          class="uk-navbar-dropdown"
-          n:if="$item->numChildren()"
-        >
+        <div class="uk-navbar-dropdown" n:if="$item->numChildren()">
           <ul class="uk-nav uk-navbar-dropdown-nav">
             <li
               n:foreach="$item->children() as $child"

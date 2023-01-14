@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.14.1',
+      'version' => '2.15.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -218,7 +218,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookAfter(
       "Page::render",
       function (HookEvent $event) {
-        $page = $event->object;
         $html = $event->return;
         $styles = $this->styles();
         $scripts = $this->scripts();
@@ -262,6 +261,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
             }
           }
         }
+
+        $this->addTopBar($html);
 
         // at the very end we inject the js variables
         $assets = '';
@@ -331,6 +332,33 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function addPostCSS($key, $callback)
   {
     $this->postCSS->set($key, $callback);
+  }
+
+  /**
+   * Show topbar with sitemap and edit and mobile preview
+   */
+  public function addTopBar(&$html)
+  {
+    if (!$this->isEnabled('topbar')) return;
+
+    $page = $this->wire->page;
+    if (!$page->editable()) return;
+    if ($page->template == 'admin') return;
+    if ($this->wire->input->get('rfpreview')) return;
+
+    /** @var RockMigrations $rm */
+    $less = __DIR__ . "/bar/bar.less";
+    if ($rm = $this->wire->modules->get('RockMigrations')) {
+      $rm->saveCSS($less); // recompile less if changed
+    }
+    $css = $this->toUrl("$less.css", true);
+    $style = "<link rel='stylesheet' href='$css'>";
+    $html = str_replace("</head", "$style</head", $html);
+
+    $topbar = $this->wire->files->render(__DIR__ . "/bar/topbar.php", [
+      'logourl' => $this->toUrl(__DIR__ . "/RockFrontend.svg", true),
+    ]);
+    $html = str_replace("</body", "$topbar</body", $html);
   }
 
   /**
@@ -1028,6 +1056,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function rfGrow($_data, $shrink = false): string
   {
+    if (is_string($_data)) {
+      $tmp = explode(",", $_data);
+      $_data = [
+        'min' => trim($tmp[0]),
+        'max' => trim($tmp[1]),
+      ];
+    }
+    if (!is_array($_data)) {
+      // bd(Debug::backtrace());
+      throw new WireException("data for rfGrow must be an array");
+    }
     $data = new WireData();
     $data->setArray([
       'min' => null,
@@ -1525,8 +1564,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Custom
    * @return string
    */
-  public function renderLayout(Page $page, $fallback = [], $noMerge = false)
+  public function renderLayout(Page $page = null, $fallback = [], $noMerge = false)
   {
+    if (!$page) $page = $this->wire->page;
     $defaultFallback = [
       "layouts/{$page->template}",
       "layouts/default",
@@ -1669,6 +1709,38 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $svg = str_replace("{{$k}}", $v, $svg);
     }
     return $this->html($svg);
+  }
+
+  /**
+   * Make sure that the given file/directory path is absolute
+   * This will NOT check if the directory or path exists!
+   * It will always prepend the PW root directory so this method does not work
+   * for absolute paths outside of PW!
+   */
+  public function toPath($url): string
+  {
+    $url = $this->toUrl($url);
+    return $this->wire->config->paths->root . ltrim($url, "/");
+  }
+
+  /**
+   * Make sure that the given file/directory path is relative to PW root
+   * This will NOT check if the directory or path exists!
+   * If provided a path outside of PW root it will return that path because
+   * the str_replace only works if the path starts with the pw root path!
+   */
+  public function toUrl($path, $cachebuster = false): string
+  {
+    $cache = '';
+    if ($cachebuster) {
+      $path = $this->toPath($path);
+      if (is_file($path)) $cache = "?m=" . filemtime($path);
+    }
+    return str_replace(
+      $this->wire->config->paths->root,
+      $this->wire->config->urls->root,
+      Paths::normalizeSeparators((string)$path) . $cache
+    );
   }
 
   /**
@@ -1825,6 +1897,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Features";
     $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax)');
     $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Auto-Minify-Feature))');
+    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview)');
     $f->value = (array)$this->features;
     $fs->add($f);
 
@@ -1834,7 +1907,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
     $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
     $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
-    $f->addOption('layoutfield', 'layoutfield - Create the layout field that can override layout rendering');
     $f->value = (array)$this->migrations;
     $fs->add($f);
 
