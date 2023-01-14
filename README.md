@@ -415,42 +415,7 @@ RockFrontend does not force you to use an MVC architecture, though I'm always us
 
 # Example \_main.php
 
-```php
-<?php namespace ProcessWire;
-/** @var RockFrontend $rockfrontend */
-$rockfrontend->styles()
-  ->add(/path/to/your/file.css)
-  ;
-$rockfrontend->scripts()
-  ->add(/path/to/your/file.js)
-  ;
-?><!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <?= $rockfrontend->seo() ?>
-  <?php
-  // your scripts will be injected here automatically
-  // see the video for details!
-  ?>
-</head>
-<body>
-  <?php
-  // render layout from page field or from /site/templates/layouts
-  echo $rockfrontend->renderLayout($page);
-
-  // this is just an example of how you could add another scripts section
-  // you can safely remove this call if you don't want to add any scripts
-  // at the bottom of your page body
-  echo $rockfrontend->scripts('body')
-    ->add('site/templates/bundle/main.js')
-    ->render();
-  ?>
-</body>
-</html>
-```
+Please see https://github.com/baumrock/RockFrontend/blob/main/profiles/rock/files/site/templates/_main.php
 
 <img src=hr.svg>
 
