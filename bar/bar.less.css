@@ -19,12 +19,13 @@ body.overflow-hidden {
 #rpb-topbar a {
   color: inherit;
   text-decoration: none;
+  border: 0;
 }
 #rpb-topbar a svg {
   transition: all 0.3s ease;
 }
 #rpb-topbar a:hover svg {
-  transform: translateY(-2px);
+  transform: scale(1.2);
 }
 #rpb-topbar svg {
   height: 20px;
@@ -46,47 +47,7 @@ body.rpb-preview #rpb-topbar {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: radial-gradient(
-      circle at center center,
-      transparent,
-      #ffffff
-    ),
-    linear-gradient(
-      309deg,
-      rgba(90, 90, 90, 0.05) 0%,
-      rgba(90, 90, 90, 0.05) 50%,
-      rgba(206, 206, 206, 0.05) 50%,
-      rgba(206, 206, 206, 0.05) 100%
-    ),
-    linear-gradient(
-      39deg,
-      rgba(13, 13, 13, 0.05) 0%,
-      rgba(13, 13, 13, 0.05) 50%,
-      rgba(189, 189, 189, 0.05) 50%,
-      rgba(189, 189, 189, 0.05) 100%
-    ),
-    linear-gradient(
-      144deg,
-      rgba(249, 249, 249, 0.05) 0%,
-      rgba(249, 249, 249, 0.05) 50%,
-      rgba(111, 111, 111, 0.05) 50%,
-      rgba(111, 111, 111, 0.05) 100%
-    ),
-    linear-gradient(
-      166deg,
-      rgba(231, 231, 231, 0.05) 0%,
-      rgba(231, 231, 231, 0.05) 50%,
-      rgba(220, 220, 220, 0.05) 50%,
-      rgba(220, 220, 220, 0.05) 100%
-    ),
-    linear-gradient(
-      212deg,
-      rgba(80, 80, 80, 0.05) 0%,
-      rgba(80, 80, 80, 0.05) 50%,
-      rgba(243, 243, 243, 0.05) 50%,
-      rgba(243, 243, 243, 0.05) 100%
-    ),
-    radial-gradient(circle at center center, #ffffff, #ffffff);
+  background-image: radial-gradient(circle at center center, transparent, #ffffff), linear-gradient(309deg, rgba(90, 90, 90, 0.05) 0%, rgba(90, 90, 90, 0.05) 50%, rgba(206, 206, 206, 0.05) 50%, rgba(206, 206, 206, 0.05) 100%), linear-gradient(39deg, rgba(13, 13, 13, 0.05) 0%, rgba(13, 13, 13, 0.05) 50%, rgba(189, 189, 189, 0.05) 50%, rgba(189, 189, 189, 0.05) 100%), linear-gradient(144deg, rgba(249, 249, 249, 0.05) 0%, rgba(249, 249, 249, 0.05) 50%, rgba(111, 111, 111, 0.05) 50%, rgba(111, 111, 111, 0.05) 100%), linear-gradient(166deg, rgba(231, 231, 231, 0.05) 0%, rgba(231, 231, 231, 0.05) 50%, rgba(220, 220, 220, 0.05) 50%, rgba(220, 220, 220, 0.05) 100%), linear-gradient(212deg, rgba(80, 80, 80, 0.05) 0%, rgba(80, 80, 80, 0.05) 50%, rgba(243, 243, 243, 0.05) 50%, rgba(243, 243, 243, 0.05) 100%), radial-gradient(circle at center center, #ffffff, #ffffff);
 }
 #rpb-device-preview.show {
   height: 100%;
