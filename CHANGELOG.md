@@ -1,3 +1,12 @@
+# [2.16.0](https://github.com/baumrock/RockFrontend/compare/v2.15.0...v2.16.0) (2023-01-19)
+
+
+### Features
+
+* hide alfred GUI on shift keypress ([d6862d0](https://github.com/baumrock/RockFrontend/commit/d6862d041c61af0b067edd81e8cbd407d405aa04))
+
+
+
 # [2.15.0](https://github.com/baumrock/RockFrontend/compare/v2.14.1...v2.15.0) (2023-01-14)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * alfred icons only shown on pagebuilder blocks ([811a296](https://github.com/baumrock/RockFrontend/commit/811a29685e693eb2bae373c6c288da9e54e18818))
-
-
-
-# [2.13.0](https://github.com/baumrock/RockFrontend/compare/v2.12.0...v2.13.0) (2023-01-10)
-
-
-### Features
-
-* add improved box-layout ([cc3d10e](https://github.com/baumrock/RockFrontend/commit/cc3d10e1acdd2f997a25275a73169b0d127615f2))
 
 
 
