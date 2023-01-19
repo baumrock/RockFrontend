@@ -1,3 +1,12 @@
+## [2.16.1](https://github.com/baumrock/RockFrontend/compare/v2.16.0...v2.16.1) (2023-01-19)
+
+
+### Bug Fixes
+
+* shiftkey hides alfred elements which breaks confirm feature ([2a5f3b1](https://github.com/baumrock/RockFrontend/commit/2a5f3b16c86e9405344a8661ea610f1e344bdb55))
+
+
+
 # [2.16.0](https://github.com/baumrock/RockFrontend/compare/v2.15.0...v2.16.0) (2023-01-19)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add selector to rock profile header.latte ([b6e2c00](https://github.com/baumrock/RockFrontend/commit/b6e2c00c9cda5271562639d65d5fe06cc511ef8b))
-
-
-
-## [2.13.1](https://github.com/baumrock/RockFrontend/compare/v2.13.0...v2.13.1) (2023-01-12)
-
-
-### Bug Fixes
-
-* alfred icons only shown on pagebuilder blocks ([811a296](https://github.com/baumrock/RockFrontend/commit/811a29685e693eb2bae373c6c288da9e54e18818))
 
 
 
