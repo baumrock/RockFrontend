@@ -125,19 +125,19 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   height: 145px;
   border-bottom: 3px solid #ececec;
 }
-.alfred:hover > .alfredelements > .icons {
+.alfred:hover:not(.alfred-disabled) > .alfredelements > .icons {
   display: inline-block;
 }
-.alfred:hover > .alfredelements > .add-top {
+.alfred:hover:not(.alfred-disabled) > .alfredelements > .add-top {
   display: inline-block;
 }
-.alfred:hover > .alfredelements > .add-bottom {
+.alfred:hover:not(.alfred-disabled) > .alfredelements > .add-bottom {
   display: inline-block;
 }
-.alfred:hover > .alfredelements > .add-left {
+.alfred:hover:not(.alfred-disabled) > .alfredelements > .add-left {
   display: inline-block;
 }
-.alfred:hover > .alfredelements > .add-right {
+.alfred:hover:not(.alfred-disabled) > .alfredelements > .add-right {
   display: inline-block;
 }
 .alfred-cover {
