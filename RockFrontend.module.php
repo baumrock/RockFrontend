@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.16.1',
+      'version' => '2.16.2',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -429,9 +429,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->hasAlfred = true;
 
     // set the page to be edited
-    $page = ($page and $page->id)
-      ? $this->wire->pages->get((string)$page)
-      : false;
+    $p = false;
+    if ($page) $p = $this->wire->pages->get((string)$page);
+    if (!$p->id) $p = false;
+    $page = $p;
 
     // check if the current page is a RPB block
     // that can happen if RPB blocks are used as regular pages (nfkinder)
