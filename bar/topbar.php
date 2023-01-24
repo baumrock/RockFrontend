@@ -1,4 +1,4 @@
-<div id="rpb-topbar">
+<div id="rpb-topbar" style="z-index: <?= $z ?>">
   <a href="https://www.baumrock.com" target=_blank>
     <img id="rpb-logo" src="<?= $logourl ?>">
   </a>

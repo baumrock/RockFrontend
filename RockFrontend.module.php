@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.16.2',
+      'version' => '2.17.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -357,6 +357,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $topbar = $this->wire->files->render(__DIR__ . "/bar/topbar.php", [
       'logourl' => $this->toUrl(__DIR__ . "/RockFrontend.svg", true),
+      'z' => is_int($this->topbarz) ? $this->topbarz : 999,
     ]);
     $html = str_replace("</body", "$topbar</body", $html);
   }
@@ -1900,6 +1901,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Auto-Minify-Feature))');
     $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview)');
     $f->value = (array)$this->features;
+    $fs->add($f);
+
+    $f = new InputfieldInteger();
+    $f->name = 'topbarz';
+    $f->label = 'Topbar Z-Index';
+    $f->initValue = 999;
+    $f->value = $this->topbarz;
+    $f->showIf = 'features=topbar';
+    $f->notes = 'Default is 999';
     $fs->add($f);
 
     $f = $this->wire->modules->get('InputfieldCheckboxes');
