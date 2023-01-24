@@ -1,3 +1,12 @@
+# [2.17.0](https://github.com/baumrock/RockFrontend/compare/v2.16.2...v2.17.0) (2023-01-24)
+
+
+### Features
+
+* make z-index of topbar configurable ([81ef91f](https://github.com/baumrock/RockFrontend/commit/81ef91fb492f9018311fb6c7caa742ac6fcbffdd))
+
+
+
 ## [2.16.2](https://github.com/baumrock/RockFrontend/compare/v2.16.1...v2.16.2) (2023-01-23)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add topbar feature (mobile preview + edit links) ([a4ee4cf](https://github.com/baumrock/RockFrontend/commit/a4ee4cfd5eb8dd149db8839a73088271713fb616))
-
-
-
-## [2.14.1](https://github.com/baumrock/RockFrontend/compare/v2.14.0...v2.14.1) (2023-01-12)
-
-
-### Bug Fixes
-
-* header outputting selector ([2c3b9e1](https://github.com/baumrock/RockFrontend/commit/2c3b9e103c6327b866c7888226529928e269d67b))
 
 
 
