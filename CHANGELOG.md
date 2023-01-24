@@ -1,3 +1,12 @@
+## [2.17.1](https://github.com/baumrock/RockFrontend/compare/v2.17.0...v2.17.1) (2023-01-24)
+
+
+### Bug Fixes
+
+* access property id on bool ([876e66c](https://github.com/baumrock/RockFrontend/commit/876e66c7e7443cc8256bc93f8c28e3e4c2b3d4c0))
+
+
+
 # [2.17.0](https://github.com/baumrock/RockFrontend/compare/v2.16.2...v2.17.0) (2023-01-24)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * hide alfred GUI on shift keypress ([d6862d0](https://github.com/baumrock/RockFrontend/commit/d6862d041c61af0b067edd81e8cbd407d405aa04))
-
-
-
-# [2.15.0](https://github.com/baumrock/RockFrontend/compare/v2.14.1...v2.15.0) (2023-01-14)
-
-
-### Features
-
-* add topbar feature (mobile preview + edit links) ([a4ee4cf](https://github.com/baumrock/RockFrontend/commit/a4ee4cfd5eb8dd149db8839a73088271713fb616))
 
 
 
