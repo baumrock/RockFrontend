@@ -144,6 +144,9 @@ class StylesArray extends AssetsArray
 
   /**
    * Add some postCSS magic to css files
+   *
+   * We save generated CSS files to /site/assets as it should be writable.
+   *
    */
   public function postCSS($asset)
   {
@@ -159,6 +162,12 @@ class StylesArray extends AssetsArray
       // asset has been changed, update cached file
       $markup = $rf->postCSS($markup);
       $rf->writeAsset($newFile, $markup);
+
+      // if there is a sourcemap file for the given asset we copy it
+      // over to the new location
+      if (is_file($src = $asset->path . ".map")) {
+        $this->wire->files->copy($src, $newFile . ".map");
+      }
     }
     $asset->setPath($newFile);
     return $asset;
