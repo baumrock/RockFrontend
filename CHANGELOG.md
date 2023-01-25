@@ -1,3 +1,12 @@
+# [2.18.0](https://github.com/baumrock/RockFrontend/compare/v2.17.1...v2.18.0) (2023-01-25)
+
+
+### Features
+
+* copy sourcemap files after postCSS() ([b925b58](https://github.com/baumrock/RockFrontend/commit/b925b589e0b46ac15301c61255e50f1835649abc))
+
+
+
 ## [2.17.1](https://github.com/baumrock/RockFrontend/compare/v2.17.0...v2.17.1) (2023-01-24)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * shiftkey hides alfred elements which breaks confirm feature ([2a5f3b1](https://github.com/baumrock/RockFrontend/commit/2a5f3b16c86e9405344a8661ea610f1e344bdb55))
-
-
-
-# [2.16.0](https://github.com/baumrock/RockFrontend/compare/v2.15.0...v2.16.0) (2023-01-19)
-
-
-### Features
-
-* hide alfred GUI on shift keypress ([d6862d0](https://github.com/baumrock/RockFrontend/commit/d6862d041c61af0b067edd81e8cbd407d405aa04))
 
 
 
