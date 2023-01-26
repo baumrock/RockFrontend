@@ -1,3 +1,12 @@
+# [2.20.0](https://github.com/baumrock/RockFrontend/compare/v2.19.0...v2.20.0) (2023-01-26)
+
+
+### Features
+
+* add scrollclass snippet ([3b6f981](https://github.com/baumrock/RockFrontend/commit/3b6f981bf20a555bedf49fefaad5f66544519f38))
+
+
+
 # [2.19.0](https://github.com/baumrock/RockFrontend/compare/v2.18.0...v2.19.0) (2023-01-26)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * make z-index of topbar configurable ([81ef91f](https://github.com/baumrock/RockFrontend/commit/81ef91fb492f9018311fb6c7caa742ac6fcbffdd))
-
-
-
-## [2.16.2](https://github.com/baumrock/RockFrontend/compare/v2.16.1...v2.16.2) (2023-01-23)
-
-
-### Bug Fixes
-
-* warning on alfred() calls with integers ([d8f7122](https://github.com/baumrock/RockFrontend/commit/d8f7122d59a4862cdf20d4dfa680b57c06021d75))
 
 
 
