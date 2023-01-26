@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.19.0',
+      'version' => '2.20.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1928,7 +1928,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = $this->wire->modules->get('InputfieldMarkup');
     $f->entityEncodeText = false;
     $f->label = 'Javascript Snippets';
-    $f->notes = 'To use snippets just add them to $rockfrontend->scripts()->add(...) in your main markup file.';
+    $f->notes = 'To use snippets just add them to $rockfrontend->scripts()->add("/url/to/script.js", "defer") in your main markup file.';
     $f->wrapClass = 'script-checkboxes';
     $f->value = '';
     foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
@@ -2062,6 +2062,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function drop($str)
   {
+    $str = str_replace(
+      ["/**\n", " * ", "\n */"],
+      "",
+      $str
+    );
     return "<div class='uk-inline'>
       <span uk-icon='info' class='uk-margin-small-left'></span>
       <div class='uk-card uk-card-body uk-card-default' uk-drop>"

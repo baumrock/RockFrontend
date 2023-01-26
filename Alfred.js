@@ -293,7 +293,9 @@
     $(document).on("keydown keyup", function (e) {
       pressed = false;
       $(".alfred").removeClass("alfred-disabled");
-      if ($hovered.closest(".alfredelements").length) return;
+      try {
+        if ($hovered.closest(".alfredelements").length) return;
+      } catch (error) {}
       if (!e.shiftKey) return;
       pressed = true;
       let $alfred = $hovered.closest(".alfred");
