@@ -1,3 +1,12 @@
+# [2.19.0](https://github.com/baumrock/RockFrontend/compare/v2.18.0...v2.19.0) (2023-01-26)
+
+
+### Features
+
+* add template-edit button to topbar ([fec8447](https://github.com/baumrock/RockFrontend/commit/fec844705bc23585346d4f00485e073c8061493b))
+
+
+
 # [2.18.0](https://github.com/baumrock/RockFrontend/compare/v2.17.1...v2.18.0) (2023-01-25)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * warning on alfred() calls with integers ([d8f7122](https://github.com/baumrock/RockFrontend/commit/d8f7122d59a4862cdf20d4dfa680b57c06021d75))
-
-
-
-## [2.16.1](https://github.com/baumrock/RockFrontend/compare/v2.16.0...v2.16.1) (2023-01-19)
-
-
-### Bug Fixes
-
-* shiftkey hides alfred elements which breaks confirm feature ([2a5f3b1](https://github.com/baumrock/RockFrontend/commit/2a5f3b16c86e9405344a8661ea610f1e344bdb55))
 
 
 
