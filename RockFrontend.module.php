@@ -1928,7 +1928,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = $this->wire->modules->get('InputfieldMarkup');
     $f->entityEncodeText = false;
     $f->label = 'Javascript Snippets';
-    $f->notes = 'To use snippets just add them to $rockfrontend->scripts()->add("/url/to/script.js", "defer") in your main markup file.';
     $f->wrapClass = 'script-checkboxes';
     $f->value = '';
     foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
@@ -1940,7 +1939,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       if (count($matches)) {
         $label .= $this->drop($matches[0]);
       }
-      $f->value .= "<div>$label</div>";
+      $url = $this->toUrl($script);
+      $markup = '<span class="uk-margin-left">
+        <pre style="font-size:10px;margin:5px 0;">$rockfrontend->scripts()->add("' . $url . '", "defer");</pre>
+        </span>';
+      $f->value .= "<div>$label $markup</div>";
     }
     $fs->add($f);
 
