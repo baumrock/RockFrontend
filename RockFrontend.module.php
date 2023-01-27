@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.20.0',
+      'version' => '2.20.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -349,7 +349,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     /** @var RockMigrations $rm */
     $less = __DIR__ . "/bar/bar.less";
     if ($rm = $this->wire->modules->get('RockMigrations')) {
-      $rm->saveCSS($less); // recompile less if changed
+      // recompile less if changed
+      // check for method saveCSS to prevent errors on old installations
+      if (method_exists($rm, "saveCSS")) $rm->saveCSS($less);
     }
     $css = $this->toUrl("$less.css", true);
     $style = "<link rel='stylesheet' href='$css'>";
