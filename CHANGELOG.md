@@ -1,3 +1,12 @@
+## [2.20.1](https://github.com/baumrock/RockFrontend/compare/v2.20.0...v2.20.1) (2023-01-27)
+
+
+### Bug Fixes
+
+* prevent saveCSS error on old installations ([001e311](https://github.com/baumrock/RockFrontend/commit/001e3111af96ffbea21d8b553ed4d51162fdc600))
+
+
+
 # [2.20.0](https://github.com/baumrock/RockFrontend/compare/v2.19.0...v2.20.0) (2023-01-26)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * access property id on bool ([876e66c](https://github.com/baumrock/RockFrontend/commit/876e66c7e7443cc8256bc93f8c28e3e4c2b3d4c0))
-
-
-
-# [2.17.0](https://github.com/baumrock/RockFrontend/compare/v2.16.2...v2.17.0) (2023-01-24)
-
-
-### Features
-
-* make z-index of topbar configurable ([81ef91f](https://github.com/baumrock/RockFrontend/commit/81ef91fb492f9018311fb6c7caa742ac6fcbffdd))
 
 
 
