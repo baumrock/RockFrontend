@@ -24,12 +24,17 @@ setTimeout(() => {
         // check if we are in the admin and have unsaved changes
         if (document.querySelectorAll(".InputfieldStateChanged").length) {
           console.log("detected change - unsaved changes prevent reload");
-          UIkit.notification({
-            message: "Unsaved changes prevent reload",
-            status: "warning",
-            pos: "top-center",
-            timeout: 0,
-          });
+          // show notification
+          // delay of 200ms prevents that the notification is shown
+          // when a page is saved that creates files in the background
+          setTimeout(() => {
+            UIkit.notification({
+              message: "Unsaved changes prevent reload",
+              status: "warning",
+              pos: "top-center",
+              timeout: 0,
+            });
+          }, 200);
           return;
         }
         if (document.querySelectorAll("#pw-panel-shade").length) {
