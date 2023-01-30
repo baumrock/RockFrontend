@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.20.1',
+      'version' => '2.21.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1956,6 +1956,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $fs = new InputfieldFieldset();
     $fs->label = "Tools";
+
+    $f = new InputfieldText();
+    $f->name = "postCssTool";
+    $f->label = "PostCSS";
+    $f->notes = "Enter rfGrow/rfShrink CSS and save the page then you'll get the transformed CSS to copy paste.
+      Eg rfGrow(10px, 100px);";
+    $f->collapsed = 1;
+    $f->value = $this->postCssTool;
+    if ($f->value) {
+      $f->collapsed = 0;
+      $f->notes = $this->postCSS($f->value);
+    }
+    $fs->add($f);
 
     $this->profileExecute();
     $f = new InputfieldSelect();
