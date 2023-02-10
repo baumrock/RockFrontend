@@ -405,7 +405,7 @@ $rockfrontend->styles('foo')->render() --> /site/templates/bundle/foo.css
 
 ### Does RockFrontend force me to use a CSS Frontend Framework?
 
-No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course). You can also use TailwindCSS but of course you'll need to add your own frontend build pipeline!
+No! Some examples might use UIkit classes, but you can choose whatever framework you like (or none of course). You can also use TailwindCSS but of course you'll need to add your own frontend build pipeline! Or use https://github.com/gebeer/RockFrontendTailwind
 
 ### Does RockFrontend use an MVC pattern or force me to use one?
 
