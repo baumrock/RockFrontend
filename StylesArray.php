@@ -14,6 +14,7 @@ class StylesArray extends AssetsArray
   const cacheName = 'rockfrontend-stylesarray-cache';
   const comment = '<!-- rockfrontend-styles-head -->';
 
+  public $cssDir = false;
   protected $vars = [];
 
   /**
@@ -185,7 +186,7 @@ class StylesArray extends AssetsArray
     $opt->setArray([
       'debug' => $this->wire->config->debug,
       'indent' => '  ',
-      'cssDir' => "/site/templates/bundle/",
+      'cssDir' => $this->cssDir ?: "/site/templates/bundle/",
       'cssName' => $this->name,
       'sourcemaps' => $this->wire->config->debug,
     ]);

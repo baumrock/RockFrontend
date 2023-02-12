@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.21.0',
+      'version' => '2.22.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -960,6 +960,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // string instead. That means if called from outside a latte file it will
     // still return the HTML.
     try {
+      require_once __DIR__ . "/vendor/autoload.php";
       return new Html($str);
     } catch (\Throwable $th) {
       return $str;
@@ -1681,11 +1682,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return StylesArray
    */
-  public function styles($name = 'head')
+  public function styles($name = 'head', $cssDir = null)
   {
     if (!$this->styles) $this->styles = new WireData();
     $style = $this->styles->get($name) ?: new StylesArray($name);
     if ($name) $this->styles->set($name, $style);
+    if ($cssDir) $style->cssDir = $cssDir;
     return $style;
   }
 
