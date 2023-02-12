@@ -1,3 +1,12 @@
+# [2.22.0](https://github.com/baumrock/RockFrontend/compare/v2.21.0...v2.22.0) (2023-02-12)
+
+
+### Features
+
+* make it possible to define the output directory for css ([cf7afd1](https://github.com/baumrock/RockFrontend/commit/cf7afd14be358a028a4c0a0d12d967ccd22db687))
+
+
+
 # [2.21.0](https://github.com/baumrock/RockFrontend/compare/v2.20.1...v2.21.0) (2023-01-30)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add template-edit button to topbar ([fec8447](https://github.com/baumrock/RockFrontend/commit/fec844705bc23585346d4f00485e073c8061493b))
-
-
-
-# [2.18.0](https://github.com/baumrock/RockFrontend/compare/v2.17.1...v2.18.0) (2023-01-25)
-
-
-### Features
-
-* copy sourcemap files after postCSS() ([b925b58](https://github.com/baumrock/RockFrontend/commit/b925b589e0b46ac15301c61255e50f1835649abc))
 
 
 
