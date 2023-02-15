@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.22.0',
+      'version' => '2.23.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -205,6 +205,36 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->liveReload();
     $this->addAssets();
+  }
+
+
+  /**
+   * Helper function to support translatable strings in latte/twig files
+   *
+   * Usage:
+   * <a href=...>{$rf->_('login')}</a>
+   * <a href=...>{$rf->_('logout')}</a>
+   *
+   * See https://github.com/processwire/processwire-requests/issues/480
+   */
+  public function _($str)
+  {
+    $trace = Debug::backtrace();
+    foreach ($trace as $item) {
+      $call = $item['call'];
+      // renderFile[Latte|Twig]
+      if (strpos($call, '$rockfrontend->renderFile') !== 0) continue;
+      preg_match("/(.*)\"(.*)\"(.*)/", $call, $matches);
+      // path to file that was rendered (eg main.latte)
+      $path = $matches[2];
+      break;
+    }
+    $url = str_replace(
+      $this->wire->config->paths->root,
+      $this->wire->config->urls->root,
+      $path
+    );
+    return \ProcessWire\__($str, $url);
   }
 
   /**
