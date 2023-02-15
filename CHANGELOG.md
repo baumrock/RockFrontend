@@ -1,3 +1,12 @@
+# [2.23.0](https://github.com/baumrock/RockFrontend/compare/v2.22.0...v2.23.0) (2023-02-15)
+
+
+### Features
+
+* add translation helper ([877ddb9](https://github.com/baumrock/RockFrontend/commit/877ddb9dbda605d76450d538bb3da21615def0bd))
+
+
+
 # [2.22.0](https://github.com/baumrock/RockFrontend/compare/v2.21.0...v2.22.0) (2023-02-12)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add scrollclass snippet ([3b6f981](https://github.com/baumrock/RockFrontend/commit/3b6f981bf20a555bedf49fefaad5f66544519f38))
-
-
-
-# [2.19.0](https://github.com/baumrock/RockFrontend/compare/v2.18.0...v2.19.0) (2023-01-26)
-
-
-### Features
-
-* add template-edit button to topbar ([fec8447](https://github.com/baumrock/RockFrontend/commit/fec844705bc23585346d4f00485e073c8061493b))
 
 
 
