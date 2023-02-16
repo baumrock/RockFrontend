@@ -452,6 +452,8 @@ $rockfrontend->scripts()
   ->add('/path/to/your/script.js')
   // you can add any custom flags to your $rockfrontend variable at runtime!
   ->addIf('/path/to/foo.js', $rockfrontend->needsFooScript)
+  ->addIf('/path/to/slider.js', $page instanceof HomePage)
+  ->addIf('/path/to/blogscript.js', $page->template == 'blogitem')
   ;
 $rockfrontend->styles()
   ->add(...)
