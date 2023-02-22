@@ -1,3 +1,12 @@
+# [2.25.0](https://github.com/baumrock/RockFrontend/compare/v2.24.0...v2.25.0) (2023-02-22)
+
+
+### Features
+
+* add latte translation helper to module config ([96d0e00](https://github.com/baumrock/RockFrontend/commit/96d0e00d1172cc702fd279214a7d0d047b9e2bfe))
+
+
+
 # [2.24.0](https://github.com/baumrock/RockFrontend/compare/v2.23.0...v2.24.0) (2023-02-22)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add postCSS tool ([1daaded](https://github.com/baumrock/RockFrontend/commit/1daadedcd364f3d828dd71c3e3bb59bb7fc6dbba))
-
-
-
-## [2.20.1](https://github.com/baumrock/RockFrontend/compare/v2.20.0...v2.20.1) (2023-01-27)
-
-
-### Bug Fixes
-
-* prevent saveCSS error on old installations ([001e311](https://github.com/baumrock/RockFrontend/commit/001e3111af96ffbea21d8b553ed4d51162fdc600))
 
 
 
