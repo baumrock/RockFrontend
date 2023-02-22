@@ -423,25 +423,30 @@ Please see https://github.com/baumrock/RockFrontend/blob/main/profiles/rock/file
 
 ## LATTE and translatable strings
 
-Unfortunately you can't use ProcessWire's translation system in LATTE files. You can either use an MVC approach and move your translatable strings into the controller file (custom page class) or you can use RockFrontend's translation helper:
+Since version 2.24.0 RockFrontend supports translatable strings in LATTE files!! 😎🥳
+
+This are the three versions that you can use to translate strings in your LATTE files - choose whatever you prefer.
 
 ```php
-// define translations, eg in /site/init.php
-/** @var RockFrontend $rf */
-$rf = $this->wire->modules->get('RockFrontend');
-$rf->x([
-  'status_loggedin' => __('You are now logged in'),
-  'status_loggedout' => __('Pleas log in'),
-  'logout' => __('Logout'),
-  'login' => __('Login'),
-]);
+<p>{=__('Das ist ein Test')}</p>
+<p>{=_x('foo bar', 'context')}</p>
+<p>{=_n('Found one item', 'Found multiple items', 1)}</p>
+<p>{=_n('Found one item', 'Found multiple items', 2)}</p>
+
+<p>{$rf->_('Das ist ein Test')}</p>
+<p>{$rf->_x('foo bar', 'context')}</p>
+<p>{$rf->_n('Found one item', 'Found multiple items', 1)}</p>
+<p>{$rf->_n('Found one item', 'Found multiple items', 2)}</p>
+
+<p>{$rockfrontend->_('Das ist ein Test')}</p>
+<p>{$rockfrontend->_x('foo bar', 'context')}</p>
+<p>{$rockfrontend->_n('Found one item', 'Found multiple items', 1)}</p>
+<p>{$rockfrontend->_n('Found one item', 'Found multiple items', 2)}</p>
 ```
 
-In your LATTE files you can output translations like this:
+Note that when using the function-syntax you must prepend the function call with an equal sign! While the translation will - in theory - also work without the equal sign you will not be able to translate the string in the backend, because the regex will not find it!
 
-```html
-<button>{$user->isLoggedin() ? x('logout') : x('login')}</button>
-```
+In case you have an older version of RockFrontend [here](https://github.com/baumrock/RockFrontend/tree/12fa350b69873054bb529e985f01c2dcdeef594f#latte-and-translatable-strings) is the link to the outdated workaround.
 
 ## Adding assets to your site (JS or CSS)
 

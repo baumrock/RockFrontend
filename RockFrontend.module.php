@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.23.0',
+      'version' => '2.24.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -205,36 +205,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->liveReload();
     $this->addAssets();
-  }
-
-
-  /**
-   * Helper function to support translatable strings in latte/twig files
-   *
-   * Usage:
-   * <a href=...>{$rf->_('login')}</a>
-   * <a href=...>{$rf->_('logout')}</a>
-   *
-   * See https://github.com/processwire/processwire-requests/issues/480
-   */
-  public function _($str)
-  {
-    $trace = Debug::backtrace();
-    foreach ($trace as $item) {
-      $call = $item['call'];
-      // renderFile[Latte|Twig]
-      if (strpos($call, '$rockfrontend->renderFile') !== 0) continue;
-      preg_match("/(.*)\"(.*)\"(.*)/", $call, $matches);
-      // path to file that was rendered (eg main.latte)
-      $path = $matches[2];
-      break;
-    }
-    $url = str_replace(
-      $this->wire->config->paths->root,
-      $this->wire->config->urls->root,
-      $path
-    );
-    return \ProcessWire\__($str, $url);
   }
 
   /**
@@ -1518,6 +1488,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $latte = $this->latte;
     if (!$latte) {
       try {
+        require_once __DIR__ . "/translate.php";
         require_once $this->path . "vendor/autoload.php";
         $latte = new Engine();
         if ($this->modules->isInstalled("TracyDebugger")) {
@@ -1750,6 +1721,42 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
     return $this->html($svg);
   }
+
+  /** translation support in LATTE files */
+
+  public function _($str)
+  {
+    return \ProcessWire\__($str, $this->textdomain());
+  }
+
+  public function _x($str, $context)
+  {
+    return \ProcessWire\_x($str, $context, $this->textdomain());
+  }
+
+  public function _n($textsingular, $textplural, $count)
+  {
+    return \ProcessWire\_n($textsingular, $textplural, $count, $this->textdomain());
+  }
+
+  /**
+   * Method to find the correct textdomain file for translations in latte files
+   */
+  public function textdomain()
+  {
+    $trace = Debug::backtrace();
+    foreach ($trace as $item) {
+      $call = $item['call'];
+      // renderFile[Latte|Twig]
+      if (strpos($call, '$rockfrontend->renderFile') !== 0) continue;
+      preg_match("/(.*)\"(.*)\"(.*)/", $call, $matches);
+      // path to file that was rendered (eg main.latte)
+      return $this->url($matches[2], false);
+    }
+    return false;
+  }
+
+  /** END translation support in LATTE files */
 
   /**
    * Make sure that the given file/directory path is absolute
