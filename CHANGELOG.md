@@ -1,3 +1,12 @@
+# [2.24.0](https://github.com/baumrock/RockFrontend/compare/v2.23.0...v2.24.0) (2023-02-22)
+
+
+### Features
+
+* add support for translations in LATTE files ([5656765](https://github.com/baumrock/RockFrontend/commit/5656765b998ff00d16a1887f8a1b3bbf01e9ba12))
+
+
+
 # [2.23.0](https://github.com/baumrock/RockFrontend/compare/v2.22.0...v2.23.0) (2023-02-15)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * prevent saveCSS error on old installations ([001e311](https://github.com/baumrock/RockFrontend/commit/001e3111af96ffbea21d8b553ed4d51162fdc600))
-
-
-
-# [2.20.0](https://github.com/baumrock/RockFrontend/compare/v2.19.0...v2.20.0) (2023-01-26)
-
-
-### Features
-
-* add scrollclass snippet ([3b6f981](https://github.com/baumrock/RockFrontend/commit/3b6f981bf20a555bedf49fefaad5f66544519f38))
 
 
 
