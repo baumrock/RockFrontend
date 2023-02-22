@@ -1233,7 +1233,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->migrateFavicon();
     $this->migrateOgImage();
     $this->migrateFooterlinks();
-    $this->migrateLayoutField();
+    $this->mgirateLatteTranslations();
+    // $this->migrateLayoutField();
   }
 
   private function migrateFavicon()
@@ -1280,29 +1281,40 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->addFieldToTemplate(self::field_footerlinks, 'home');
   }
 
-  private function migrateLayoutField()
+  private function mgirateLatteTranslations()
   {
-    if (!in_array("layoutfield", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_layout => [
-          'type' => 'text',
-          'label' => 'Layout',
-          'icon' => 'cubes',
-          'collapsed' => Inputfield::collapsedYes,
-          'notes' => 'This field is only visible to superusers',
-          'inputfieldClass' => 'InputfieldTextTags',
-          'allowUserTags' => false,
-          'useAjax' => true,
-          'tagsUrl' => self::tagsUrl,
-          'closeAfterSelect' => 0, // dont use false
-          'flags' => Field::flagSystem,
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
+    if (!in_array("lattetranslations", $this->migrations)) return;
+    /** @var RockMigrations $rm */
+    $rm = $this->wire->modules->get('RockMigrations');
+    $ext = $rm->getModuleConfig('ProcessLanguageTranslator', 'extensions');
+    if (strpos($ext, "latte") !== false) return;
+    $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
   }
+
+  // DEPRECATED - NOT USED IN ANY OF MY PROJECTS
+  // private function migrateLayoutField()
+  // {
+  //   if (!in_array("layoutfield", $this->migrations)) return;
+  //   $rm = $this->rm();
+  //   $rm->migrate([
+  //     'fields' => [
+  //       self::field_layout => [
+  //         'type' => 'text',
+  //         'label' => 'Layout',
+  //         'icon' => 'cubes',
+  //         'collapsed' => Inputfield::collapsedYes,
+  //         'notes' => 'This field is only visible to superusers',
+  //         'inputfieldClass' => 'InputfieldTextTags',
+  //         'allowUserTags' => false,
+  //         'useAjax' => true,
+  //         'tagsUrl' => self::tagsUrl,
+  //         'closeAfterSelect' => 0, // dont use false
+  //         'flags' => Field::flagSystem,
+  //         'tags' => self::tags,
+  //       ],
+  //     ],
+  //   ]);
+  // }
 
   private function migrateOgImage()
   {
@@ -1963,7 +1975,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
     $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
     $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
+    $url = $this->wire->pages->get(2)->url . "module/edit?name=ProcessLanguageTranslator";
+    $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
     $f->value = (array)$this->migrations;
+    $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
     $fs->add($f);
 
     $f = $this->wire->modules->get('InputfieldMarkup');
