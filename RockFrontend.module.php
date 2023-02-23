@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.24.0',
+      'version' => '2.24.1',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -986,7 +986,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $opt->setArray($options);
     $url = rtrim($this->wire->config->urls($this), "/");
     $title = $opt->title ? "title='{$opt->title}' uk-tooltip" : "";
-    return "<div class='{$opt->wrapperClass}' style='{$opt->style}'>
+    return "<div class='{$opt->wrapClass}' style='{$opt->style}'>
       <a href='$href' $title class='{$opt->class}' {$opt->attrs}>
         <img src='$url/icons/$icon.svg' style='display:inline'>
       </a>
