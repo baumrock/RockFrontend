@@ -1,3 +1,12 @@
+# [2.26.0](https://github.com/baumrock/RockFrontend/compare/v2.25.1...v2.26.0) (2023-02-25)
+
+
+### Features
+
+* make loadAlfred() public ([42e10b1](https://github.com/baumrock/RockFrontend/commit/42e10b10d3e5ba1c51869912c8ec1a42f3851efc))
+
+
+
 ## [2.25.1](https://github.com/baumrock/RockFrontend/compare/v2.25.0...v2.25.1) (2023-02-23)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add translation helper ([877ddb9](https://github.com/baumrock/RockFrontend/commit/877ddb9dbda605d76450d538bb3da21615def0bd))
-
-
-
-# [2.22.0](https://github.com/baumrock/RockFrontend/compare/v2.21.0...v2.22.0) (2023-02-12)
-
-
-### Features
-
-* make it possible to define the output directory for css ([cf7afd1](https://github.com/baumrock/RockFrontend/commit/cf7afd14be358a028a4c0a0d12d967ccd22db687))
 
 
 
