@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.24.1',
+      'version' => '2.25.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -1204,7 +1204,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Load ALFRED assets?
    */
-  protected function loadAlfred(): bool
+  public function loadAlfred(): bool
   {
     if (!$this->hasAlfred) return false;
     if ($this->wire->user->isSuperuser()) return true;
