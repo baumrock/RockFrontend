@@ -365,39 +365,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * Apply postCSS rules to given string
-   */
-  public function postCSS($str): string
-  {
-    foreach ($this->postCSS as $callback) $str = $callback($str);
-    return $str;
-  }
-
-  /**
-   * Convert px to rem
-   */
-  public function rem($value): RemData
-  {
-    require_once __DIR__ . "/RemData.php";
-    $value = strtolower(trim($value));
-    preg_match("/(.*?)([a-z]+)/", $value, $matches);
-    $val = trim($matches[1]);
-    $unit = trim($matches[2]);
-
-    $data = $this->wire(new RemData());
-    $data->val = $val;
-    $data->unit = $unit;
-
-    if ($unit !== 'pxrem') return $data;
-
-    // convert pixel to rem
-    $data->val = round($val / $this->remBase, 3);
-    $data->unit = 'rem';
-
-    return $data;
-  }
-
-  /**
    * ALFRED - A Lovely FRontend EDitor
    *
    * Usage:
@@ -1341,6 +1308,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Apply postCSS rules to given string
+   */
+  public function postCSS($str): string
+  {
+    foreach ($this->postCSS as $callback) $str = $callback($str);
+    return $str;
+  }
+
+  /**
    * Copy profile files to PW root
    * @return void
    */
@@ -1392,6 +1368,30 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $dir = $this->wire->config->paths->assets . "RockFrontend/css/";
     if (is_dir($dir)) $this->wire->files->rmdir($dir, true);
     $this->forceRecompile();
+  }
+
+  /**
+   * Convert px to rem
+   */
+  public function rem($value): RemData
+  {
+    require_once __DIR__ . "/RemData.php";
+    $value = strtolower(trim($value));
+    preg_match("/(.*?)([a-z]+)/", $value, $matches);
+    $val = trim($matches[1]);
+    $unit = trim($matches[2]);
+
+    $data = $this->wire(new RemData());
+    $data->val = $val;
+    $data->unit = $unit;
+
+    if ($unit !== 'pxrem') return $data;
+
+    // convert pixel to rem
+    $data->val = round($val / $this->remBase, 3);
+    $data->unit = 'rem';
+
+    return $data;
   }
 
   /**
