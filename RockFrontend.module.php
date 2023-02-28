@@ -1955,7 +1955,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'features';
     $f->label = "Features";
     $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax)');
-    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Auto-Minify-Feature))');
+    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature))');
     $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview)');
     $f->value = (array)$this->features;
     $fs->add($f);
