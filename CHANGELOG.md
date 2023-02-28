@@ -1,3 +1,12 @@
+# [2.27.0](https://github.com/baumrock/RockFrontend/compare/v2.26.0...v2.27.0) (2023-02-28)
+
+
+### Features
+
+* add new minify feature ([aebf4c0](https://github.com/baumrock/RockFrontend/commit/aebf4c0a9f896b44be8201b98d39cf20fb88a1c4))
+
+
+
 # [2.26.0](https://github.com/baumrock/RockFrontend/compare/v2.25.1...v2.26.0) (2023-02-25)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add support for translations in LATTE files ([5656765](https://github.com/baumrock/RockFrontend/commit/5656765b998ff00d16a1887f8a1b3bbf01e9ba12))
-
-
-
-# [2.23.0](https://github.com/baumrock/RockFrontend/compare/v2.22.0...v2.23.0) (2023-02-15)
-
-
-### Features
-
-* add translation helper ([877ddb9](https://github.com/baumrock/RockFrontend/commit/877ddb9dbda605d76450d538bb3da21615def0bd))
 
 
 
