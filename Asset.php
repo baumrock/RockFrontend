@@ -8,14 +8,17 @@ use ProcessWire\WireData;
 class Asset extends WireData
 {
 
-  public $debug;
-  public $ext;
   public $basename;
+  public $comment;
+  public $debug;
+  public $dir;
+  public $ext;
+  public $filename;
   public $m;
+  public $minify = 'auto';
   public $path;
   public $suffix;
   public $url;
-  public $comment;
 
   public function __construct($file, $suffix = '')
   {
@@ -29,6 +32,9 @@ class Asset extends WireData
     $this->suffix = $suffix;
     $this->ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
     $this->basename = pathinfo($this->path, PATHINFO_BASENAME);
+
+    $this->dir = dirname($this->path) . "/";
+    $this->filename = pathinfo($this->path, PATHINFO_FILENAME);
   }
 
   /**
@@ -92,9 +98,12 @@ class Asset extends WireData
   {
     return [
       'basename' => $this->basename,
+      'filename' => $this->filename,
       'path' => $this->path,
+      'dir' => $this->dir,
       'url' => $this->url,
       'm' => $this->m,
+      'minify' => $this->minify,
       'suffix' => $this->suffix,
       'ext' => $this->ext,
       'comment' => $this->comment,

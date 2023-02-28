@@ -106,7 +106,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'title' => 'RockFrontend',
-      'version' => '2.25.0',
+      'version' => '2.26.0',
       'summary' => 'Module for easy frontend development',
       'autoload' => true,
       'singular' => true,
@@ -289,7 +289,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function ___addAlfredStyles()
   {
-    $this->styles()->add($this->path . "Alfred.css");
+    $this->styles()->add($this->path . "Alfred.css", "", ['minify' => false]);
   }
 
   /**

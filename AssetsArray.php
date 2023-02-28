@@ -8,6 +8,7 @@ use ProcessWire\RockFrontend;
 class AssetsArray extends \ProcessWire\WireArray
 {
 
+  public $minify = false;
   public $name;
 
   /** @var array */
@@ -22,14 +23,26 @@ class AssetsArray extends \ProcessWire\WireArray
   }
 
   /**
+   * Add file to assets array
+   *
+   * Usage:
+   * $rf->styles()->add("/path/to/file.css");
+   *
+   * Set noMinify property:
+   * $rf->styles()->add("/path/to/file.css", '', ['noMinify' => true]);
+   *
    * @return self
    */
-  public function add($file, $suffix = '')
+  public function add($file, $suffix = '', $properties = [])
   {
     $debug = $this->getDebugNote($file);
     if (is_string($file)) $file = new Asset($file, $suffix);
+    foreach ($properties as $k => $v) $file->$k = $v;
     // prevent adding file multiple times
-    if ($this->get('path=' . $file->path)) return $this;
+    if ($exists = $this->get('path=' . $file->path)) {
+      foreach ($properties as $k => $v) $exists->$k = $v;
+      return $this;
+    }
     $file->debug = $debug;
     parent::add($file);
     return $this;
@@ -92,11 +105,23 @@ class AssetsArray extends \ProcessWire\WireArray
     return $this;
   }
 
+  public function minify($bool): self
+  {
+    $this->minify = $bool;
+    return $this;
+  }
+
   /**
    * Auto-create minified version of asset
    * See docs here: https://github.com/baumrock/RockFrontend/wiki/Auto-Minify-Feature
    */
-  public function minify(Asset $asset): Asset
+  public function minifyAsset(Asset $asset): Asset
+  {
+    if ($this->minify) return $this->minifyForced($asset);
+    else return $this->minifyAuto($asset);
+  }
+
+  public function minifyAuto(Asset $asset): Asset
   {
     if (!$this->rockfrontend()->isEnabled('minify')) return $asset;
 
@@ -113,7 +138,7 @@ class AssetsArray extends \ProcessWire\WireArray
     $min = $asset->path;
     $nomin = substr($min, 0, strlen($min) - strlen($ending)) . "." . $asset->ext;
 
-    // if no unminified file exists we return instantly
+    // if no unminified file exists we return the asset as is
     if (!is_file($nomin)) return $asset;
 
     // a non-minified file exists, so we check if it has been updated
@@ -124,6 +149,29 @@ class AssetsArray extends \ProcessWire\WireArray
       $minify->minify($min);
     }
 
+    return $asset;
+  }
+
+  public function minifyForced(Asset $asset): Asset
+  {
+    if ($asset instanceof AssetComment) return $asset;
+    if ($asset->minify === false) return $asset;
+    if ($asset->minify === 'auto' and !$this->minify) return $asset;
+    if (substr($asset->path, -8) === '.min.css') return $asset;
+    if (substr($asset->path, -7) === '.min.js') return $asset;
+
+    $nomin = $asset->path;
+    if ($asset->ext == 'css') $min = $asset->dir . $asset->filename . ".min.css";
+    else $min = $asset->dir . $asset->filename . ".min.js";
+
+    $asset = new Asset($min);
+    if ($this->rockfrontend()->isNewer($nomin, $min)) {
+      require_once __DIR__ . "/vendor/autoload.php";
+      if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
+      else $minify = new \MatthiasMullie\Minify\CSS($nomin);
+      $minify->minify($min);
+      $asset->comment = 'foo bar';
+    }
     return $asset;
   }
 

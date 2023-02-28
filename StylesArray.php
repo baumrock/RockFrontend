@@ -219,7 +219,7 @@ class StylesArray extends AssetsArray
     $out = '';
     foreach ($this as $asset) {
       if ($asset->ext === 'less') continue;
-      $asset = $this->minify($asset);
+      $asset = $this->minifyAsset($asset);
       $asset = $this->postCSS($asset);
       $out .= $this->renderTag($asset, $opt, 'style');
     }
