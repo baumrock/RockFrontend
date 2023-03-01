@@ -1,5 +1,5 @@
 <div id="rf-topbar" style="z-index: <?= $z ?>">
-  <a href="https://www.baumrock.com" target=_blank>
+  <a href="<?= $pages->get(2)->url ?>module/edit?name=RockFrontend" target=_blank>
     <img id="rf-logo" src="<?= $logourl ?>">
   </a>
 
