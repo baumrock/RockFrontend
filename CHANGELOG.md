@@ -1,3 +1,12 @@
+# [2.28.0](https://github.com/baumrock/RockFrontend/compare/v2.27.1...v2.28.0) (2023-03-01)
+
+
+### Features
+
+* add hide icon to topbar and rename rpb to rf ([7f56583](https://github.com/baumrock/RockFrontend/commit/7f56583abe10a3d2ac011d6f57c58565b1bb4781))
+
+
+
 ## [2.27.1](https://github.com/baumrock/RockFrontend/compare/v2.27.0...v2.27.1) (2023-03-01)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * wrong property wrapperClass --> wrapClass ([c1c01bf](https://github.com/baumrock/RockFrontend/commit/c1c01bf36fa17ad716fbbdc277b9d35673733f4b))
-
-
-
-# [2.25.0](https://github.com/baumrock/RockFrontend/compare/v2.24.0...v2.25.0) (2023-02-22)
-
-
-### Features
-
-* add latte translation helper to module config ([96d0e00](https://github.com/baumrock/RockFrontend/commit/96d0e00d1172cc702fd279214a7d0d047b9e2bfe))
 
 
 
