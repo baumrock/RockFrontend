@@ -1,3 +1,12 @@
+## [2.27.1](https://github.com/baumrock/RockFrontend/compare/v2.27.0...v2.27.1) (2023-03-01)
+
+
+### Bug Fixes
+
+* topbar style ([509e27b](https://github.com/baumrock/RockFrontend/commit/509e27b66017567b95ea7ed43355e64d4bdd2ce9))
+
+
+
 # [2.27.0](https://github.com/baumrock/RockFrontend/compare/v2.26.0...v2.27.0) (2023-02-28)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add latte translation helper to module config ([96d0e00](https://github.com/baumrock/RockFrontend/commit/96d0e00d1172cc702fd279214a7d0d047b9e2bfe))
-
-
-
-# [2.24.0](https://github.com/baumrock/RockFrontend/compare/v2.23.0...v2.24.0) (2023-02-22)
-
-
-### Features
-
-* add support for translations in LATTE files ([5656765](https://github.com/baumrock/RockFrontend/commit/5656765b998ff00d16a1887f8a1b3bbf01e9ba12))
 
 
 
