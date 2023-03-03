@@ -170,7 +170,6 @@ class AssetsArray extends \ProcessWire\WireArray
       if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
       else $minify = new \MatthiasMullie\Minify\CSS($nomin);
       $minify->minify($min);
-      $asset->comment = 'foo bar';
     }
     return $asset;
   }
