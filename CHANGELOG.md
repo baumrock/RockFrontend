@@ -1,3 +1,12 @@
+# [2.29.0](https://github.com/baumrock/RockFrontend/compare/v2.28.0...v2.29.0) (2023-03-03)
+
+
+### Features
+
+* add module.info.php file ([04f91d7](https://github.com/baumrock/RockFrontend/commit/04f91d73d71916e2980213f4536f2f98bbcd19a6))
+
+
+
 # [2.28.0](https://github.com/baumrock/RockFrontend/compare/v2.27.1...v2.28.0) (2023-03-01)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * make loadAlfred() public ([42e10b1](https://github.com/baumrock/RockFrontend/commit/42e10b10d3e5ba1c51869912c8ec1a42f3851efc))
-
-
-
-## [2.25.1](https://github.com/baumrock/RockFrontend/compare/v2.25.0...v2.25.1) (2023-02-23)
-
-
-### Bug Fixes
-
-* wrong property wrapperClass --> wrapClass ([c1c01bf](https://github.com/baumrock/RockFrontend/commit/c1c01bf36fa17ad716fbbdc277b9d35673733f4b))
 
 
 
