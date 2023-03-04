@@ -2,11 +2,9 @@
 
 namespace ProcessWire;
 
-$package = json_decode(file_get_contents(__DIR__ . "/package.json"));
-
 $info = [
   'title' => 'RockFrontend',
-  'version' => $package->version,
+  'version' => json_decode(file_get_contents(__DIR__ . "/package.json"))->version,
   'summary' => 'Module for easy frontend development',
   'autoload' => true,
   'singular' => true,
