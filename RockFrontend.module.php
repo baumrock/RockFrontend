@@ -127,6 +127,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
+    $this->wire->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
 
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
@@ -134,11 +135,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!is_array($this->features)) $this->features = [];
     if (!is_array($this->migrations)) $this->migrations = [];
 
-    require_once($this->path . "Asset.php");
-    require_once($this->path . "AssetComment.php");
-    require_once($this->path . "AssetsArray.php");
-    require_once($this->path . "StylesArray.php");
-    require_once($this->path . "ScriptsArray.php");
 
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
