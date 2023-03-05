@@ -1,3 +1,12 @@
+# [2.30.0](https://github.com/baumrock/RockFrontend/compare/v2.29.0...v2.30.0) (2023-03-05)
+
+
+### Features
+
+* refactor to use pw classloader ([091888e](https://github.com/baumrock/RockFrontend/commit/091888e49d1e868ebdbd20e8f9ce4d052404c74f))
+
+
+
 # [2.29.0](https://github.com/baumrock/RockFrontend/compare/v2.28.0...v2.29.0) (2023-03-03)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add new minify feature ([aebf4c0](https://github.com/baumrock/RockFrontend/commit/aebf4c0a9f896b44be8201b98d39cf20fb88a1c4))
-
-
-
-# [2.26.0](https://github.com/baumrock/RockFrontend/compare/v2.25.1...v2.26.0) (2023-02-25)
-
-
-### Features
-
-* make loadAlfred() public ([42e10b1](https://github.com/baumrock/RockFrontend/commit/42e10b10d3e5ba1c51869912c8ec1a42f3851efc))
 
 
 
