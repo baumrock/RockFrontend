@@ -1,3 +1,12 @@
+## [2.30.1](https://github.com/baumrock/RockFrontend/compare/v2.30.0...v2.30.1) (2023-03-07)
+
+
+### Bug Fixes
+
+* wrong vendor path in AssetsArray ([a1ba9aa](https://github.com/baumrock/RockFrontend/commit/a1ba9aabd32ecff571680ee3978b15d604b4bb13))
+
+
+
 # [2.30.0](https://github.com/baumrock/RockFrontend/compare/v2.29.0...v2.30.0) (2023-03-05)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * topbar style ([509e27b](https://github.com/baumrock/RockFrontend/commit/509e27b66017567b95ea7ed43355e64d4bdd2ce9))
-
-
-
-# [2.27.0](https://github.com/baumrock/RockFrontend/compare/v2.26.0...v2.27.0) (2023-02-28)
-
-
-### Features
-
-* add new minify feature ([aebf4c0](https://github.com/baumrock/RockFrontend/commit/aebf4c0a9f896b44be8201b98d39cf20fb88a1c4))
 
 
 
