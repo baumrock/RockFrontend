@@ -1,3 +1,12 @@
+# [2.31.0](https://github.com/baumrock/RockFrontend/compare/v2.30.1...v2.31.0) (2023-03-11)
+
+
+### Features
+
+* add vitepress docs ([6500881](https://github.com/baumrock/RockFrontend/commit/6500881d9be49602603066c9d87381323f1b7780))
+
+
+
 ## [2.30.1](https://github.com/baumrock/RockFrontend/compare/v2.30.0...v2.30.1) (2023-03-07)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add hide icon to topbar and rename rpb to rf ([7f56583](https://github.com/baumrock/RockFrontend/commit/7f56583abe10a3d2ac011d6f57c58565b1bb4781))
-
-
-
-## [2.27.1](https://github.com/baumrock/RockFrontend/compare/v2.27.0...v2.27.1) (2023-03-01)
-
-
-### Bug Fixes
-
-* topbar style ([509e27b](https://github.com/baumrock/RockFrontend/commit/509e27b66017567b95ea7ed43355e64d4bdd2ce9))
 
 
 
