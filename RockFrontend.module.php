@@ -238,6 +238,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
               $html = str_replace("$key", $str, $html);
             }
           }
+
+          // add a fake edit tag to the page body
+          // this ensures that jQuery is loaded via PageFrontEdit
+          $faketag = "<div edit=title hidden>title</div>";
+          $html = str_replace("</body", "$faketag</body", $html);
         }
 
         $this->addTopBar($html);
@@ -254,12 +259,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // return replaced markup
         $html = str_replace("</head>", "$assets</head>", $html);
-
-        // add a fake edit tag to the page body
-        // this ensures that jQuery is loaded via PageFrontEdit
-        $faketag = "<div edit=title hidden>title</div>";
-        $html = str_replace("</body", "$faketag</body", $html);
-
         $event->return = $html;
       }
     );
@@ -1152,9 +1151,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function loadAlfred(): bool
   {
     if (!$this->hasAlfred) return false;
-    if ($this->wire->user->isSuperuser()) return true;
-    if ($this->wire->user->hasPermission(self::permission_alfred)) return true;
-    return false;
+    $permission = false;
+    if ($this->wire->user->isSuperuser()) $permission = true;
+    if ($this->wire->user->hasPermission(self::permission_alfred)) $permission = true;
+    return $permission and $this->hasAlfred;
   }
 
   /**
