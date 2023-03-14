@@ -164,7 +164,7 @@ class AssetsArray extends \ProcessWire\WireArray
     if ($asset->ext == 'css') $min = $asset->dir . $asset->filename . ".min.css";
     else $min = $asset->dir . $asset->filename . ".min.js";
 
-    $asset = new Asset($min);
+    $asset = new Asset($min, $asset->suffix);
     if ($this->rockfrontend()->isNewer($nomin, $min)) {
       require_once __DIR__ . "/../vendor/autoload.php";
       if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
