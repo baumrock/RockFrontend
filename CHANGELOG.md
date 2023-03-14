@@ -1,3 +1,12 @@
+## [2.31.2](https://github.com/baumrock/RockFrontend/compare/v2.31.1...v2.31.2) (2023-03-14)
+
+
+### Bug Fixes
+
+* minify removing defer attribute from script tag ([f3f0e38](https://github.com/baumrock/RockFrontend/commit/f3f0e387fbd6317d739d9dac50edff371b350b43))
+
+
+
 ## [2.31.1](https://github.com/baumrock/RockFrontend/compare/v2.31.0...v2.31.1) (2023-03-13)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * refactor to use pw classloader ([091888e](https://github.com/baumrock/RockFrontend/commit/091888e49d1e868ebdbd20e8f9ce4d052404c74f))
-
-
-
-# [2.29.0](https://github.com/baumrock/RockFrontend/compare/v2.28.0...v2.29.0) (2023-03-03)
-
-
-### Features
-
-* add module.info.php file ([04f91d7](https://github.com/baumrock/RockFrontend/commit/04f91d73d71916e2980213f4536f2f98bbcd19a6))
 
 
 
