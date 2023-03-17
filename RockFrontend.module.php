@@ -353,6 +353,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *   'fields' => 'foo,bar',
    * ]);
    *
+   * Show alfred without plus-icons for adding a new block before/after
+   * alfred($block, false);
+   *
    * You can also provide fields as array when using the verbose syntax
    * alfred($page, [
    *   'trash' => false,
@@ -369,7 +372,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$this->alfredAllowed()) return;
 
     // support short syntax
-    if (is_string($options)) $options = ['fields' => $options];
+    if ($options === false) {
+      $options = [
+        'addTop' => false,
+        'addBottom' => false,
+      ];
+    } elseif (is_string($options)) $options = ['fields' => $options];
 
     // set flag to show that at least one alfred tag is on the page
     // this flag is used to load the PW frontend editing assets
@@ -446,6 +454,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function alfredH($page = null, $options = [])
   {
+    if ($options === false) {
+      $options = [
+        'addLeft' => false,
+        'addRight' => false,
+      ];
+    }
     return $this->alfred(
       $page,
       array_merge(['addHorizontal' => true], $options)
