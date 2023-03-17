@@ -1,3 +1,12 @@
+# [2.32.0](https://github.com/baumrock/RockFrontend/compare/v2.31.2...v2.32.0) (2023-03-17)
+
+
+### Features
+
+* add short syntax for hiding plus icons in alfred ([65c59bf](https://github.com/baumrock/RockFrontend/commit/65c59bfab21c3a7f9bd44c3326b34718941dc9f9))
+
+
+
 ## [2.31.2](https://github.com/baumrock/RockFrontend/compare/v2.31.1...v2.31.2) (2023-03-14)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * wrong vendor path in AssetsArray ([a1ba9aa](https://github.com/baumrock/RockFrontend/commit/a1ba9aabd32ecff571680ee3978b15d604b4bb13))
-
-
-
-# [2.30.0](https://github.com/baumrock/RockFrontend/compare/v2.29.0...v2.30.0) (2023-03-05)
-
-
-### Features
-
-* refactor to use pw classloader ([091888e](https://github.com/baumrock/RockFrontend/commit/091888e49d1e868ebdbd20e8f9ce4d052404c74f))
 
 
 
