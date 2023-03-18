@@ -1,3 +1,12 @@
+# [2.33.0](https://github.com/baumrock/RockFrontend/compare/v2.32.0...v2.33.0) (2023-03-18)
+
+
+### Features
+
+* support multiple classes for rf-scrollclass ([8a3f011](https://github.com/baumrock/RockFrontend/commit/8a3f01136f7c00031677d204dd5f68e888f12a10))
+
+
+
 # [2.32.0](https://github.com/baumrock/RockFrontend/compare/v2.31.2...v2.32.0) (2023-03-17)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * add vitepress docs ([6500881](https://github.com/baumrock/RockFrontend/commit/6500881d9be49602603066c9d87381323f1b7780))
-
-
-
-## [2.30.1](https://github.com/baumrock/RockFrontend/compare/v2.30.0...v2.30.1) (2023-03-07)
-
-
-### Bug Fixes
-
-* wrong vendor path in AssetsArray ([a1ba9aa](https://github.com/baumrock/RockFrontend/commit/a1ba9aabd32ecff571680ee3978b15d604b4bb13))
 
 
 
