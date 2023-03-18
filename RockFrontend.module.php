@@ -1468,7 +1468,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $html = '';
 
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-    if ($ext == 'php') {
+    if ($ext == 'php' or $ext == 'html') {
       $options = $opt->getArray();
       $html = $this->wire->files->render($file, $vars, $options);
     } elseif ($ext == 'svg') $html = $this->svg($file, $vars);
