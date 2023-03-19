@@ -1246,7 +1246,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     $ext = $rm->getModuleConfig('ProcessLanguageTranslator', 'extensions');
-    if (strpos($ext, "latte") !== false) return;
+    if (strpos((string)$ext, "latte") !== false) return;
     $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
   }
 
