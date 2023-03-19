@@ -46,8 +46,8 @@ class HomePage extends Page
         self::tpl => [
           'fields' => [
             'title',
-            RockPageBuilder::field_blocks,
-            RockPageBuilder::field_widgets,
+            // RockPageBuilder::field_blocks,
+            // RockPageBuilder::field_widgets,
 
             RockFrontend::field_favicon,
             RockFrontend::field_ogimage,
