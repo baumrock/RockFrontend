@@ -19,41 +19,49 @@ setTimeout(() => {
     evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
       let changed = event.data;
-      if (changed && !reloading) {
-        console.log(changed);
-        // check if we are in the admin and have unsaved changes
-        if (document.querySelectorAll(".InputfieldStateChanged").length) {
-          console.log("detected change - unsaved changes prevent reload");
-          // show notification
-          // delay of 200ms prevents that the notification is shown
-          // when a page is saved that creates files in the background
-          setTimeout(() => {
-            UIkit.notification({
-              message: "Unsaved changes prevent reload",
-              status: "warning",
-              pos: "top-center",
-              timeout: 0,
-            });
-          }, 200);
-          return;
-        }
-        if (document.querySelectorAll("#pw-panel-shade").length) {
-          console.log("detected change - open panel prevents reload");
+      if (!changed) return;
+      if (reloading) return;
+
+      // check if the current tab is active
+      // if not, we do not reload
+      // this prevents multiple simultaneous reloads that can lead to errors
+      // when using RockMigrations
+      if (document.hidden) return;
+
+      console.log(changed);
+      // check if we are in the admin and have unsaved changes
+      if (document.querySelectorAll(".InputfieldStateChanged").length) {
+        console.log("detected change - unsaved changes prevent reload");
+        // show notification
+        // delay of 200ms prevents that the notification is shown
+        // when a page is saved that creates files in the background
+        setTimeout(() => {
           UIkit.notification({
-            message: "Open panel prevents reload",
+            message: "Unsaved changes prevent reload",
             status: "warning",
             pos: "top-center",
             timeout: 0,
           });
-          return;
-        }
-        // all fine, reload page
-        console.log("detected change - reloading");
-        reloading = true;
-        setTimeout(() => {
-          document.location.reload(true);
-        }, redirecttimeout);
+        }, 200);
+        return;
       }
+      if (document.querySelectorAll("#pw-panel-shade").length) {
+        console.log("detected change - open panel prevents reload");
+        UIkit.notification({
+          message: "Open panel prevents reload",
+          status: "warning",
+          pos: "top-center",
+          timeout: 0,
+        });
+        return;
+      }
+
+      // all fine, reload page
+      console.log("detected change - reloading");
+      reloading = true;
+      setTimeout(() => {
+        document.location.reload(true);
+      }, redirecttimeout);
     };
   };
 
