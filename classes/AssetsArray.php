@@ -257,6 +257,8 @@ class AssetsArray extends \ProcessWire\WireArray
   {
     return array_merge([
       'name' => $this->name,
-    ], parent::__debugInfo());
+    ], parent::__debugInfo(), [
+      'items' => $this->getArray(),
+    ]);
   }
 }
