@@ -1,3 +1,18 @@
+# [2.35.0](https://github.com/baumrock/RockFrontend/compare/v2.34.0...v2.35.0) (2023-03-26)
+
+
+### Bug Fixes
+
+* make alfred icons have z-index 10 instead of 2 ([2ce3562](https://github.com/baumrock/RockFrontend/commit/2ce3562164bf48e6b8beed17c6e9a5388c950634))
+* show items as array in debuginfo ([ff0068b](https://github.com/baumrock/RockFrontend/commit/ff0068bf211f2d2a9e7a59cba89627b5db8fb48a))
+
+
+### Features
+
+* add support for showing RockPageBuilder block type ([d577ea7](https://github.com/baumrock/RockFrontend/commit/d577ea7dee7b3bf68783dfcfedad261936e3c291))
+
+
+
 # [2.34.0](https://github.com/baumrock/RockFrontend/compare/v2.33.0...v2.34.0) (2023-03-22)
 
 
@@ -40,15 +55,6 @@
 ### Bug Fixes
 
 * minify removing defer attribute from script tag ([f3f0e38](https://github.com/baumrock/RockFrontend/commit/f3f0e387fbd6317d739d9dac50edff371b350b43))
-
-
-
-## [2.31.1](https://github.com/baumrock/RockFrontend/compare/v2.31.0...v2.31.1) (2023-03-13)
-
-
-### Bug Fixes
-
-* alfred tag showing up in markup when not needed ([5a152e7](https://github.com/baumrock/RockFrontend/commit/5a152e715c66303c17df65ccf2b900e97766d61f))
 
 
 
