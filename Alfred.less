@@ -11,7 +11,7 @@
 // block hover
 body:not(.uk-offcanvas-container) .alfred:hover {
   outline: @outline;
-  z-index: 1;
+  z-index: 10;
 }
 
 // mixin for icons
@@ -89,6 +89,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
     top: -1px; // icon-border = 3px, half container-groove = 2px, looks better
     right: 0;
     text-align: right;
+    z-index: 10;
   }
 
   // modifier for rockpagebuilder widgets
