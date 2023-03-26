@@ -9,8 +9,11 @@
    */
   function Alfred() {}
 
-  Alfred.prototype.addIcons = function (el, icons) {
+  Alfred.prototype.addIcons = function (el, icons, type) {
     let html = "<div class=icons>";
+    if (type) {
+      html += "<span class='rpb-type'><span>" + type + "</span></span>";
+    }
     icons.forEach(function (icon) {
       // console.log(icon);
       html +=
@@ -85,7 +88,7 @@
     let $elements = $(el).find(".alfredelements");
     try {
       let config = JSON.parse($(el).attr("alfred"));
-      this.addIcons($elements, config.icons);
+      this.addIcons($elements, config.icons, config.type);
       if (config.widgetStyle) $(el).addClass("rpb-widget");
       if (config.addTop) $elements.append(this.plus("top", config.addTop));
       if (config.addBottom)

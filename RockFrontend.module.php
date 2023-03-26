@@ -434,6 +434,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'addLeft' => $opt->addLeft,
       'addRight' => $opt->addRight,
       'widgetStyle' => $opt->widgetStyle,
+      'type' => $opt->type,
     ]);
 
     // save markup to cache and generate alfred tag
