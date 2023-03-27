@@ -124,6 +124,7 @@ class AssetsArray extends \ProcessWire\WireArray
   public function minifyAuto(Asset $asset): Asset
   {
     if (!$this->rockfrontend()->isEnabled('minify')) return $asset;
+    if ($asset->isExternal()) return $asset;
 
     // check file type
     if ($asset->ext == 'js') $search = ".min.js";
@@ -155,6 +156,7 @@ class AssetsArray extends \ProcessWire\WireArray
   public function minifyForced(Asset $asset): Asset
   {
     if ($asset instanceof AssetComment) return $asset;
+    if ($asset->isExternal()) return $asset;
     if ($asset->minify === false) return $asset;
     if ($asset->minify === 'auto' and !$this->minify) return $asset;
     if (substr($asset->path, -8) === '.min.css') return $asset;
