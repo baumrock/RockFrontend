@@ -1,3 +1,12 @@
+## [2.35.1](https://github.com/baumrock/RockFrontend/compare/v2.35.0...v2.35.1) (2023-03-27)
+
+
+### Bug Fixes
+
+* issue with minify() and external assets like typekit ([c2014fa](https://github.com/baumrock/RockFrontend/commit/c2014fabe9bf5cab823d1212b2948ae071403edd))
+
+
+
 # [2.35.0](https://github.com/baumrock/RockFrontend/compare/v2.34.0...v2.35.0) (2023-03-26)
 
 
@@ -46,15 +55,6 @@
 ### Features
 
 * add short syntax for hiding plus icons in alfred ([65c59bf](https://github.com/baumrock/RockFrontend/commit/65c59bfab21c3a7f9bd44c3326b34718941dc9f9))
-
-
-
-## [2.31.2](https://github.com/baumrock/RockFrontend/compare/v2.31.1...v2.31.2) (2023-03-14)
-
-
-### Bug Fixes
-
-* minify removing defer attribute from script tag ([f3f0e38](https://github.com/baumrock/RockFrontend/commit/f3f0e387fbd6317d739d9dac50edff371b350b43))
 
 
 
