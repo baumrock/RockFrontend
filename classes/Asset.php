@@ -70,6 +70,14 @@ class Asset extends WireData
     return false;
   }
 
+  public function isExternal()
+  {
+    if (strpos($this->path, "http://") === 0) return true;
+    if (strpos($this->path, "https://") === 0) return true;
+    if (strpos($this->path, "//") === 0) return true;
+    return false;
+  }
+
   public function rockfrontend(): RockFrontend
   {
     return $this->wire->modules->get('RockFrontend');
@@ -86,6 +94,9 @@ class Asset extends WireData
     $rockfrontend = $this->rockfrontend();
     $this->path = $rockfrontend->getFile($path, true);
     $this->url = $rockfrontend->url($path);
+
+    // early exit for external files
+    if ($this->isExternal()) return;
 
     // if path and url are the same that means that we requested a file that does not exist
     // in that case we prepend the root path to the url
