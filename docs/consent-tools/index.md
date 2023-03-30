@@ -1,4 +1,6 @@
-# RockFrontend Consent Management
+# Consent Tools
+
+## Usage
 
 ```php
 echo $rockfrontend->consent(
