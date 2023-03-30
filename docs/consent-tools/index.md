@@ -4,37 +4,43 @@
 
 ```php
 echo $rockfrontend->consent(
-  'youtube',
-  '<iframe src=...',
-  'sections/youtube-consent.php'
+  'youtube',                       // consent name
+  '<iframe src=...',               // code shown if access granted
+  'sections/youtube-consent.latte' // code/file shown if not granted
 );
 ```
 
 This is similar to if-else short syntax and means:
 
-- if the `youtube` consent has been given by the user
-- then render the markup of the second argument
-- else render the markup of the third argument
+- if the `youtube` consent has been granted by the user
+- then render the markup of the second argument (here: iframe...)
+- else render the markup of the third argument (here: sections/youtube...)
 
-## Enabling Consent
+## Granting Consent
 
-In `youtube-consent.php` you could have the following code:
+In `youtube-consent.latte` you can have any code you want. The only thing you need to have is a link that when clicked grants access and it is as easy as adding the `rfc-allow` attribute to your link (matching the name of your consent embed of course):
 
-```php
+```latte
 <h2>We need your consent</h2>
 <p><a href=# rfc-allow="youtube">Allow YouTube</a></p>
 ```
 
+Once the user clicks on that link rockfrontend will show all `youtube` embeds.
+
 ## Managing Consent
 
-Once enabled the user can toggle consent via simple checkboxes that you typically place into your privacy policy. Simply enable the `TextformatterRockFrontend` textformatter on any markup field and add the `rf-consent` tags to that markup:
+If the user has already granted access to one of your embeds he/she can toggle consent via simple checkboxes that you typically place into your privacy policy. Simply enable the `TextformatterRockFrontend` textformatter on any markup field and add the `rf-consent` tags to that markup:
 
-```
+```txt
 Privacy Policy
-
-## YouTube
-
-We want to ....
-
+We would like to ...
 [rf-consent=youtube]Allow embedding YouTube videos[/rf-consent]
 ```
+
+This would render like this when showing that page:
+
+<img src=checkbox.png class=blur>
+
+And it would render like this when frontend editing that page:
+
+<img src=checkbox2.png class=blur>
