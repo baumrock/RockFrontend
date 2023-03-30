@@ -1,3 +1,12 @@
+## [2.36.1](https://github.com/baumrock/RockFrontend/compare/v2.36.0...v2.36.1) (2023-03-30)
+
+
+### Bug Fixes
+
+* rename index.md files to readme.md ([49500d9](https://github.com/baumrock/RockFrontend/commit/49500d901948b93d0bb9edeab66b9c478b8090f0))
+
+
+
 # [2.36.0](https://github.com/baumrock/RockFrontend/compare/v2.35.1...v2.36.0) (2023-03-30)
 
 
@@ -50,15 +59,6 @@
 
 * add support for rendering html files ([b4d3e6b](https://github.com/baumrock/RockFrontend/commit/b4d3e6bd7a295efd318f82e03db88e47cbf03f27))
 * add tinymce alignment styles to defaults.less ([cb1bd0a](https://github.com/baumrock/RockFrontend/commit/cb1bd0a5e535a216f3ce2643a79f3ca5c9962f52))
-
-
-
-# [2.33.0](https://github.com/baumrock/RockFrontend/compare/v2.32.0...v2.33.0) (2023-03-18)
-
-
-### Features
-
-* support multiple classes for rf-scrollclass ([8a3f011](https://github.com/baumrock/RockFrontend/commit/8a3f01136f7c00031677d204dd5f68e888f12a10))
 
 
 
