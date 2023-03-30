@@ -5,6 +5,7 @@ namespace ProcessWire;
 use Latte\Bridges\Tracy\LattePanel;
 use Latte\Engine;
 use Latte\Runtime\Html;
+use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
@@ -81,6 +82,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /** @var Manifest */
   protected $manifest;
+
+  /** @var bool */
+  public $noAssets = false;
 
   /** @var string */
   public $path;
@@ -200,6 +204,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $styles = $this->styles();
         $scripts = $this->scripts();
 
+        // early exit if asset injection is disabled
+        // Usage: place "$rockfrontend->noAssets = true" somewhere in your
+        // template file to prevent loading of any rockfrontend assets
+        if ($this->noAssets) return;
+
         // early exit if html does not contain a head section
         if (!strpos($html, "</head>")) return;
 
@@ -217,6 +226,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           $this->wire->cache->save(self::livereloadCacheName, $merged);
           $this->js("livereloadSecret", $secret);
         }
+
+        // load RockFrontend frontend js file
+        $file = __DIR__ . "/RockFrontend.js";
+        if ($this->wire->config->debug) {
+          // load the non-minified script
+          $this->scripts()->add($file, "defer");
+          // when logged in as superuser we make sure to create the minified
+          // file even if the non-minified version is used.
+          if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
+        } else $this->scripts()->add($this->minifyFile($file), "defer");
 
         // load alfred?
         if ($this->loadAlfred()) {
@@ -249,8 +268,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // at the very end we inject the js variables
         $assets = '';
-        $json = count($this->js) ? json_encode($this->js) : '';
-        if ($json) $assets .= "\n  <script>let RockFrontend = $json</script>";
+        $json = count($this->js) ? json_encode($this->js) : '{}';
+        $assets .= "<script>let RockFrontend = $json</script>";
 
         // check if assets have already been added
         // if not we inject them at the end of the <head>
@@ -262,6 +281,39 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $event->return = $html;
       }
     );
+  }
+
+  /**
+   * Render a portion of HTML that needs consent from the user.
+   *
+   * This will replace all "src" attributes by "data-src" attributes.
+   * All scripts will therefore only be loaded when the user clicks on the
+   * consent button.
+   *
+   * Usage:
+   * $rockfrontend->consent(
+   *   'youtube',
+   *   '<iframe src=...',
+   *   '<a href=# rfc-allow=youtube>Allow YouTube-Player on this website</a>'
+   * );
+   *
+   * You can also render files instead of markup:
+   * $rockfrontend->consent(
+   *   'youtube'
+   *   'your youtube embed code',
+   *   'sections/youtube-consent.latte'
+   * );
+   */
+  public function consent($name, $enabled, $disabled = null)
+  {
+    $enabled = str_replace(" src=", " data-src=", $enabled);
+    $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
+    if ($disabled) {
+      $file = $this->getFile($disabled);
+      if ($file) $disabled = $this->render($file);
+      $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
+    }
+    return $this->html($enabled . $disabled);
   }
 
   public function ___addAlfredStyles()
@@ -546,6 +598,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $tmp = (new WireTempDir());
     (new WireHttp())->download($url, $tmp . "uikit.zip");
     $this->wire->files->unzip($tmp . "uikit.zip", $tpl);
+    $this->wire->files->rmdir($tpl . "uikit", true);
+    foreach (glob($tpl . "uikit-*") as $dir) {
+      $this->wire->files->rename($dir, $tpl . "uikit");
+    }
   }
 
   public function editLinks($options = null, $list = true, $size = 32)
@@ -731,41 +787,33 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     if ($this->wire->user->isSuperuser()) {
-      $tracy = $this->wire->config->tracy;
-      if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
-        $root = $tracy['localRootPath'];
-      else $root = $this->wire->config->paths->root;
-      $link = str_replace($this->wire->config->paths->root, $root, $opt->path);
-
       // view file edit link
       $icons[] = (object)[
         'icon' => 'code',
         'label' => $opt->path,
-        'href' => "vscode://file/$link",
-        'tooltip' => $link,
+        'href' => $this->vscodeLink($opt->path),
+        'tooltip' => $opt->path,
       ];
 
-      $ext = pathinfo($link, PATHINFO_EXTENSION);
+      $ext = pathinfo($opt->path, PATHINFO_EXTENSION);
 
       // php file edit link
       $php = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".php";
       if (is_file($php)) {
-        $php = str_replace($this->wire->config->paths->root, $root, $php);
         $icons[] = (object)[
           'icon' => 'php',
           'label' => $php,
-          'href' => "vscode://file/$php",
+          'href' => $this->vscodeLink($php),
           'tooltip' => $php,
         ];
       }
       // style edit link
       $less = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".less";
       if (is_file($less)) {
-        $less = str_replace($this->wire->config->paths->root, $root, $less);
         $icons[] = (object)[
           'icon' => 'eye',
           'label' => $less,
-          'href' => "vscode://file/$less",
+          'href' => $this->vscodeLink($less),
           'tooltip' => $less,
         ];
       }
@@ -1301,6 +1349,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Minify file and return path of minified file
+   */
+  public function minifyFile($file, $minFile = null): string
+  {
+    $file = new Asset($file);
+    if (!$minFile) $minFile = $file->minPath();
+    $minFile = new Asset($minFile);
+    if ($minFile->m < $file->m) {
+      require_once __DIR__ . "/vendor/autoload.php";
+      if ($file->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($file);
+      else $minify = new \MatthiasMullie\Minify\CSS($file);
+      $minify->minify($minFile->path);
+    }
+    return $minFile->path;
+  }
+
+  /**
    * Apply postCSS rules to given string
    */
   public function postCSS($str): string
@@ -1622,6 +1687,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $out;
   }
 
+  public function renderPagerUIkit(PageArray $items, $options = [])
+  {
+    $options = array_merge([
+      'numPageLinks' => 5,
+      'listMarkup' => "<ul class='uk-pagination uk-flex-center'>{out}</ul>",
+      'nextItemLabel' => '<span uk-pagination-next></span>',
+      'previousItemLabel' => '<span uk-pagination-previous></span>',
+      'currentItemClass' => 'uk-active',
+    ], $options);
+    return $this->html($items->renderPager($options));
+  }
+
   /**
    * @return RockMigrations
    */
@@ -1725,6 +1802,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $svg = str_replace("{{$k}}", $v, $svg);
     }
     return $this->html($svg);
+  }
+
+  public function vscodeLink($path)
+  {
+    $tracy = $this->wire->config->tracy;
+    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
+      $root = $tracy['localRootPath'];
+    else $root = $this->wire->config->paths->root;
+    $link = str_replace($this->wire->config->paths->root, $root, $path);
+    return "vscode://file/$link";
   }
 
   /** translation support in LATTE files */
@@ -1912,16 +1999,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $inputfields;
   }
 
-  private function addUikitNote(InputfieldSelect $f)
-  {
-    $note = '';
-    foreach (scandir($this->wire->config->paths->templates) as $p) {
-      if (strpos($p, "uikit-") !== 0) continue;
-      $note .= "\nFound /site/templates/$p";
-    }
-    $f->notes .= $note;
-  }
-
   private function configSettings($inputfields)
   {
     $fs = new InputfieldFieldset();
@@ -2044,10 +2121,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'uikit';
     $f->label = 'Download UIkit';
     $f->collapsed = Inputfield::collapsedYes;
-    $f->notes = "Will be downloaded to /site/templates/";
+    $f->notes = "WARNING: This will wipe the folder /site/templates/uikit and then download the selected uikit version into that folder!";
     foreach ($this->getUikitVersions() as $k => $v) $f->addOption($k);
     $fs->add($f);
-    $this->addUikitNote($f);
 
     $this->downloadCDN();
     $f = new InputfieldMarkup();

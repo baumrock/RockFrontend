@@ -78,6 +78,27 @@ class Asset extends WireData
     return false;
   }
 
+  public function isJS()
+  {
+    return $this->ext == 'js';
+  }
+
+  public function isMin()
+  {
+    return substr($this->basename, -7) == '.min.js'
+      or substr($this->basename, -8) == '.min.css';
+  }
+
+  /**
+   * Return current path with minified extension
+   * foo.js --> foo.min.js
+   */
+  public function minPath()
+  {
+    $ext = $this->isJS() ? '.min.js' : '.min.css';
+    return $this->dir . $this->filename . $ext;
+  }
+
   public function rockfrontend(): RockFrontend
   {
     return $this->wire->modules->get('RockFrontend');
@@ -105,6 +126,11 @@ class Asset extends WireData
     }
   }
 
+  public function __toString()
+  {
+    return $this->path;
+  }
+
   public function __debugInfo()
   {
     return [
@@ -119,6 +145,7 @@ class Asset extends WireData
       'ext' => $this->ext,
       'comment' => $this->comment,
       'debug' => $this->debug,
+      'isMin()' => $this->isMin(),
     ];
   }
 }
