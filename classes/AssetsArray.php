@@ -142,13 +142,8 @@ class AssetsArray extends \ProcessWire\WireArray
     // if no unminified file exists we return the asset as is
     if (!is_file($nomin)) return $asset;
 
-    // a non-minified file exists, so we check if it has been updated
-    if ($this->rockfrontend()->isNewer($nomin, $min)) {
-      require_once __DIR__ . "/../vendor/autoload.php";
-      if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
-      else $minify = new \MatthiasMullie\Minify\CSS($nomin);
-      $minify->minify($min);
-    }
+    // else we minify the file if it has changed
+    $this->rockfrontend()->minifyFile($nomin, $min);
 
     return $asset;
   }
@@ -167,12 +162,10 @@ class AssetsArray extends \ProcessWire\WireArray
     else $min = $asset->dir . $asset->filename . ".min.js";
 
     $asset = new Asset($min, $asset->suffix);
-    if ($this->rockfrontend()->isNewer($nomin, $min)) {
-      require_once __DIR__ . "/../vendor/autoload.php";
-      if ($asset->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($nomin);
-      else $minify = new \MatthiasMullie\Minify\CSS($nomin);
-      $minify->minify($min);
-    }
+
+    // else we minify the file if it has changed
+    $this->rockfrontend()->minifyFile($nomin, $min);
+
     return $asset;
   }
 

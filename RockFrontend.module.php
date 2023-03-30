@@ -5,6 +5,7 @@ namespace ProcessWire;
 use Latte\Bridges\Tracy\LattePanel;
 use Latte\Engine;
 use Latte\Runtime\Html;
+use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
@@ -226,6 +227,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           $this->js("livereloadSecret", $secret);
         }
 
+        // load RockFrontend frontend js file
+        $file = __DIR__ . "/RockFrontend.js";
+        if ($this->wire->config->debug) {
+          // load the non-minified script
+          $this->scripts()->add($file, "defer");
+          // when logged in as superuser we make sure to create the minified
+          // file even if the non-minified version is used.
+          if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
+        } else $this->scripts()->add($this->minifyFile($file), "defer");
+
         // load alfred?
         if ($this->loadAlfred()) {
           $this->js("rootUrl", $this->wire->config->urls->root);
@@ -257,8 +268,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // at the very end we inject the js variables
         $assets = '';
-        $json = count($this->js) ? json_encode($this->js) : '';
-        if ($json) $assets .= "\n  <script>let RockFrontend = $json</script>";
+        $json = count($this->js) ? json_encode($this->js) : '{}';
+        $assets .= "<script>let RockFrontend = $json</script>";
 
         // check if assets have already been added
         // if not we inject them at the end of the <head>
@@ -270,6 +281,39 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $event->return = $html;
       }
     );
+  }
+
+  /**
+   * Render a portion of HTML that needs consent from the user.
+   *
+   * This will replace all "src" attributes by "data-src" attributes.
+   * All scripts will therefore only be loaded when the user clicks on the
+   * consent button.
+   *
+   * Usage:
+   * $rockfrontend->consent(
+   *   'youtube',
+   *   '<iframe src=...',
+   *   '<a href=# rfc-allow=youtube>Allow YouTube-Player on this website</a>'
+   * );
+   *
+   * You can also render files instead of markup:
+   * $rockfrontend->consent(
+   *   'youtube'
+   *   'your youtube embed code',
+   *   'sections/youtube-consent.latte'
+   * );
+   */
+  public function consent($name, $enabled, $disabled = null)
+  {
+    $enabled = str_replace(" src=", " data-src=", $enabled);
+    $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
+    if ($disabled) {
+      $file = $this->getFile($disabled);
+      if ($file) $disabled = $this->render($file);
+      $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
+    }
+    return $this->html($enabled . $disabled);
   }
 
   public function ___addAlfredStyles()
@@ -1306,6 +1350,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       ],
     ]);
     $rm->addFieldToTemplate(self::field_ogimage, 'home');
+  }
+
+  /**
+   * Minify file and return path of minified file
+   */
+  public function minifyFile($file, $minFile = null): string
+  {
+    $file = new Asset($file);
+    if (!$minFile) $minFile = $file->minPath();
+    $minFile = new Asset($minFile);
+    if ($minFile->m < $file->m) {
+      require_once __DIR__ . "/vendor/autoload.php";
+      if ($file->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($file);
+      else $minify = new \MatthiasMullie\Minify\CSS($file);
+      $minify->minify($minFile->path);
+    }
+    return $minFile->path;
   }
 
   /**
