@@ -82,6 +82,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var Manifest */
   protected $manifest;
 
+  /** @var bool */
+  public $noAssets = false;
+
   /** @var string */
   public $path;
 
@@ -199,6 +202,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $html = $event->return;
         $styles = $this->styles();
         $scripts = $this->scripts();
+
+        // early exit if asset injection is disabled
+        // Usage: place "$rockfrontend->noAssets = true" somewhere in your
+        // template file to prevent loading of any rockfrontend assets
+        if ($this->noAssets) return;
 
         // early exit if html does not contain a head section
         if (!strpos($html, "</head>")) return;
