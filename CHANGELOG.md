@@ -1,3 +1,16 @@
+# [2.36.0](https://github.com/baumrock/RockFrontend/compare/v2.35.1...v2.36.0) (2023-03-30)
+
+
+### Features
+
+* add consent management feature ([b5cab3c](https://github.com/baumrock/RockFrontend/commit/b5cab3c8980f45d3e7233566b6290c74574c86ae))
+* add noAssets flag ([c2d0a71](https://github.com/baumrock/RockFrontend/commit/c2d0a7157d3719160420d6863b50625d1b263ade))
+* add renderPagerUIkit() helper ([43cc908](https://github.com/baumrock/RockFrontend/commit/43cc908e51a94a39c97b4454791cce648f5e1cb5))
+* add vscodeLink method ([aa0bdd8](https://github.com/baumrock/RockFrontend/commit/aa0bdd83cc183e28473b933b38ba8e8d18f5ce50))
+* remove version number from downloaded uikit folder to prevent profile exceptions ([94f8b94](https://github.com/baumrock/RockFrontend/commit/94f8b94b0c3b780ff985fcc174c045fb89fee128))
+
+
+
 ## [2.35.1](https://github.com/baumrock/RockFrontend/compare/v2.35.0...v2.35.1) (2023-03-27)
 
 
@@ -46,15 +59,6 @@
 ### Features
 
 * support multiple classes for rf-scrollclass ([8a3f011](https://github.com/baumrock/RockFrontend/commit/8a3f01136f7c00031677d204dd5f68e888f12a10))
-
-
-
-# [2.32.0](https://github.com/baumrock/RockFrontend/compare/v2.31.2...v2.32.0) (2023-03-17)
-
-
-### Features
-
-* add short syntax for hiding plus icons in alfred ([65c59bf](https://github.com/baumrock/RockFrontend/commit/65c59bfab21c3a7f9bd44c3326b34718941dc9f9))
 
 
 
