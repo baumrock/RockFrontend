@@ -1630,6 +1630,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $out;
   }
 
+  public function renderPagerUIkit(PageArray $items, $options = [])
+  {
+    $options = array_merge([
+      'numPageLinks' => 5,
+      'listMarkup' => "<ul class='uk-pagination uk-flex-center'>{out}</ul>",
+      'nextItemLabel' => '<span uk-pagination-next></span>',
+      'previousItemLabel' => '<span uk-pagination-previous></span>',
+      'currentItemClass' => 'uk-active',
+    ], $options);
+    return $this->html($items->renderPager($options));
+  }
+
   /**
    * @return RockMigrations
    */
