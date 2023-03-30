@@ -598,6 +598,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $tmp = (new WireTempDir());
     (new WireHttp())->download($url, $tmp . "uikit.zip");
     $this->wire->files->unzip($tmp . "uikit.zip", $tpl);
+    $this->wire->files->rmdir($tpl . "uikit", true);
+    foreach (glob($tpl . "uikit-*") as $dir) {
+      $this->wire->files->rename($dir, $tpl . "uikit");
+    }
   }
 
   public function editLinks($options = null, $list = true, $size = 32)
@@ -1995,16 +1999,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $inputfields;
   }
 
-  private function addUikitNote(InputfieldSelect $f)
-  {
-    $note = '';
-    foreach (scandir($this->wire->config->paths->templates) as $p) {
-      if (strpos($p, "uikit-") !== 0) continue;
-      $note .= "\nFound /site/templates/$p";
-    }
-    $f->notes .= $note;
-  }
-
   private function configSettings($inputfields)
   {
     $fs = new InputfieldFieldset();
@@ -2127,10 +2121,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'uikit';
     $f->label = 'Download UIkit';
     $f->collapsed = Inputfield::collapsedYes;
-    $f->notes = "Will be downloaded to /site/templates/";
+    $f->notes = "WARNING: This will wipe the folder /site/templates/uikit and then download the selected uikit version into that folder!";
     foreach ($this->getUikitVersions() as $k => $v) $f->addOption($k);
     $fs->add($f);
-    $this->addUikitNote($f);
 
     $this->downloadCDN();
     $f = new InputfieldMarkup();
