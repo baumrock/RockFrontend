@@ -783,41 +783,33 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     if ($this->wire->user->isSuperuser()) {
-      $tracy = $this->wire->config->tracy;
-      if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
-        $root = $tracy['localRootPath'];
-      else $root = $this->wire->config->paths->root;
-      $link = str_replace($this->wire->config->paths->root, $root, $opt->path);
-
       // view file edit link
       $icons[] = (object)[
         'icon' => 'code',
         'label' => $opt->path,
-        'href' => "vscode://file/$link",
-        'tooltip' => $link,
+        'href' => $this->vscodeLink($opt->path),
+        'tooltip' => $opt->path,
       ];
 
-      $ext = pathinfo($link, PATHINFO_EXTENSION);
+      $ext = pathinfo($opt->path, PATHINFO_EXTENSION);
 
       // php file edit link
       $php = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".php";
       if (is_file($php)) {
-        $php = str_replace($this->wire->config->paths->root, $root, $php);
         $icons[] = (object)[
           'icon' => 'php',
           'label' => $php,
-          'href' => "vscode://file/$php",
+          'href' => $this->vscodeLink($php),
           'tooltip' => $php,
         ];
       }
       // style edit link
       $less = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".less";
       if (is_file($less)) {
-        $less = str_replace($this->wire->config->paths->root, $root, $less);
         $icons[] = (object)[
           'icon' => 'eye',
           'label' => $less,
-          'href' => "vscode://file/$less",
+          'href' => $this->vscodeLink($less),
           'tooltip' => $less,
         ];
       }
@@ -1806,6 +1798,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $svg = str_replace("{{$k}}", $v, $svg);
     }
     return $this->html($svg);
+  }
+
+  public function vscodeLink($path)
+  {
+    $tracy = $this->wire->config->tracy;
+    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
+      $root = $tracy['localRootPath'];
+    else $root = $this->wire->config->paths->root;
+    $link = str_replace($this->wire->config->paths->root, $root, $path);
+    return "vscode://file/$link";
   }
 
   /** translation support in LATTE files */
