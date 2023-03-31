@@ -1,3 +1,9 @@
-# RockFrontend 🚀🚀 The Powerful Frontend Development Toolbox for ProcessWire
+# The Powerful Frontend Development Toolbox for ProcessWire 🚀🚀
 
-Awesome Docs for RockFrontend - coming soon!
+Check out the video about RockFrontend on YouTube:
+
+<a href='https://www.youtube.com/watch?v=7CoIj--u4ps'><img src=thumb.jpg></a>
+
+## API
+
+RockFrontend will register the `$rockfrontend` API variable and its shorthand `$rf`. Both variables will be available in all your ProcessWire template files or in files rendered via `$rockfrontend->render()`.
