@@ -1,9 +1,9 @@
-##### Getting started
+## Getting started
 
 - Index
 - Quickstart
 - Module Config
 
-##### Features
+## Features
 
 [features]
