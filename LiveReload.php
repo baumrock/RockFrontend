@@ -31,23 +31,27 @@ class LiveReload extends Wire
       // user defined includes
       'include' => [],
       'excludeDefaults' => [
-        $this->wire->config->paths->templates . 'uikit-*',
-        $this->wire->config->paths->assets . 'backups',
-        $this->wire->config->paths->assets . 'cache',
-        $this->wire->config->paths->assets . 'files',
-        $this->wire->config->paths->assets . 'logs',
-        $this->wire->config->paths->assets . 'sessions',
-        $this->wire->config->paths->assets . 'ProCache-*',
-        $this->wire->config->paths->assets . 'pwpc',
         '.*/vendor',
         '.*/\.git',
         '.*/\.github',
         '.*/\.vscode',
-        '.*/site/modules/TracyDebugger/tracy-.*',
-        '.*/site/templates/bundle/*',
+
+        '.*/site/assets/backups',
+        '.*/site/assets/cache',
+        '.*/site/assets/files',
+        '.*/site/assets/logs',
+        '.*/site/assets/sessions',
+        '.*/site/assets/ProCache-*',
+        '.*/site/assets/pwpc',
         '.*/site/assets/RockFrontend/.*.css',
         '.*/site/assets/RockPdfDumps/*',
+
+        '.*/site/modules/TracyDebugger/tracy-.*',
         '.*/site/modules/RockBlocks/blocks/.*.css',
+
+        '.*/site/templates/bundle/*',
+        '.*/site/templates/uikit',
+        '.*/site/templates/uikit-*',
       ],
       // user defined exclude regexes
       'exclude' => [],
@@ -178,6 +182,7 @@ class LiveReload extends Wire
       $this->sse($file = $this->findModifiedFile($start));
       if ($file) {
         ob_end_flush();
+        $this->wire->log->prune('livereload', 1);
         return $this->wire->log->save('livereload', $file);
       }
       while (ob_get_level() > 0) ob_end_flush();
@@ -189,8 +194,6 @@ class LiveReload extends Wire
 
   public function __debuginfo()
   {
-    return array_merge($this->config->getArray(), [
-      'getIncludes()' => $this->getIncludes(),
-    ]);
+    return $this->config->getArray();
   }
 }
