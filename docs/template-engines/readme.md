@@ -1,6 +1,6 @@
 # Template Engines
 
-RockFrontend makes it super easy to use Template Engines like `LATTE` or `Twig`. As always RockFrontend does not force you to use one but it helps you if you want to.
+RockFrontend makes it super easy to use Template Engines like `Latte` or `Twig`. As always RockFrontend does not force you to use one but it helps you if you want to.
 
 ## Latte
 
@@ -14,11 +14,11 @@ To use latte for your project all you have to do is to render a latte file like 
 echo $rockfrontend->render('sections/header.latte');
 ```
 
-### Translatable Strings in Latte Files
+### Translatable Strings
 
-Since version 2.24.0 RockFrontend supports translatable strings in LATTE files!! 😎🥳
+Since version 2.24.0 RockFrontend supports translatable strings in latte files!! 😎🥳
 
-You just need to make sure that `latte` files are enabled in PW's translation system. RockFrontend can do that for you if you have RockMigrations installed and check the checkbox:
+You just need to make sure that latte files are enabled in PW's translation system. RockFrontend can do that for you if you have RockMigrations installed and check the checkbox:
 
 <img src=translations.png class=blur>
 
