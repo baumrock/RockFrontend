@@ -1,5 +1,7 @@
 # Consent Tools
 
+<div class="uk-alert uk-alert-warning">Disclaimer: These docs are only a technical guide and no legal advice in any means. It's your responsibility to comply with your local laws.</div>
+
 ## Usage
 
 ```php
@@ -26,6 +28,35 @@ In `youtube-consent.latte` you can have any code you want. The only thing you ne
 ```
 
 Once the user clicks on that link rockfrontend will show all `youtube` embeds.
+
+## Opt-Out
+
+If you want to include a script that you don't need prior consent for (like Plausible Analytics for example) you can do so like this:
+
+```php
+echo $rockfrontend->consentOptout(
+  "plausible",
+  "<script defer data-domain='{$config->httpHost}' src='https://plausible.yourdomain.com/js/script.js'></script>"
+);
+```
+
+This will render the following tag:
+
+```html
+<script
+  defer
+  rfconsent="optout"
+  rfconsent-name="plausible"
+  data-domain="yourdomain.com.ddev.site"
+  rfconsent-src="https://plausible.yourdomain.com/js/script.js"
+></script>
+```
+
+On the first pageload RockFrontend will check if an entry of `plausible` exists in the browsers localstorage. If not, it will create an entry which tells RockFrontend that it can load the script.
+
+Then RockFrontend will add the `src` attribute to the script tag which will make the script load and do its work.
+
+<div class=uk-alert>Note that you still need the possibility for the user to opt-out in your privacy policy. See the next section how to do that!</div>
 
 ## Managing Consent
 
