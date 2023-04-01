@@ -25,7 +25,7 @@ $rockfrontend->scripts()
   ->minify(!$config->debug);
 ```
 
-<div class="uk-alert uk-alert-warning">Note that we only add assets, but we do NOT echo anything here!</div>
+<div class="uk-alert uk-alert-warning">Note that we only add assets, but we do NOT echo anything here! See section about Auto-Rendering below.</div>
 
 ## AssetsArray
 
@@ -43,7 +43,13 @@ $rockfrontend->styles('bar')
 $rockfrontend->styles('baz')
 ```
 
-Note though that only the `head` scripts and styles will be rendered automatically. They will be rendered into the `<head>` of your website. All other AssetArrays can be rendered manually wherever you want:
+## Auto-Rendering
+
+Note that only the `head` scripts and styles will be rendered automatically. They will be rendered into the `<head>` of your website.
+
+RockFrontend will hook into `Page::render` and inject all styles and scripts that you added to your `head` arrays (using either `scripts()->add(...)` or `styles()->head(...)`).
+
+All other AssetArrays can be rendered manually wherever you want:
 
 ```html
 <html>
@@ -53,6 +59,8 @@ Note though that only the `head` scripts and styles will be rendered automatical
   </body>
 </html>
 ```
+
+Note that the preferred way of adding scripts to your site is in `<head>` with the `defer` attribute rather than adding it to the bottom of your `<body>` element. Personally I've never ever needed any other assets than the default ones with name `head`.
 
 ## Adding files
 
