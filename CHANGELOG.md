@@ -1,3 +1,12 @@
+# [2.38.0](https://github.com/baumrock/RockFrontend/compare/v2.37.0...v2.38.0) (2023-04-01)
+
+
+### Features
+
+* add consentOptout() feature + docs ([1cc3389](https://github.com/baumrock/RockFrontend/commit/1cc3389c54619a04338e089cb3ebc929f0b65a09))
+
+
+
 # [2.37.0](https://github.com/baumrock/RockFrontend/compare/v2.36.1...v2.37.0) (2023-03-31)
 
 
@@ -37,21 +46,6 @@
 ### Bug Fixes
 
 * issue with minify() and external assets like typekit ([c2014fa](https://github.com/baumrock/RockFrontend/commit/c2014fabe9bf5cab823d1212b2948ae071403edd))
-
-
-
-# [2.35.0](https://github.com/baumrock/RockFrontend/compare/v2.34.0...v2.35.0) (2023-03-26)
-
-
-### Bug Fixes
-
-* make alfred icons have z-index 10 instead of 2 ([2ce3562](https://github.com/baumrock/RockFrontend/commit/2ce3562164bf48e6b8beed17c6e9a5388c950634))
-* show items as array in debuginfo ([ff0068b](https://github.com/baumrock/RockFrontend/commit/ff0068bf211f2d2a9e7a59cba89627b5db8fb48a))
-
-
-### Features
-
-* add support for showing RockPageBuilder block type ([d577ea7](https://github.com/baumrock/RockFrontend/commit/d577ea7dee7b3bf68783dfcfedad261936e3c291))
 
 
 
