@@ -306,14 +306,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function consent($name, $enabled, $disabled = null)
   {
-    $enabled = str_replace(" src=", " data-src=", $enabled);
-    $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
+    $enabled = str_replace(" src=", " rfconsent-name='$name' rfconsent-src=", $enabled);
     if ($disabled) {
+      // we only add the wrapper if we have a disabled markup
+      // if we dont have a disabled markup that means we only have
+      // a script tag (like plausible analytics) so we don't need the
+      // wrapping div!
+      $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
       $file = $this->getFile($disabled);
       if ($file) $disabled = $this->render($file);
       $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
     }
     return $this->html($enabled . $disabled);
+  }
+
+  public function consentOptout($name, $script)
+  {
+    $enabled = str_replace(" src=", " rfconsent-name='$name' rfconsent=optout rfconsent-src=", $script);
+    return $this->html($enabled);
   }
 
   public function ___addAlfredStyles()

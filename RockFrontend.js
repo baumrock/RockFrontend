@@ -29,8 +29,24 @@
       let name = container.getAttribute("data-rfc-show");
       if (!C.isEnabled(name)) return;
       container.removeAttribute("hidden");
-      let el = container.querySelector("[data-src]");
-      let src = el.getAttribute("data-src");
+      let el = container.querySelector("[rfconsent-src]");
+      let src = el.getAttribute("rfconsent-src");
+      el.setAttribute("src", src);
+    });
+
+    // enable scripts that don't have an alternate markup
+    let enable = document.querySelectorAll("[rfconsent-src]");
+    this.each(enable, function (el) {
+      let name = el.getAttribute("rfconsent-name");
+      let optout = el.getAttribute("rfconsent") == "optout";
+
+      // on optout scripts we set the consent automatically if no entry exists
+      if (optout && typeof C.getStorage()[name] == "undefined") {
+        C.save(name, true);
+      }
+
+      if (!C.isEnabled(name)) return;
+      let src = el.getAttribute("rfconsent-src");
       el.setAttribute("src", src);
     });
 
