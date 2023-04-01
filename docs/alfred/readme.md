@@ -2,6 +2,11 @@
 
 ALFRED stands for "<b>A</b> <b>L</b>ovely <b>FR</b>ontend <b>ED</b>itor".
 
+It has two main goals:
+
+- Better editing experience for your clients
+- Better development experience for yourself
+
 See the video here: https://www.youtube.com/watch?v=7CoIj--u4ps&t=1714s
 
 ## Easier frontend editing for your clients
