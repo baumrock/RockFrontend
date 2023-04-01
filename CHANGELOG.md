@@ -1,3 +1,12 @@
+## [2.38.1](https://github.com/baumrock/RockFrontend/compare/v2.38.0...v2.38.1) (2023-04-01)
+
+
+### Bug Fixes
+
+* remove features ([5f24e9d](https://github.com/baumrock/RockFrontend/commit/5f24e9de75976038cd2a041d12d58efa8eef7c34))
+
+
+
 # [2.38.0](https://github.com/baumrock/RockFrontend/compare/v2.37.0...v2.38.0) (2023-04-01)
 
 
@@ -37,15 +46,6 @@
 * add renderPagerUIkit() helper ([43cc908](https://github.com/baumrock/RockFrontend/commit/43cc908e51a94a39c97b4454791cce648f5e1cb5))
 * add vscodeLink method ([aa0bdd8](https://github.com/baumrock/RockFrontend/commit/aa0bdd83cc183e28473b933b38ba8e8d18f5ce50))
 * remove version number from downloaded uikit folder to prevent profile exceptions ([94f8b94](https://github.com/baumrock/RockFrontend/commit/94f8b94b0c3b780ff985fcc174c045fb89fee128))
-
-
-
-## [2.35.1](https://github.com/baumrock/RockFrontend/compare/v2.35.0...v2.35.1) (2023-03-27)
-
-
-### Bug Fixes
-
-* issue with minify() and external assets like typekit ([c2014fa](https://github.com/baumrock/RockFrontend/commit/c2014fabe9bf5cab823d1212b2948ae071403edd))
 
 
 
