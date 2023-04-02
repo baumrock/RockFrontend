@@ -1,3 +1,17 @@
+# [2.39.0](https://github.com/baumrock/RockFrontend/compare/v2.38.1...v2.39.0) (2023-04-02)
+
+
+### Bug Fixes
+
+* typos ([92672ea](https://github.com/baumrock/RockFrontend/commit/92672ea60993760f91c08c95a703537ff18f0b23))
+
+
+### Features
+
+* add seo docs and new manifest config settings ([47e6668](https://github.com/baumrock/RockFrontend/commit/47e6668928f3df0714fe3546e8b4c642ff0f6db8))
+
+
+
 ## [2.38.1](https://github.com/baumrock/RockFrontend/compare/v2.38.0...v2.38.1) (2023-04-01)
 
 
@@ -33,19 +47,6 @@
 ### Bug Fixes
 
 * rename index.md files to readme.md ([49500d9](https://github.com/baumrock/RockFrontend/commit/49500d901948b93d0bb9edeab66b9c478b8090f0))
-
-
-
-# [2.36.0](https://github.com/baumrock/RockFrontend/compare/v2.35.1...v2.36.0) (2023-03-30)
-
-
-### Features
-
-* add consent management feature ([b5cab3c](https://github.com/baumrock/RockFrontend/commit/b5cab3c8980f45d3e7233566b6290c74574c86ae))
-* add noAssets flag ([c2d0a71](https://github.com/baumrock/RockFrontend/commit/c2d0a7157d3719160420d6863b50625d1b263ade))
-* add renderPagerUIkit() helper ([43cc908](https://github.com/baumrock/RockFrontend/commit/43cc908e51a94a39c97b4454791cce648f5e1cb5))
-* add vscodeLink method ([aa0bdd8](https://github.com/baumrock/RockFrontend/commit/aa0bdd83cc183e28473b933b38ba8e8d18f5ce50))
-* remove version number from downloaded uikit folder to prevent profile exceptions ([94f8b94](https://github.com/baumrock/RockFrontend/commit/94f8b94b0c3b780ff985fcc174c045fb89fee128))
 
 
 
