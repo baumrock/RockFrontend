@@ -1,3 +1,12 @@
+## [2.39.2](https://github.com/baumrock/RockFrontend/compare/v2.39.1...v2.39.2) (2023-04-02)
+
+
+### Bug Fixes
+
+* add docs about seo fields ([9dcbd3a](https://github.com/baumrock/RockFrontend/commit/9dcbd3ab91b1f079749cacec9b30664f3063f5f0))
+
+
+
 ## [2.39.1](https://github.com/baumrock/RockFrontend/compare/v2.39.0...v2.39.1) (2023-04-02)
 
 
@@ -36,17 +45,6 @@
 ### Features
 
 * add consentOptout() feature + docs ([1cc3389](https://github.com/baumrock/RockFrontend/commit/1cc3389c54619a04338e089cb3ebc929f0b65a09))
-
-
-
-# [2.37.0](https://github.com/baumrock/RockFrontend/compare/v2.36.1...v2.37.0) (2023-03-31)
-
-
-### Features
-
-* add alfred docs ([b044f94](https://github.com/baumrock/RockFrontend/commit/b044f94a95ebdedf71df089fbaa3360d4163422b))
-* add docs ([3ffc68e](https://github.com/baumrock/RockFrontend/commit/3ffc68e89a9471b8a695859e605d270b87219cea))
-* prune livereload log to 1 day ([e8ea6b6](https://github.com/baumrock/RockFrontend/commit/e8ea6b6795a35936dfdcc4357cc015d9f4b7c2e1))
 
 
 
