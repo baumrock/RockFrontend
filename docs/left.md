@@ -2,4 +2,3 @@
 
 - Introduction
 - Quickstart
-- Module Config
