@@ -57,7 +57,7 @@ Then you can render twig files like this:
 echo $rockfrontend->render('sections/header.twig');
 ```
 
-## Others
+## Adding Other Template Engines
 
 You can easily add any other Template Engine to RockFrontend. Say we wanted to add the `Foo` engine that renders all `.foo` files.
 

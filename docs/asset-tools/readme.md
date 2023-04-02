@@ -47,7 +47,7 @@ $rockfrontend->styles('baz')
 
 Note that only the `head` scripts and styles will be rendered automatically. They will be rendered into the `<head>` of your website.
 
-RockFrontend will hook into `Page::render` and inject all styles and scripts that you added to your `head` arrays (using either `scripts()->add(...)` or `styles()->head(...)`).
+RockFrontend will hook into `Page::render` and inject all styles and scripts that you added to your `head` arrays (using either `scripts()->add(...)` or `styles()->add(...)`).
 
 All other AssetArrays can be rendered manually wherever you want:
 

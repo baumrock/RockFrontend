@@ -2091,6 +2091,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = "Tools";
 
+    $this->manifestConfig($fs);
+
     $f = new InputfieldText();
     $f->name = "postCssTool";
     $f->label = "PostCSS";
@@ -2189,6 +2191,64 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $fs->add($f);
     }
     $inputfields->add($fs);
+  }
+
+  private function manifestConfig(InputfieldWrapper $fs)
+  {
+    $wrapper = new InputfieldFieldset();
+    $wrapper->label = 'Manifest File';
+    $wrapper->collapsed = Inputfield::collapsedYes;
+    $create = false;
+
+    $wrapper->add([
+      'type' => 'markup',
+      'label' => 'Docs',
+      'value' => 'RockFrontend Docs: <a href=https://www.baumrock.com/modules/RockFrontend/docs/seo/#website-manifest-file">https://www.baumrock.com/modules/RockFrontend/docs/seo/#website-manifest-file</a>
+        <br>Mozilla Reference: <a href=https://developer.mozilla.org/en-US/docs/Web/Manifest>https://developer.mozilla.org/en-US/docs/Web/Manifest</a>',
+    ]);
+
+    $wrapper->add([
+      'type' => 'text',
+      'label' => 'Name',
+      'name' => 'm_name',
+      'value' => $this->m_name,
+    ]);
+    if ($this->m_name) $create = true;
+
+    $wrapper->add([
+      'type' => 'text',
+      'label' => 'Theme-Color',
+      'name' => 'm_theme_color',
+      'value' => $this->m_theme_color,
+      'notes' => 'eg #00bb86',
+    ]);
+    if ($this->m_theme_color) $create = true;
+
+    $wrapper->add([
+      'type' => 'text',
+      'label' => 'Background-Color',
+      'name' => 'm_background_color',
+      'value' => $this->m_background_color,
+      'notes' => 'Leave blank for white background.',
+    ]);
+    if ($this->m_background_color) $create = true;
+
+    $wrapper->add([
+      'type' => 'markup',
+      'label' => 'Icon',
+      'value' => 'TBD',
+    ]);
+
+    if ($create) {
+      $this->manifest()
+        ->name($this->m_name)
+        ->themeColor($this->m_theme_color)
+        ->backgroundColor($this->m_background_color ?: '#fff')
+        ->saveToFile();
+      $this->message('Manifest File has been saved to PW root folder.');
+    }
+
+    $fs->add($wrapper);
   }
 
   private function downloadCDN()
