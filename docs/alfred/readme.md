@@ -9,7 +9,7 @@ It has two main goals:
 
 See the video here: https://www.youtube.com/watch?v=7CoIj--u4ps&t=1714s
 
-## Easier frontend editing for your clients
+## Easier Frontend Editing for Your Clients
 
 A typical example that almost every website has are footer links - that's why RockFrontend comes with a migration that creates a footerlinks field for you. It creates that field on the `home` page and the client can manage the footerlinks by editing the `home` page in the PW backend.
 
@@ -55,7 +55,7 @@ When using regular PHP templates simply use `<?= alfred(...) ?>` instead of `{al
 >
 ```
 
-## Easier development
+## Easier Development
 
 <img src=footer.png class=blur>
 
