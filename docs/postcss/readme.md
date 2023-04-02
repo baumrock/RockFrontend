@@ -23,8 +23,8 @@ Here we add a vertical padding of 20px on mobile and 100px on desktop.
 By default RockFrontend will use `360px` as the mobile screen with and `1440px` as desktop screen with. You can adjust these settings in your `config.php`:
 
 ```php
-$this->wire->config->growMin = 250;
-$this->wire->config->growMax = 1920;
+$config->growMin = 250;
+$config->growMax = 1920;
 ```
 
 You can also provide the min/max settings directly in the method call:
