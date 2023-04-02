@@ -1,3 +1,12 @@
+## [2.39.1](https://github.com/baumrock/RockFrontend/compare/v2.39.0...v2.39.1) (2023-04-02)
+
+
+### Bug Fixes
+
+* docs typos ([96b04fc](https://github.com/baumrock/RockFrontend/commit/96b04fc75ca2d997dbe917addc3d3e9689397643))
+
+
+
 # [2.39.0](https://github.com/baumrock/RockFrontend/compare/v2.38.1...v2.39.0) (2023-04-02)
 
 
@@ -38,15 +47,6 @@
 * add alfred docs ([b044f94](https://github.com/baumrock/RockFrontend/commit/b044f94a95ebdedf71df089fbaa3360d4163422b))
 * add docs ([3ffc68e](https://github.com/baumrock/RockFrontend/commit/3ffc68e89a9471b8a695859e605d270b87219cea))
 * prune livereload log to 1 day ([e8ea6b6](https://github.com/baumrock/RockFrontend/commit/e8ea6b6795a35936dfdcc4357cc015d9f4b7c2e1))
-
-
-
-## [2.36.1](https://github.com/baumrock/RockFrontend/compare/v2.36.0...v2.36.1) (2023-03-30)
-
-
-### Bug Fixes
-
-* rename index.md files to readme.md ([49500d9](https://github.com/baumrock/RockFrontend/commit/49500d901948b93d0bb9edeab66b9c478b8090f0))
 
 
 
