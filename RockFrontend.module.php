@@ -306,7 +306,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function consent($name, $enabled, $disabled = null)
   {
-    $enabled = str_replace(" src=", " rfconsent-name='$name' rfconsent-src=", $enabled);
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-src=", $enabled);
     if ($disabled) {
       // we only add the wrapper if we have a disabled markup
       // if we dont have a disabled markup that means we only have
@@ -322,7 +322,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function consentOptout($name, $script)
   {
-    $enabled = str_replace(" src=", " rfconsent-name='$name' rfconsent=optout rfconsent-src=", $script);
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
     return $this->html($enabled);
   }
 
@@ -2059,28 +2059,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
     $f->value = (array)$this->migrations;
     $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
-    $fs->add($f);
-
-    $f = $this->wire->modules->get('InputfieldMarkup');
-    $f->entityEncodeText = false;
-    $f->label = 'Javascript Snippets';
-    $f->wrapClass = 'script-checkboxes';
-    $f->value = '';
-    foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
-      $name = basename($script);
-      if (substr($name, -7) == '.min.js') continue;
-      $js = $this->wire->files->fileGetContents($script);
-      $label = $name;
-      preg_match("/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/", $js, $matches);
-      if (count($matches)) {
-        $label .= $this->drop($matches[0]);
-      }
-      $url = $this->toUrl($script);
-      $markup = '<span class="uk-margin-left">
-        <pre style="font-size:10px;margin:5px 0;">$rockfrontend->scripts()->add("' . $url . '", "defer");</pre>
-        </span>';
-      $f->value .= "<div>$label $markup</div>";
-    }
     $fs->add($f);
 
     $inputfields->add($fs);

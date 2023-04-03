@@ -18,7 +18,7 @@
 
   // get enabled state for given item
   Consent.prototype.isEnabled = function (name) {
-    return this.getStorage()[name];
+    return !!this.getStorage()[name];
   };
 
   // init all containers and checkboxes
@@ -37,8 +37,8 @@
     // enable scripts that don't have an alternate markup
     let enable = document.querySelectorAll("[rfconsent-src]");
     this.each(enable, function (el) {
-      let name = el.getAttribute("rfconsent-name");
-      let optout = el.getAttribute("rfconsent") == "optout";
+      let name = el.getAttribute("rfconsent");
+      let optout = el.getAttribute("rfconsent-type") == "optout";
 
       // on optout scripts we set the consent automatically if no entry exists
       if (optout && typeof C.getStorage()[name] == "undefined") {
@@ -99,6 +99,104 @@
     C.init();
   });
 
+  // intercept links with "rfconsent-click" attributes
+  let allowAttached = false;
+  document.addEventListener("click", (e) => {
+    let el = e.target.closest("[rfconsent-click]");
+    if (!el) return;
+    e.preventDefault();
+    let name = el.getAttribute("rfconsent");
+    let click = el.getAttribute("rfconsent-click");
+    let allow = el.getAttribute("rfconsent-allow");
+    let ask = el.getAttribute("rfconsent-ask");
+    if (C.isEnabled(name)) document.querySelector(click).click();
+    else {
+      // attach listener to element that confirms the dialog
+      if (!allowAttached) {
+        document.addEventListener("click", (e) => {
+          // we only grant consent if the allow selector matches
+          // otherwise the cancel button was clicked
+          if (!e.target.matches(allow)) return;
+
+          // save consent
+          C.save(name, true);
+
+          // now click the element defined in the "click" property
+          document.querySelector(click).click();
+        });
+        allowAttached = true;
+      }
+
+      // trigger confirmation click
+      document.querySelector(ask).click();
+    }
+  });
+
   RockFrontend.Consent = C;
   C.init();
+})();
+
+/**
+ * Add/remove class on scroll position
+ *
+ * Usage:
+ * <a href='#' rf-scrollclass='show@300'>Add class "show" at 300px scrollposition</a>
+ *
+ * Add multiple classes (thx @StefanThumann)
+ * <a href='#' rf-scrollclass='show@300 show2@600'>Add class "show" at 300px scrollposition, "show2" at 600px</a>
+ */
+(function () {
+  let scrollElements = document.querySelectorAll("[rf-scrollclass]");
+  for (let i = 0; i < scrollElements.length; i++) {
+    let el = scrollElements[i];
+    let attrs = el.getAttribute("rf-scrollclass").split(" ");
+    for (j = 0; j < attrs.length; j++) {
+      let parts = attrs[j].split("@");
+      if (parts.length != 2) return;
+      let cls = parts[0];
+      let y = parts[1] * 1;
+      window.addEventListener("scroll", function () {
+        scrollpos = window.scrollY;
+        if (scrollpos >= y) el.classList.add(cls);
+        else el.classList.remove(cls);
+      });
+    }
+  }
+})();
+
+/**
+ * Trigger a click on another element
+ * Usage:
+ * <a rf-click="#foo">click the #foo element</a>
+ * <div uk-lightbox>
+ *   <a href="/foo/bar.jpg" id="foo">Show Image</a>
+ * </div>
+ */
+(() => {
+  document.addEventListener("click", function (e) {
+    let click = e.target.closest("[rf-click]");
+    if (!click) return;
+    e.preventDefault();
+    let selector = click.getAttribute("rf-click");
+    let target = document.querySelector(selector);
+    if (target) target.click();
+  });
+})();
+
+/**
+ * Toggle the "hidden" attribute of another element
+ * Usage:
+ * <a href=# rf-toggle='#foo'>toggle foo</a>
+ * <div id='foo'>hello world</div>
+ */
+(() => {
+  document.addEventListener("click", function (e) {
+    let toggle = e.target.closest("[rf-toggle]");
+    if (!toggle) return;
+    e.preventDefault();
+    let selector = toggle.getAttribute("rf-toggle");
+    let target = document.querySelector(selector);
+    if (target.hasAttribute("hidden")) target.removeAttribute("hidden");
+    else target.setAttribute("hidden", "");
+  });
 })();
