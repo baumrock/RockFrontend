@@ -98,8 +98,9 @@
         $elements.append(this.plus("right", config.addRight));
       $(el).removeAttr("alfred");
     } catch (error) {
+      console.log($elements);
       alert(
-        "invalid json in alfred - dont forget |noescape filter when working with latte files"
+        "invalid json in alfred - dont forget |noescape filter when working with latte files. The element that threw this error was logged to the console."
       );
     }
   };

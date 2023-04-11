@@ -779,7 +779,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($page and $page->editable() and $opt->edit) {
       $icons[] = (object)[
         'icon' => 'edit',
-        'label' => $page->title,
         'tooltip' => "Edit Block #{$page->id}",
         'href' => $page->editUrl() . $fields,
         'class' => 'pw-modal alfred-edit',
