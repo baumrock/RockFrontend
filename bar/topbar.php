@@ -64,6 +64,13 @@
     </svg>
   </a>
 
+  <?php if ($user->isSuperuser()) : ?>
+    <span style="margin-left: 10px;">[
+      <a href="<?= $pages->get(2)->url ?>setup/template/edit?id=<?= $page->template->id ?>">
+        <?= $page->template->name ?>
+      </a>
+      ]</span>
+  <?php endif; ?>
 </div>
 <div id="rf-device-preview">
   <div class="iframe-wrapper">
