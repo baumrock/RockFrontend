@@ -102,6 +102,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private $scripts;
   private $styles;
+  private $textdomain;
 
   /** @var array */
   private $translations = [];
@@ -1840,15 +1841,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return \ProcessWire\_n($textsingular, $textplural, $count, $this->textdomain());
   }
 
+  public function setTextdomain($file = false)
+  {
+    $this->textdomain = $file;
+  }
+
   /**
    * Method to find the correct textdomain file for translations in latte files
    */
   public function textdomain()
   {
     $trace = Debug::backtrace();
+    if ($this->textdomain) return $this->textdomain;
     foreach ($trace as $item) {
       $call = $item['call'];
       // renderFile[Latte|Twig]
+
+      // Translations in RockPageBuilder
+      $match = false;
+      if (strpos($item['file'], "/modules/RockPageBuilder/Block.php")) $match = true;
+      elseif (strpos($call, '$rockfrontend->renderFile') === 0) $match = true;
+      if (!$match) continue;
+
       if (strpos($call, '$rockfrontend->renderFile') !== 0) continue;
       preg_match("/(.*)\"(.*)\"(.*)/", $call, $matches);
       // path to file that was rendered (eg main.latte)

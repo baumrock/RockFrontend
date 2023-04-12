@@ -43,6 +43,10 @@ These are the three versions that you can use to translate strings in your LATTE
 
 Note that when using the function-syntax you must prepend the function call with an equal sign! While the translation will - in theory - also work without the equal sign you will not be able to translate the string in the backend, because the regex will not find it!
 
+### setTextdomain
+
+TBD
+
 ## Twig
 
 Twig is not shipped with RockFrontend by default, but can easily be added via composer in the PW root directory:
