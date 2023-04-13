@@ -153,7 +153,7 @@ class Seo extends Wire
         // sanitize value
         $value = (string)$value;
         if ($filter != 'noescape') {
-          $value = $this->wire->sanitizer->entities($value);
+          $value = $this->wire->sanitizer->entities1($value);
         }
 
         $out = str_replace($search, $value, $out);
