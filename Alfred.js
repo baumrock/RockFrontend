@@ -16,6 +16,8 @@
       id = "<span style='margin-right: 7px;'>#" + id + "</span>";
     }
     if (type || id) {
+      type = type || "";
+      id = id || "";
       html += "<span class='rpb-type'><span>" + id + type + "</span></span>";
     }
     icons.forEach(function (icon) {
