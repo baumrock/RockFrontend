@@ -1433,6 +1433,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
+    // refresh uikit cache
+    $this->wire->cache->save(self::cache, "");
+
+    // force recreation of assets
     $dir = $this->wire->config->paths->assets . "RockFrontend/css/";
     if (is_dir($dir)) $this->wire->files->rmdir($dir, true);
     $this->forceRecompile();
