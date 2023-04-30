@@ -45,6 +45,7 @@ class LiveReload extends Wire
         '.*/site/assets/pwpc',
         '.*/site/assets/RockFrontend/.*.css',
         '.*/site/assets/RockPdfDumps/*',
+        '.*/site/assets/RockPdf/*',
 
         '.*/site/modules/TracyDebugger/tracy-.*',
         '.*/site/modules/RockBlocks/blocks/.*.css',
