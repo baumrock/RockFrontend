@@ -2541,4 +2541,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /** ##### END webfont downloader ##### */
+
+  public function __debugInfo()
+  {
+    return [
+      'folders' => $this->folders->getArray(),
+    ];
+  }
 }
