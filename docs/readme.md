@@ -2,7 +2,9 @@
 
 Check out the video about RockFrontend on YouTube:
 
-<a href='https://www.youtube.com/watch?v=7CoIj--u4ps'><img src=thumb.jpg></a>
+<a href='https://www.youtube.com/watch?v=7CoIj--u4ps'>
+  <img src=thumb.jpg class=blur>
+</a>
 
 ## API
 

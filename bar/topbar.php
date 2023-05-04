@@ -22,6 +22,7 @@
       </g>
     </svg>
   </a>
+
   <a href="#" class="rf-topbar-hide">
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
@@ -30,18 +31,6 @@
       </g>
     </svg>
   </a>
-
-  <?php if ($user->isSuperuser()) : ?>
-    <a href="<?= $pages->get(2)->url . "setup/template/edit?id=" . $page->template->id ?>">
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-          <rect width="16" height="4" x="4" y="4" rx="1" />
-          <rect width="6" height="8" x="4" y="12" rx="1" />
-          <path d="M14 12h6m-6 4h6m-6 4h6" />
-        </g>
-      </svg>
-    </a>
-  <?php endif; ?>
 
   <a href=/ class="rf-device-preview">
     <svg width="100%" height="100%" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;">
@@ -64,6 +53,13 @@
     </svg>
   </a>
 
+  <?php if ($user->isSuperuser()) : ?>
+    <span style="margin-left: 10px;">[
+      <a href="<?= $pages->get(2)->url ?>setup/template/edit?id=<?= $page->template->id ?>">
+        <?= $page->template->name ?>
+      </a>
+      ]</span>
+  <?php endif; ?>
 </div>
 <div id="rf-device-preview">
   <div class="iframe-wrapper">

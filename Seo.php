@@ -2,7 +2,6 @@
 
 namespace RockFrontend;
 
-use Exception;
 use ProcessWire\Page;
 use ProcessWire\Pageimage;
 use ProcessWire\Pageimages;
@@ -10,7 +9,6 @@ use ProcessWire\Paths;
 use ProcessWire\RockFrontend;
 use ProcessWire\Wire;
 use ProcessWire\WireData;
-use ProcessWire\WireHttp;
 
 class Seo extends Wire
 {
@@ -155,7 +153,7 @@ class Seo extends Wire
         // sanitize value
         $value = (string)$value;
         if ($filter != 'noescape') {
-          $value = $this->wire->sanitizer->entities($value);
+          $value = $this->wire->sanitizer->entities1($value);
         }
 
         $out = str_replace($search, $value, $out);

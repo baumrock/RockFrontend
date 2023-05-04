@@ -102,6 +102,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private $scripts;
   private $styles;
+  private $textdomain;
 
   /** @var array */
   private $translations = [];
@@ -306,7 +307,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function consent($name, $enabled, $disabled = null)
   {
-    $enabled = str_replace(" src=", " rfconsent-name='$name' rfconsent-src=", $enabled);
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-src=", $enabled);
     if ($disabled) {
       // we only add the wrapper if we have a disabled markup
       // if we dont have a disabled markup that means we only have
@@ -322,7 +323,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function consentOptout($name, $script)
   {
-    $enabled = str_replace(" src=", " rfconsent-name='$name' rfconsent=optout rfconsent-src=", $script);
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
     return $this->html($enabled);
   }
 
@@ -779,7 +780,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($page and $page->editable() and $opt->edit) {
       $icons[] = (object)[
         'icon' => 'edit',
-        'label' => $page->title,
         'tooltip' => "Edit Block #{$page->id}",
         'href' => $page->editUrl() . $fields,
         'class' => 'pw-modal alfred-edit',
@@ -1433,6 +1433,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
+    // refresh uikit cache
+    $this->wire->cache->save(self::cache, "");
+
+    // force recreation of assets
     $dir = $this->wire->config->paths->assets . "RockFrontend/css/";
     if (is_dir($dir)) $this->wire->files->rmdir($dir, true);
     $this->forceRecompile();
@@ -1841,15 +1845,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return \ProcessWire\_n($textsingular, $textplural, $count, $this->textdomain());
   }
 
+  public function setTextdomain($file = false)
+  {
+    $this->textdomain = $file;
+  }
+
   /**
    * Method to find the correct textdomain file for translations in latte files
    */
   public function textdomain()
   {
     $trace = Debug::backtrace();
+    if ($this->textdomain) return $this->textdomain;
     foreach ($trace as $item) {
       $call = $item['call'];
       // renderFile[Latte|Twig]
+
+      // Translations in RockPageBuilder
+      $match = false;
+      if (strpos($item['file'], "/modules/RockPageBuilder/Block.php")) $match = true;
+      elseif (strpos($call, '$rockfrontend->renderFile') === 0) $match = true;
+      if (!$match) continue;
+
       if (strpos($call, '$rockfrontend->renderFile') !== 0) continue;
       preg_match("/(.*)\"(.*)\"(.*)/", $call, $matches);
       // path to file that was rendered (eg main.latte)
@@ -2059,28 +2076,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
     $f->value = (array)$this->migrations;
     $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
-    $fs->add($f);
-
-    $f = $this->wire->modules->get('InputfieldMarkup');
-    $f->entityEncodeText = false;
-    $f->label = 'Javascript Snippets';
-    $f->wrapClass = 'script-checkboxes';
-    $f->value = '';
-    foreach ($this->wire->files->find(__DIR__ . "/scripts") as $script) {
-      $name = basename($script);
-      if (substr($name, -7) == '.min.js') continue;
-      $js = $this->wire->files->fileGetContents($script);
-      $label = $name;
-      preg_match("/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/", $js, $matches);
-      if (count($matches)) {
-        $label .= $this->drop($matches[0]);
-      }
-      $url = $this->toUrl($script);
-      $markup = '<span class="uk-margin-left">
-        <pre style="font-size:10px;margin:5px 0;">$rockfrontend->scripts()->add("' . $url . '", "defer");</pre>
-        </span>';
-      $f->value .= "<div>$label $markup</div>";
-    }
     $fs->add($f);
 
     $inputfields->add($fs);
@@ -2546,4 +2541,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /** ##### END webfont downloader ##### */
+
+  public function __debugInfo()
+  {
+    return [
+      'folders' => $this->folders->getArray(),
+    ];
+  }
 }

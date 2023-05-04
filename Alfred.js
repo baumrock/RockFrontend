@@ -11,8 +11,14 @@
 
   Alfred.prototype.addIcons = function (el, icons, type) {
     let html = "<div class=icons>";
-    if (type) {
-      html += "<span class='rpb-type'><span>" + type + "</span></span>";
+    let id = $(el).parent().attr("id") || "";
+    if (id) {
+      id = "<span style='margin-right: 7px;'>#" + id + "</span>";
+    }
+    if (type || id) {
+      type = type || "";
+      id = id || "";
+      html += "<span class='rpb-type'><span>" + id + type + "</span></span>";
     }
     icons.forEach(function (icon) {
       // console.log(icon);
@@ -98,8 +104,9 @@
         $elements.append(this.plus("right", config.addRight));
       $(el).removeAttr("alfred");
     } catch (error) {
+      console.log($elements);
       alert(
-        "invalid json in alfred - dont forget |noescape filter when working with latte files"
+        "invalid json in alfred - dont forget |noescape filter when working with latte files. The element that threw this error was logged to the console."
       );
     }
   };

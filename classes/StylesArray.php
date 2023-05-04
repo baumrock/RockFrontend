@@ -228,12 +228,13 @@ class StylesArray extends AssetsArray
 
   /**
    * Set a less variable
-   * @return array
+   * @return self
    */
   public function setVar($key, $value)
   {
     $vars = $this->vars;
     $vars[$key] = $value;
-    return $this->vars = $vars;
+    $this->vars = $vars;
+    return $this;
   }
 }
