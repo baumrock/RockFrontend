@@ -1230,6 +1230,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $permission and $this->hasAlfred;
   }
 
+  /**
+   * @return Engine
+   */
   public function loadLatte()
   {
     if ($this->latte) return $this->latte;
