@@ -17,6 +17,7 @@ use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
+use Wa72\HtmlPageDom\HtmlPageCrawler;
 
 /**
  * @author Bernhard Baumrock, 05.01.2022
@@ -595,6 +596,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($p and $p->id) return;
     $p = $this->wire->permissions->add($name);
     $p->setAndSave('title', $title);
+  }
+
+  /**
+   * Load HtmlPageDom
+   *
+   * If you have plain HTML like from TinyMCE field some methods will not work
+   * because they need a hierarchy with a single root element. That's why by
+   * default the dom() method will add a wrapping div unless you specify
+   * FALSE as second param.
+   *
+   * Usage:
+   * $rockfrontend->dom("your html string")
+   *   ->filter("img")
+   *   ->each(function($img) {
+   *     $img->attr('src', '/foo/bar.png');
+   *   });
+   */
+  public function dom($data, $addWrapperDiv = true): HtmlPageCrawler
+  {
+    require_once __DIR__ . "/vendor/autoload.php";
+    if ($addWrapperDiv) $data = "<div>$data</div>";
+    return HtmlPageCrawler::create($data);
   }
 
   /**
