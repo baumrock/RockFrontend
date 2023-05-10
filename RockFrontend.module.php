@@ -1230,6 +1230,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $permission and $this->hasAlfred;
   }
 
+  public function loadLatte()
+  {
+    if ($this->latte) return $this->latte;
+    try {
+      require_once __DIR__ . "/translate.php";
+      require_once $this->path . "vendor/autoload.php";
+      $latte = new Engine();
+      if ($this->wire->modules->isInstalled("TracyDebugger")) {
+        LattePanel::initialize($latte);
+      }
+      $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
+      return $this->latte = $latte;
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+      return false;
+    }
+  }
+
   /**
    * Create a site webmanifest in PW root
    * @return Manifest
@@ -1569,21 +1587,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   protected function renderFileLatte($file, $vars)
   {
-    $latte = $this->latte;
-    if (!$latte) {
-      try {
-        require_once __DIR__ . "/translate.php";
-        require_once $this->path . "vendor/autoload.php";
-        $latte = new Engine();
-        if ($this->modules->isInstalled("TracyDebugger")) {
-          LattePanel::initialize($latte);
-        }
-        $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
-        $this->latte = $latte;
-      } catch (\Throwable $th) {
-        return $th->getMessage();
-      }
-    }
+    $latte = $this->loadLatte();
+    if (!$latte) throw new WireException("Unable to load Latte");
     return $latte->renderToString($file, $vars);
   }
 
