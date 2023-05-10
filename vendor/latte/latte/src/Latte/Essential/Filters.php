@@ -30,7 +30,7 @@ final class Filters
 	{
 		$info->validate([null, 'html', 'html/attr', 'xml', 'xml/attr'], __FUNCTION__);
 		$info->contentType = ContentType::Text;
-		return html_entity_decode(strip_tags((string) $s), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+		return Latte\Runtime\Filters::convertHtmlToText((string) $s);
 	}
 
 
@@ -226,7 +226,8 @@ final class Filters
 		string|array $subject,
 		string|array $search,
 		string|array|null $replace = null,
-	): string {
+	): string
+	{
 		$subject = (string) $subject;
 		if (is_array($search)) {
 			if (is_array($replace)) {
@@ -550,7 +551,8 @@ final class Filters
 		int $start,
 		?int $length = null,
 		bool $preserveKeys = false,
-	): string|array {
+	): string|array
+	{
 		return is_array($value)
 			? array_slice($value, $start, $length, $preserveKeys)
 			: self::substring($value, $start, $length);

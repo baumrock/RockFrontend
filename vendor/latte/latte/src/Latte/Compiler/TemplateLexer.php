@@ -26,8 +26,7 @@ final class TemplateLexer
 	public const NPrefix = 'n:';
 
 	/** HTML attribute name/value (\p{C} means \x00-\x1F except space) */
-	private const ReHtmlName = '[^\p{C} "\'<>=`/{}]+';
-	private const ReHtmlValue = '[^\p{C} "\'<>=`{}]+';
+	private const ReAttrName = '[^\p{C} "\'<>=`/]';
 	private const StateEnd = 'end';
 
 	public string $openDelimiter;
@@ -88,7 +87,9 @@ final class TemplateLexer
 
 	private function stateLatteTag(): \Generator
 	{
+		$pos = $this->states[0]['pos'];
 		$this->popState();
+
 		yield from $this->match('~
 			(?<Slash>/)?
 			(?<Latte_Name> = | _(?!_) | [a-z]\w*+(?:[.:-]\w+)*+(?!::|\(|\\\\))?   # name, /name, but not function( or class:: or namespace\
@@ -100,18 +101,20 @@ final class TemplateLexer
 			(?<Slash>/)?
 			(?<Latte_TagClose>' . $this->closeDelimiter . ')
 			(?<Newline>[ \t]*\R)?
-		~xsiAu');
+		~xsiAu')
+		or throw new CompileException('Unterminated Latte tag', $pos);
 	}
 
 
 	private function stateLatteComment(): \Generator
 	{
-		$this->popState();
 		yield from $this->match('~
 			(?<Text>.+?)??
 			(?<Latte_CommentClose>\*' . $this->closeDelimiter . ')
 			(?<Newline>[ \t]*\R{1,2})?
-		~xsiAu');
+		~xsiAu')
+		or throw new CompileException('Unterminated Latte comment', $this->states[0]['pos']);
+		$this->popState();
 	}
 
 
@@ -153,21 +156,21 @@ final class TemplateLexer
 			(?<Equals>=)|
 			(?<Quote>["\'])|
 			(?<Slash>/)?(?<Html_TagClose>>)(?<Newline>[ \t]*\R)?|      # > />
-			(?<Html_Name>' . self::ReHtmlName . ')|                    # HTML attribute name/value
+			(?<Html_Name>(?:(?!' . $this->openDelimiter . ')' . self::ReAttrName . ')+)|  # HTML attribute name/value
 			(?<Latte_TagOpen>' . $this->openDelimiter . '(?!\*))|      # {tag
 			(?<Latte_CommentOpen>' . $this->openDelimiter . '\*)       # {* comment
 		~xsiAu');
 
 		if (isset($m['Html_Name'])) {
-			$this->states[0]['args'][1] = $m['Html_Name'];
+			$this->states[0]['args'][1] = $m['Html_Name']; // sets $attrName
 		} elseif (isset($m['Equals'])) {
 			yield from $this->match('~
 				(?<Whitespace>\s+)?                                    # whitespace
-				(?<Html_Name>' . self::ReHtmlValue . ')                # HTML attribute name/value
+				(?<Html_Name>(?:(?!' . $this->openDelimiter . ')' . self::ReAttrName . '|/)+)  # HTML attribute value can contain /
 			~xsiAu');
 		} elseif (isset($m['Whitespace'])) {
 		} elseif (isset($m['Quote'])) {
-			$this->pushState(str_starts_with($attrName, self::NPrefix)
+			$this->pushState(str_starts_with($attrName ?? '', self::NPrefix)
 				? 'stateHtmlQuotedNAttrValue'
 				: 'stateHtmlQuotedValue', $m['Quote']);
 		} elseif (
@@ -176,7 +179,7 @@ final class TemplateLexer
 			&& !isset($m['Slash'])
 			&& in_array($tagName, ['script', 'style'], true)
 		) {
-			$this->setState('stateHtmlRCData', $tagName);
+			$this->setState('stateHtmlRawText', $tagName);
 		} elseif (isset($m['Html_TagClose'])) {
 			$this->setState('stateHtmlText');
 		} elseif (isset($m['Latte_TagOpen'])) {
@@ -206,7 +209,7 @@ final class TemplateLexer
 		} elseif (isset($m['Latte_CommentOpen'])) {
 			$this->pushState('stateLatteComment');
 		} else {
-			$this->setState(self::StateEnd);
+			throw new CompileException('Unterminated HTML attribute value', $this->states[0]['pos']);
 		}
 	}
 
@@ -220,12 +223,12 @@ final class TemplateLexer
 		if (isset($m['Quote'])) {
 			$this->popState();
 		} else {
-			$this->setState(self::StateEnd);
+			throw new CompileException('Unterminated n:attribute value', $this->states[0]['pos']);
 		}
 	}
 
 
-	private function stateHtmlRCData(string $tagName): \Generator
+	private function stateHtmlRawText(string $tagName): \Generator
 	{
 		$m = yield from $this->match('~
 			(?<Text>.+?)??
@@ -268,7 +271,7 @@ final class TemplateLexer
 		} elseif (isset($m['Latte_CommentOpen'])) {
 			$this->pushState('stateLatteComment');
 		} else {
-			$this->setState(self::StateEnd);
+			throw new CompileException('Unterminated HTML comment', $this->states[0]['pos']);
 		}
 	}
 
@@ -290,7 +293,7 @@ final class TemplateLexer
 		} elseif (isset($m['Latte_CommentOpen'])) {
 			$this->pushState('stateLatteComment');
 		} else {
-			$this->setState(self::StateEnd);
+			throw new CompileException('Unterminated HTML tag', $this->states[0]['pos']);
 		}
 	}
 
@@ -300,12 +303,9 @@ final class TemplateLexer
 	 */
 	private function match(string $re): \Generator
 	{
-		if (!preg_match($re, $this->input, $matches, PREG_UNMATCHED_AS_NULL, $this->position->offset)) {
-			if (preg_last_error()) {
-				throw new RegexpException;
-			}
-
-			return [];
+		preg_match($re, $this->input, $matches, PREG_UNMATCHED_AS_NULL, $this->position->offset);
+		if (preg_last_error()) {
+			throw new RegexpException;
 		}
 
 		foreach ($matches as $k => $v) {
@@ -334,7 +334,7 @@ final class TemplateLexer
 
 	private function setState(string $state, ...$args): void
 	{
-		$this->states[0] = ['name' => $state, 'args' => $args];
+		$this->states[0] = ['name' => $state, 'args' => $args, 'pos' => $this->position];
 	}
 
 
