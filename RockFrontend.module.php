@@ -81,6 +81,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
 
+  private $liveReload;
+
   /** @var Manifest */
   protected $manifest;
 
@@ -120,6 +122,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
       // get livereload instance
       $live = $this->getLiveReload();
+      $this->liveReload = $live;
 
       // return silently if secret does not match
       // somehow this check is called twice and always throws an error
@@ -870,8 +873,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function getLiveReload(): LiveReload
   {
+    if ($this->liveReload) return $this->liveReload;
     require_once __DIR__ . "/LiveReload.php";
-    return new LiveReload();
+    return $this->liveReload = new LiveReload();
   }
 
   /**
@@ -2577,6 +2581,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'folders' => $this->folders->getArray(),
+      'liveReload' => $this->getLiveReload(),
     ];
   }
 }
