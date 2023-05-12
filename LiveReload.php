@@ -2,7 +2,6 @@
 
 namespace RockFrontend;
 
-use ProcessWire\Debug;
 use ProcessWire\Paths;
 use ProcessWire\RockFrontend;
 use ProcessWire\Wire;
@@ -184,7 +183,10 @@ class LiveReload extends Wire
       if ($file) {
         ob_end_flush();
         $this->wire->log->prune('livereload', 1);
-        return $this->wire->log->save('livereload', $file);
+        return $this->wire->log->save('livereload', $file, [
+          'showURL' => false,
+          'showUser' => false,
+        ]);
       }
       while (ob_get_level() > 0) ob_end_flush();
       if (connection_aborted()) break;
