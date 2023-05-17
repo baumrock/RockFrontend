@@ -12,6 +12,17 @@ body.overflow-hidden {
   border-radius: 0 0 5px 0;
   display: flex;
 }
+#rf-topbar .rf-topbar-show {
+  display: none;
+}
+#rf-topbar.hide {
+  padding: 0;
+  width: 10px;
+  height: 10px;
+}
+#rf-topbar.hide > * {
+  display: none;
+}
 #rf-topbar #rf-logo {
   height: 20px;
   margin-right: 10px;
