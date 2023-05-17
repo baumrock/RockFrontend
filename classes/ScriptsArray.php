@@ -44,12 +44,29 @@ class ScriptsArray extends AssetsArray
    */
   public function ___renderAssets($opt): string
   {
-    $out = '';
-    foreach ($this as $asset) {
-      if ($asset->ext === 'less') continue;
-      $asset = $this->minifyAsset($asset);
-      $out .= $this->renderTag($asset, $opt, 'script');
+    $tags = [];
+    $last = new WireData();
+    if ($this->minify) {
+      foreach ($this as $asset) {
+        if ($asset->ext === 'less') continue;
+        $asset = $this->minifyAsset($asset);
+        // this ensures that we only add the asset once
+        // and not both versions foo.js and foo.min.js
+        if ($asset->path !== $last->path) $tags[] = $this->renderTag($asset, $opt, 'script');
+        $last = $asset;
+      }
+    } else {
+      // try to load unminified versions
+      foreach ($this as $asset) {
+        if ($asset->ext === 'less') continue;
+        // this ensures that we only add the asset once
+        // and not both versions foo.js and foo.min.js
+        $unminified = substr($asset->path, 0, -7) . ".js";
+        if ($last->path != $unminified) $tags[] = $this->renderTag($asset, $opt, 'script');
+        $last = $asset;
+      }
     }
-    return $out;
+    // bd($tags);
+    return implode("\n", $tags);
   }
 }
