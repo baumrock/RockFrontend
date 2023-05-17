@@ -402,6 +402,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $html = str_replace("</head", "$style</head", $html);
 
     $topbar = $this->wire->files->render(__DIR__ . "/bar/topbar.php", [
+      'rf' => $this,
       'logourl' => $this->toUrl(__DIR__ . "/RockFrontend.svg", true),
       'z' => is_int($this->topbarz) ? $this->topbarz : 999,
     ]);

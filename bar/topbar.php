@@ -1,4 +1,7 @@
 <div id="rf-topbar" style="z-index: <?= $z ?>">
+
+  <?= $rf->topbarPrependMarkup ?>
+
   <a href="<?= $pages->get(2)->url ?>module/edit?name=RockFrontend">
     <img id="rf-logo" src="<?= $logourl ?>">
   </a>
@@ -52,6 +55,8 @@
       </g>
     </svg>
   </a>
+
+  <?= $rf->topbarAppendMarkup ?>
 
   <?php if ($user->isSuperuser()) : ?>
     <span style="margin-left: 10px;">[
