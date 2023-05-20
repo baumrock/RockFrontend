@@ -8,18 +8,27 @@ use ProcessWire\RockFrontend;
 class AssetsArray extends \ProcessWire\WireArray
 {
 
+  const debugInfo = "<!-- These comments are only visible when \$config->debug = true; -->\n";
+
   public $minify = false;
   public $name;
+  public $noNewLine = false;
 
-  /** @var array */
-  protected $options = [
-    'autoload' => true, // flag to autoload default scripts and styles
-  ];
 
   public function __construct(string $name)
   {
     $this->name = $name;
+    $this->autoload(true);
     parent::__construct();
+  }
+
+  protected function addInfo($opt)
+  {
+    if (!$opt->debug) return "";
+    $indent = $opt->indent;
+    $out = "$indent<!-- {$this->className()} '{$this->name}' -->\n";
+    $out .= $indent . self::debugInfo;
+    return $out;
   }
 
   /**
@@ -45,6 +54,19 @@ class AssetsArray extends \ProcessWire\WireArray
     }
     $file->debug = $debug;
     parent::add($file);
+    return $this;
+  }
+
+  public function autoload($bool): self
+  {
+    $rf = $this->rockfrontend();
+    if ($bool === true) {
+      if ($this instanceof StylesArray) $rf->autoloadStyles->add($this);
+      if ($this instanceof ScriptsArray) $rf->autoloadScripts->add($this);
+    } else {
+      if ($this instanceof StylesArray) $rf->autoloadStyles->remove($this);
+      if ($this instanceof ScriptsArray) $rf->autoloadScripts->remove($this);
+    }
     return $this;
   }
 
@@ -170,16 +192,6 @@ class AssetsArray extends \ProcessWire\WireArray
   }
 
   /**
-   * Get options value
-   * @return mixed
-   */
-  public function opt(string $key)
-  {
-    $opt = $this->options;
-    if (array_key_exists($key, $opt)) return $opt[$key];
-  }
-
-  /**
    * @return self
    */
   public function prepend($file, $suffix = '')
@@ -225,15 +237,6 @@ class AssetsArray extends \ProcessWire\WireArray
   public function rockfrontend(): RockFrontend
   {
     return $this->wire->modules->get('RockFrontend');
-  }
-
-  /**
-   * Set options for rendering
-   */
-  public function setOptions(array $options): self
-  {
-    $this->options = array_merge($this->options, $options);
-    return $this;
   }
 
   /**

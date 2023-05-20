@@ -62,6 +62,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var WireData */
   public $alfredCache;
 
+  public $autoloadScripts;
+  public $autoloadStyles;
+
   /** @var WireArray $folders */
   public $folders;
 
@@ -148,6 +151,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
     $this->wire('home', $this->home);
+    $this->autoloadScripts = new WireArray();
+    $this->autoloadStyles = new WireArray();
     $this->alfredCache = $this->wire(new WireData());
 
     // JS defaults
@@ -206,8 +211,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       "Page::render",
       function (HookEvent $event) {
         $html = $event->return;
-        $styles = $this->styles();
-        $scripts = $this->scripts();
 
         // early exit if asset injection is disabled
         // Usage: place "$rockfrontend->noAssets = true" somewhere in your
@@ -236,17 +239,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $file = __DIR__ . "/RockFrontend.js";
         if ($this->wire->config->debug) {
           // load the non-minified script
-          $this->scripts()->add($file, "defer");
+          $this->scripts('rockfrontend')->add($file, "defer");
           // when logged in as superuser we make sure to create the minified
           // file even if the non-minified version is used.
           if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-        } else $this->scripts()->add($this->minifyFile($file), "defer");
+        } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
 
         // load alfred?
         if ($this->loadAlfred()) {
           $this->js("rootUrl", $this->wire->config->urls->root);
           $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-          $this->scripts()->add($this->path . "Alfred.js");
+          $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
           $this->addAlfredStyles();
 
           // replace alfred cache markup
@@ -274,13 +277,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         // at the very end we inject the js variables
         $assets = '';
         $json = count($this->js) ? json_encode($this->js) : '{}';
-        $assets .= "<script>let RockFrontend = $json</script>";
-
-        // check if assets have already been added
-        // if not we inject them at the end of the <head>
-        if (!strpos($html, StylesArray::comment)) $assets .= $styles->render();
-        if (!strpos($html, ScriptsArray::comment)) $assets .= $scripts->render();
-
+        $assets .= "\n  <script>let RockFrontend = $json</script>\n";
+        foreach ($this->autoloadScripts as $script) $assets .= $script->render();
+        foreach ($this->autoloadStyles as $style) $assets .= $style->render();
         // return replaced markup
         $html = str_replace("</head>", "$assets</head>", $html);
         $event->return = $html;
@@ -333,7 +332,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function ___addAlfredStyles()
   {
-    $this->styles()->add($this->path . "Alfred.css", "", ['minify' => false]);
+    $this->styles('rockfrontend')->add($this->path . "Alfred.css", "", ['minify' => false]);
   }
 
   /**
@@ -352,7 +351,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     // we only add live reloading to the frontend
     if ($this->wire->page->template == 'admin') return;
-    $this->scripts()->add($this->path . "livereload.min.js", "defer");
+    $this->scripts('rockfrontend')->add($this->path . "livereload.min.js", "defer");
   }
 
   /**
@@ -1785,19 +1784,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function scripts($name = 'head')
   {
     if (!$this->scripts) $this->scripts = new WireData();
-    $script = $this->scripts->get($name) ?: new ScriptsArray($name);
-    $this->scripts->set($name, $script);
+    $script = $this->scripts->get("rockfrontend-script-$name") ?: new ScriptsArray($name);
+    $this->scripts->set("rockfrontend-script-$name", $script);
     return $script;
-  }
-
-  /**
-   * Return script-tag
-   * @return string
-   */
-  public function scriptTag($path, $cacheBuster = false)
-  {
-    $src = $this->url($path, $cacheBuster);
-    return "<script type='text/javascript' src='$src'></script>";
   }
 
   /**
@@ -1818,20 +1807,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function styles($name = 'head', $cssDir = null)
   {
     if (!$this->styles) $this->styles = new WireData();
-    $style = $this->styles->get($name) ?: new StylesArray($name);
-    if ($name) $this->styles->set($name, $style);
+    $style = $this->styles->get("rf-style-$name") ?: new StylesArray($name);
+    if ($name) $this->styles->set("rf-style-$name", $style);
     if ($cssDir) $style->cssDir = $cssDir;
     return $style;
-  }
-
-  /**
-   * Return style-tag
-   * @return string
-   */
-  public function styleTag($path, $cacheBuster = false)
-  {
-    $href = $this->url($path, $cacheBuster);
-    return "<link href='$href' rel='stylesheet'>";
   }
 
   /**
@@ -2583,6 +2562,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return [
       'folders' => $this->folders->getArray(),
       'liveReload' => $this->getLiveReload(),
+      'autoloadStyles' => $this->autoloadStyles,
+      'autoloadScripts' => $this->autoloadScripts,
     ];
   }
 }

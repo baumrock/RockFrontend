@@ -3,6 +3,7 @@
 namespace RockFrontend;
 
 use Latte\Runtime\Html;
+use ProcessWire\Debug;
 use ProcessWire\Less;
 use ProcessWire\RockFrontend;
 use ProcessWire\WireArray;
@@ -10,9 +11,6 @@ use ProcessWire\WireData;
 
 class StylesArray extends AssetsArray
 {
-
-  const cacheName = 'rockfrontend-stylesarray-cache';
-  const comment = '<!-- rockfrontend-styles-head -->';
 
   public $cssDir = false;
   protected $vars = [];
@@ -50,31 +48,21 @@ class StylesArray extends AssetsArray
     return $this;
   }
 
-  private function addInfo($opt)
-  {
-    $indent = $opt->indent;
-    $out = "\n";
-    if ($opt->debug) {
-      $out .= "$indent<!-- DEBUG enabled! You can disable it either via \$config or use \$rf->styles()->setOptions(['debug'=>false]) -->\n";
-    }
-    if ($this->name == 'head') $out .= $indent . self::comment . "\n";
-    return $out;
-  }
-
   /**
    * Parse LESS files and add the generated CSS file to output
    * If there are any less files we render them at the beginning.
    * This makes it possible to overwrite styles via plain CSS later.
    */
-  private function parseLessFiles($opt)
+  private function parseLessFiles($opt, $cacheName)
   {
     /** @var Less $less */
     $less = $this->wire->modules->get('Less');
-    $lessCache = $this->wire->cache->get(self::cacheName);
+    $lessCache = $this->wire->cache->get($cacheName);
     $lessCurrent = ''; // string to store file info
     $m = 0;
     $parse = false;
     $entries = new WireArray();
+    $intro = "Recompile $cacheName";
 
     // loop all less files and add them to the less parser
     // this will also memorize the latest file timestamp to check for recompile
@@ -93,21 +81,35 @@ class StylesArray extends AssetsArray
       $lessCurrent .= $asset->path . "|" . $asset->m . "--";
     }
 
+    $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
+    $cssFile = $cssPath . $opt->cssName . ".css";
+    $lessCacheArray = $this->getChangedFiles($lessCache, $lessCurrent);
+
     // we have a less parser installed and some less files to parse
     if ($less and $parse) {
-      $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
-      $cssFile = $cssPath . $opt->cssName . ".css";
-
       $recompile = false;
       // if it is a livereload stream we do not recompile
       if ($this->rockfrontend()->isLiveReload) $recompile = false;
-      elseif (!is_file($cssFile)) $recompile = true;
-      elseif ($lessCurrent !== $lessCache) $recompile = true;
-      elseif ($this->wire->session->get(RockFrontend::recompile)) $recompile = true;
-      else {
+      elseif (!is_file($cssFile)) {
+        $this->log("$intro: $cssFile does not exist.");
+        $recompile = true;
+      } elseif ($lessCurrent !== $lessCache) {
+        foreach ($lessCacheArray as $str) {
+          $parts = explode("|", $str);
+          $url = $this->rockfrontend()->toUrl($parts[0]);
+          $this->log("$intro: Change detected in $url");
+        }
+        $recompile = true;
+      } elseif ($this->wire->session->get(RockFrontend::recompile)) {
+        $this->log("$intro: Forced by RockFrontend::recompile.");
+        $recompile = true;
+      } else {
         // check if any of the less files in RockFrontend module folder have changed
         foreach (glob(__DIR__ . "/less/*.less") as $f) {
-          if (filemtime($f) > filemtime($cssFile)) $recompile = true;
+          if (filemtime($f) > filemtime($cssFile)) {
+            $this->log("$intro: $f changed.");
+            $recompile = true;
+          }
         }
       }
 
@@ -130,9 +132,9 @@ class StylesArray extends AssetsArray
 
         // save css file to disk
         $less->saveCss($cssFile);
-        $this->wire->cache->save(self::cacheName, $lessCurrent);
+        $this->wire->cache->save($cacheName, $lessCurrent);
         $this->wire->session->set(RockFrontend::recompile, false);
-        $this->log("Recompiled RockFrontend $url");
+        $this->log("RockFrontend recompiled $url");
       }
 
       $asset = new Asset($cssFile);
@@ -141,6 +143,13 @@ class StylesArray extends AssetsArray
     }
 
     foreach ($entries->reverse() as $entry) $this->prepend($entry);
+  }
+
+  public function getChangedFiles($lessCache, $lessCurrent): array
+  {
+    $lessCache = array_filter(explode("--", $lessCache));
+    $lessCurrent = array_filter(explode("--", $lessCurrent));
+    return array_diff($lessCache, $lessCurrent);
   }
 
   /**
@@ -159,7 +168,8 @@ class StylesArray extends AssetsArray
 
     // write markup to cached file
     $newFile = $rf->assetPath("css/" . $asset->basename);
-    if ($rf->isNewer($asset->path, $newFile)) {
+    $isNewer = $rf->isNewer($asset->path, $newFile);
+    if ($isNewer) {
       // asset has been changed, update cached file
       $markup = $rf->postCSS($markup);
       $rf->writeAsset($newFile, $markup);
@@ -201,7 +211,8 @@ class StylesArray extends AssetsArray
       $opt->cssDir
     );
 
-    $this->parseLessFiles($opt);
+    $cacheName = "rockfrontend-styles-" . $this->name;
+    $this->parseLessFiles($opt, $cacheName);
     $out = $this->renderAssets($opt);
     if ($out) $out = $this->addInfo($opt) . $out;
     try {
