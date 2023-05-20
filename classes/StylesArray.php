@@ -147,8 +147,8 @@ class StylesArray extends AssetsArray
 
   public function getChangedFiles($lessCache, $lessCurrent): array
   {
-    $lessCache = array_filter(explode("--", $lessCache));
-    $lessCurrent = array_filter(explode("--", $lessCurrent));
+    $lessCache = array_filter(explode("--", (string)$lessCache));
+    $lessCurrent = array_filter(explode("--", (string)$lessCurrent));
     return array_diff($lessCache, $lessCurrent);
   }
 
