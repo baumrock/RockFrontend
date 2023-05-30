@@ -1357,31 +1357,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
   }
 
-  // DEPRECATED - NOT USED IN ANY OF MY PROJECTS
-  // private function migrateLayoutField()
-  // {
-  //   if (!in_array("layoutfield", $this->migrations)) return;
-  //   $rm = $this->rm();
-  //   $rm->migrate([
-  //     'fields' => [
-  //       self::field_layout => [
-  //         'type' => 'text',
-  //         'label' => 'Layout',
-  //         'icon' => 'cubes',
-  //         'collapsed' => Inputfield::collapsedYes,
-  //         'notes' => 'This field is only visible to superusers',
-  //         'inputfieldClass' => 'InputfieldTextTags',
-  //         'allowUserTags' => false,
-  //         'useAjax' => true,
-  //         'tagsUrl' => self::tagsUrl,
-  //         'closeAfterSelect' => 0, // dont use false
-  //         'flags' => Field::flagSystem,
-  //         'tags' => self::tags,
-  //       ],
-  //     ],
-  //   ]);
-  // }
-
   private function migrateOgImage()
   {
     if (!in_array("ogimage", $this->migrations)) return;
@@ -1488,6 +1463,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $dir = $this->wire->config->paths->assets . "RockFrontend/css/";
     if (is_dir($dir)) $this->wire->files->rmdir($dir, true);
     $this->forceRecompile();
+
+    // block direct access to template and less files
+    $this->updateHtaccess();
   }
 
   /**
@@ -1831,6 +1809,37 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $svg = str_replace("{{$k}}", $v, $svg);
     }
     return $this->html($svg);
+  }
+
+  /**
+   * Update /site/templates/.htaccess file to block direct access
+   * to latte/twig/blade/less files
+   * Triggered on every modules::refresh
+   * Thx to @netcarver
+   */
+  private function updateHtaccess()
+  {
+    $file = $this->wire->config->paths->templates . ".htaccess";
+    if (!is_file($file)) $this->wire->files->filePutContents($file, "");
+    $content = $this->wire->files->fileGetContents($file);
+    $rules = $this->wire->files->fileGetContents(__DIR__ . "/stubs/htaccess.txt");
+    $err = "/site/templates/.htaccess not writeable - some template files might be publicly accessible!";
+    if (!strpos($content, "# RockFrontend: ")) {
+      // add rockfrontend rules
+      if (is_writable($file)) {
+        $this->wire->files->filePutContents($file, $rules, FILE_APPEND);
+      } else $this->error($err);
+    } elseif (!strpos($content, $rules)) {
+      // update rockfrontend rules
+      $newcontent = preg_replace(
+        "/# RockFrontend: (.*)# End RockFrontend/s",
+        $rules,
+        $content
+      );
+      if (is_writable($file)) {
+        $this->wire->files->filePutContents($file, $newcontent);
+      } else $this->error($err);
+    }
   }
 
   public function vscodeLink($path)
