@@ -1,5 +1,26 @@
 "use strict";
 
+// RockFrontend helper functions
+(() => {
+  /**
+   * Debounce
+   *
+   * Usage:
+      window.addEventListener("resize", () => {
+        RockFrontend.debounce(() => {
+          console.log("resized");
+        }, 1000);
+      });
+   */
+  let timer;
+  RockFrontend.debounce = function (func, timeout = 300) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func();
+    }, timeout);
+  };
+})();
+
 // consent manager
 (() => {
   function Consent() {}

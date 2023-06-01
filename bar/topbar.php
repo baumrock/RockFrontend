@@ -1,4 +1,7 @@
 <div id="rf-topbar" style="z-index: <?= $z ?>">
+
+  <?= $rf->topbarPrependMarkup ?>
+
   <a href="<?= $pages->get(2)->url ?>module/edit?name=RockFrontend">
     <img id="rf-logo" src="<?= $logourl ?>">
   </a>
@@ -53,6 +56,8 @@
     </svg>
   </a>
 
+  <?= $rf->topbarAppendMarkup ?>
+
   <?php if ($user->isSuperuser()) : ?>
     <span style="margin-left: 10px;">[
       <a href="<?= $pages->get(2)->url ?>setup/template/edit?id=<?= $page->template->id ?>">
@@ -90,6 +95,12 @@
 
     // listen to clicks
     document.addEventListener('click', function(event) {
+      if (event.target.matches('#rf-topbar')) {
+        event.preventDefault();
+        event.target.classList.remove('hide');
+        localStorage.setItem('rf-topbar-hide', 0);
+      }
+
       let $a = event.target.closest('a');
       if (!$a) return;
       if ($a.matches('.rf-device-preview')) {
@@ -105,10 +116,15 @@
         $preview.classList.remove('show');
         document.querySelector('body').classList.remove('overflow-hidden');
       } else if ($a.matches('.rf-topbar-hide')) {
-        // close preview modal
+        // hide topbar
         event.preventDefault();
-        $a.closest('#rf-topbar').remove();
+        $a.closest('#rf-topbar').classList.add('hide');
+        localStorage.setItem('rf-topbar-hide', 1);
       }
     }, false);
+
+    if (localStorage.getItem('rf-topbar-hide') == 1) {
+      document.querySelector('.rf-topbar-hide').click();
+    }
   })()
 </script>

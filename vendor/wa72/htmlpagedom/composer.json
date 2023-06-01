@@ -1,0 +1,42 @@
+{
+    "name":"wa72/htmlpagedom",
+    "description":"jQuery-inspired DOM manipulation extension for Symfony's Crawler",
+    "keywords":["HTML", "DOM", "Crawler"],
+    "homepage":"http://github.com/wasinger/htmlpagedom",
+    "type":"library",
+    "license":"MIT",
+    "authors":[
+        {
+            "name":"Christoph Singer",
+            "email":"singer@webagentur72.de",
+            "homepage":"http://www.webagentur72.de"
+        }
+    ],
+    "require":{
+        "php":"^8.0",
+        "ext-dom":"*",
+        "ext-libxml":"*",
+        "ext-mbstring":"*",
+        "symfony/dom-crawler":"^6",
+        "symfony/css-selector":"^6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9",
+        "wa72/html-pretty-min": "~0.1",
+        "mikey179/vfsstream": "^1.6.10",
+        "scrutinizer/ocular": "^1.9"
+    },
+    "suggest": {
+        "wa72/html-pretty-min": "Minify or indent HTML documents"
+    },
+    "autoload":{
+        "psr-4":{
+            "Wa72\\HtmlPageDom\\":"src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "3.0-dev"
+        }
+    }
+}

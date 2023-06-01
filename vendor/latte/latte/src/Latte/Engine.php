@@ -19,8 +19,8 @@ class Engine
 {
 	use Strict;
 
-	public const VERSION = '3.0.2';
-	public const VERSION_ID = 30002;
+	public const VERSION = '3.0.6';
+	public const VERSION_ID = 30006;
 
 	/** @deprecated use ContentType::* */
 	public const
@@ -31,15 +31,10 @@ class Engine
 		CONTENT_ICAL = ContentType::ICal,
 		CONTENT_TEXT = ContentType::Text;
 
-	/** @internal */
-	public $probe;
-
 	private ?Loader $loader = null;
 	private Runtime\FilterExecutor $filters;
 	private \stdClass $functions;
-
-	/** @var mixed[] */
-	private array $providers = [];
+	private \stdClass $providers;
 
 	/** @var Extension[] */
 	private array $extensions = [];
@@ -55,7 +50,7 @@ class Engine
 	{
 		$this->filters = new Runtime\FilterExecutor;
 		$this->functions = new \stdClass;
-		$this->probe = function () {};
+		$this->providers = new \stdClass;
 		$this->addExtension(new Essential\CoreExtension);
 		$this->addExtension(new Sandbox\SandboxExtension);
 	}
@@ -69,7 +64,6 @@ class Engine
 	{
 		$template = $this->createTemplate($name, $this->processParams($params));
 		$template->global->coreCaptured = false;
-		($this->probe)($template);
 		$template->render($block);
 	}
 
@@ -82,8 +76,7 @@ class Engine
 	{
 		$template = $this->createTemplate($name, $this->processParams($params));
 		$template->global->coreCaptured = true;
-		($this->probe)($template);
-		return $template->capture(function () use ($template, $block) { $template->render($block); });
+		return $template->capture(fn() => $template->render($block));
 	}
 
 
@@ -98,11 +91,7 @@ class Engine
 			$this->loadTemplate($name);
 		}
 
-		foreach ($this->extensions as $extension) {
-			$extension->beforeRender($this);
-		}
-
-		$this->providers['fn'] = $this->functions;
+		$this->providers->fn = $this->functions;
 		return new $class(
 			$this,
 			$params,
@@ -259,6 +248,8 @@ class Engine
 		if ((include $file) === false) {
 			throw new RuntimeException("Unable to load '$file'.");
 		}
+
+		flock($lock, LOCK_UN);
 	}
 
 
@@ -324,7 +315,10 @@ class Engine
 			$this->contentType,
 		];
 		foreach ($this->extensions as $extension) {
-			$key[] = [$extension::class, $extension->getCacheKey($this)];
+			$key[] = [
+				get_debug_type($extension),
+				$extension->getCacheKey($this),
+			];
 		}
 
 		return 'Template' . substr(md5(serialize($key)), 0, 10);
@@ -381,16 +375,25 @@ class Engine
 	public function addExtension(Extension $extension): static
 	{
 		$this->extensions[] = $extension;
-		foreach ($extension->getFilters() as $name => $callback) {
-			$this->filters->add($name, $callback);
+		foreach ($extension->getFilters() as $name => $value) {
+			$this->filters->add($name, $value);
 		}
 
-		foreach ($extension->getFunctions() as $name => $callback) {
-			$this->functions->$name = $callback;
+		foreach ($extension->getFunctions() as $name => $value) {
+			$this->functions->$name = $value;
 		}
 
-		$this->providers = array_merge($this->providers, $extension->getProviders());
+		foreach ($extension->getProviders() as $name => $value) {
+			$this->providers->$name = $value;
+		}
 		return $this;
+	}
+
+
+	/** @return Extension[] */
+	public function getExtensions(): array
+	{
+		return $this->extensions;
 	}
 
 
@@ -443,7 +446,7 @@ class Engine
 			throw new \LogicException("Invalid provider name '$name'.");
 		}
 
-		$this->providers[$name] = $value;
+		$this->providers->$name = $value;
 		return $this;
 	}
 
@@ -454,7 +457,7 @@ class Engine
 	 */
 	public function getProviders(): array
 	{
-		return $this->providers;
+		return (array) $this->providers;
 	}
 
 
@@ -475,7 +478,7 @@ class Engine
 
 	public function setExceptionHandler(callable $callback): static
 	{
-		$this->providers['coreExceptionHandler'] = $callback;
+		$this->providers->coreExceptionHandler = $callback;
 		return $this;
 	}
 
@@ -549,8 +552,6 @@ class Engine
 	{
 		if (is_array($params)) {
 			return $params;
-		} elseif (!is_object($params)) {
-			throw new \InvalidArgumentException(sprintf('Engine::render() expects array|object, %s given.', gettype($params)));
 		}
 
 		$methods = (new \ReflectionClass($params))->getMethods(\ReflectionMethod::IS_PUBLIC);

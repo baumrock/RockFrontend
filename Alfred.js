@@ -282,6 +282,9 @@
 
     // edit block on double click
     $(document).on("dblclick", function (e) {
+      // add the class .no-alfred to prevent double click alfred, eg in forms
+      if (e.target.closest(".no-alfred")) return;
+
       let $alfred = $(e.target).closest(".alfred");
       // console.log($alfred);
       // if we are currently inline-editing somthing in this block

@@ -139,11 +139,10 @@ $rockfrontend->styles()
   ->minify(!$config->debug);
 ```
 
-Renders to the following:
+Renders something like to the following:
 
 ```html
-  <!-- DEBUG enabled! You can disable it either via $config or use $rf->styles()->setOptions(['debug'=>false]) -->
-  <!-- rockfrontend-styles-head -->
+  [...]
   <!-- loading /site/templates/uikit/src/less/uikit.theme.less (_main.php:7) -->
   <!-- loading /site/modules/RockFrontend/uikit/defaults.less (_main.php:8) -->
   <!-- loading /site/modules/RockFrontend/uikit/offcanvas.less (_main.php:9) -->
