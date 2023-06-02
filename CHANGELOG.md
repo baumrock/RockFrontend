@@ -1,3 +1,12 @@
+## [3.0.1](https://github.com/baumrock/RockFrontend/compare/v3.0.0...v3.0.1) (2023-06-02)
+
+
+### Bug Fixes
+
+* remove unused options reference ([7ad201e](https://github.com/baumrock/RockFrontend/commit/7ad201eb99ea91085557f7fdf124dc744333c010))
+
+
+
 # [3.0.0](https://github.com/baumrock/RockFrontend/compare/v2.40.0...v3.0.0) (2023-06-01)
 
 
@@ -70,20 +79,6 @@
 ### Bug Fixes
 
 * docs typos ([96b04fc](https://github.com/baumrock/RockFrontend/commit/96b04fc75ca2d997dbe917addc3d3e9689397643))
-
-
-
-# [2.39.0](https://github.com/baumrock/RockFrontend/compare/v2.38.1...v2.39.0) (2023-04-02)
-
-
-### Bug Fixes
-
-* typos ([92672ea](https://github.com/baumrock/RockFrontend/commit/92672ea60993760f91c08c95a703537ff18f0b23))
-
-
-### Features
-
-* add seo docs and new manifest config settings ([47e6668](https://github.com/baumrock/RockFrontend/commit/47e6668928f3df0714fe3546e8b4c642ff0f6db8))
 
 
 
