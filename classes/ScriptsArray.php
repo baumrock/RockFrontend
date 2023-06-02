@@ -18,7 +18,6 @@ class ScriptsArray extends AssetsArray
       'debug' => $this->wire->config->debug,
       'indent' => '  ',
     ]);
-    $opt->setArray($this->options);
     $opt->setArray($options);
 
     $out = $this->renderAssets($opt);
