@@ -188,8 +188,6 @@ class StylesArray extends AssetsArray
   {
     if (is_string($options)) $options = ['indent' => $options];
 
-    // TODO make API version of options to support hook injected assets
-
     // setup options
     $opt = $this->wire(new WireData());
     /** @var WireData $opt */
@@ -200,7 +198,6 @@ class StylesArray extends AssetsArray
       'cssName' => $this->name,
       'sourcemaps' => $this->wire->config->debug,
     ]);
-    $opt->setArray($this->options);
     $opt->setArray($options);
 
     // make sure that cssDir is a relative path
