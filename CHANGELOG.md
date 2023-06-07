@@ -1,3 +1,19 @@
+# [3.1.0](https://github.com/baumrock/RockFrontend/compare/v3.0.1...v3.1.0) (2023-06-07)
+
+
+### Bug Fixes
+
+* empty string leads to empty filename ([f929762](https://github.com/baumrock/RockFrontend/commit/f9297625df6b6ef9353af01d8965dfb1742b25c9))
+* prevent double adding of assets ([14b9b10](https://github.com/baumrock/RockFrontend/commit/14b9b10e01c731a172f2c0532dcc6b9d7adebc71))
+* remove lattepanel causing compile error ([119e97c](https://github.com/baumrock/RockFrontend/commit/119e97c00db37cfa4c6d18a901bb67eee4b89e9e))
+
+
+### Features
+
+* rename default asset name from head to main ([fc3d1ae](https://github.com/baumrock/RockFrontend/commit/fc3d1ae36795c09cb74f08db585dfb8579d95b3b))
+
+
+
 ## [3.0.1](https://github.com/baumrock/RockFrontend/compare/v3.0.0...v3.0.1) (2023-06-02)
 
 
@@ -70,15 +86,6 @@
 ### Bug Fixes
 
 * add docs about seo fields ([9dcbd3a](https://github.com/baumrock/RockFrontend/commit/9dcbd3ab91b1f079749cacec9b30664f3063f5f0))
-
-
-
-## [2.39.1](https://github.com/baumrock/RockFrontend/compare/v2.39.0...v2.39.1) (2023-04-02)
-
-
-### Bug Fixes
-
-* docs typos ([96b04fc](https://github.com/baumrock/RockFrontend/commit/96b04fc75ca2d997dbe917addc3d3e9689397643))
 
 
 
