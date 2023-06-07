@@ -13,7 +13,7 @@ class AssetsArray extends \ProcessWire\WireArray
   public $minify = false;
   public $name;
   public $noNewLine = false;
-
+  public $rendered = false;
 
   public function __construct(string $name)
   {
