@@ -1757,6 +1757,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function scripts($name = 'main')
   {
+    $name = trim($name);
+    if (!$name) $name = 'main';
     if (!$this->scripts) $this->scripts = new WireData();
     $script = $this->scripts->get("rockfrontend-script-$name") ?: new ScriptsArray($name);
     $this->scripts->set("rockfrontend-script-$name", $script);
@@ -1780,6 +1782,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function styles($name = 'main', $cssDir = null)
   {
+    $name = trim($name);
+    if (!$name) $name = 'main';
     if (!$this->styles) $this->styles = new WireData();
     $style = $this->styles->get("rf-style-$name") ?: new StylesArray($name);
     if ($name) $this->styles->set("rf-style-$name", $style);
