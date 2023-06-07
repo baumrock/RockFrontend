@@ -2,7 +2,6 @@
 
 namespace ProcessWire;
 
-use Latte\Bridges\Tracy\LattePanel;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use RockFrontend\Asset;
@@ -1267,9 +1266,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       require_once __DIR__ . "/translate.php";
       require_once $this->path . "vendor/autoload.php";
       $latte = new Engine();
-      if ($this->wire->modules->isInstalled("TracyDebugger")) {
-        LattePanel::initialize($latte);
-      }
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
       return $this->latte = $latte;
     } catch (\Throwable $th) {
@@ -1751,16 +1747,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * $rockfrontend->scripts()->add(...)->add(...)->render();
    *
    * // file1.php
-   * $rockfrontend->scripts('head')->add(...);
+   * $rockfrontend->scripts('main')->add(...);
    * // file2.php
-   * $rockfrontend->scripts('head')->add(...);
+   * $rockfrontend->scripts('main')->add(...);
    * // _main.php
-   * $rockfrontend->scripts('head')->render();
+   * $rockfrontend->scripts('main')->render();
    *
    * @return ScriptsArray
    */
-  public function scripts($name = 'head')
+  public function scripts($name = 'main')
   {
+    $name = trim($name);
+    if (!$name) $name = 'main';
     if (!$this->scripts) $this->scripts = new WireData();
     $script = $this->scripts->get("rockfrontend-script-$name") ?: new ScriptsArray($name);
     $this->scripts->set("rockfrontend-script-$name", $script);
@@ -1782,8 +1780,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return StylesArray
    */
-  public function styles($name = 'head', $cssDir = null)
+  public function styles($name = 'main', $cssDir = null)
   {
+    $name = trim($name);
+    if (!$name) $name = 'main';
     if (!$this->styles) $this->styles = new WireData();
     $style = $this->styles->get("rf-style-$name") ?: new StylesArray($name);
     if ($name) $this->styles->set("rf-style-$name", $style);

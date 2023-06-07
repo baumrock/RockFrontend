@@ -186,6 +186,9 @@ class StylesArray extends AssetsArray
 
   public function render($options = [])
   {
+    if ($this->rendered) return;
+    $this->rendered = true;
+
     if (is_string($options)) $options = ['indent' => $options];
 
     // setup options
