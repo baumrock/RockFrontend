@@ -1697,7 +1697,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // provided by the user
     if (!$noMerge) $fallback = $fallback + $defaultFallback;
 
-    // bd($fallback);
+    // if a static file matches the url of the requested page we return that one
+    $static = $this->renderStaticFile($page);
+    if ($static) return $static;
 
     // try to find layout from layout field of the page editor
     $layout = $this->getLayout($page);
@@ -1738,6 +1740,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'currentItemClass' => 'uk-active',
     ], $options);
     return $this->html($items->renderPager($options));
+  }
+
+  /**
+   * Render file from /site/templates/static for given page
+   */
+  public function renderStaticFile(Page $page): string|false
+  {
+    $file = $this->wire->config->paths->templates . "static" . $page->url;
+    $file = rtrim($file, "/");
+    $content = $this->render($file);
+    if ($content) return $content;
+    return false;
   }
 
   /**
