@@ -6,6 +6,9 @@ setTimeout(() => {
   if (isModal) return;
   let reloading = false;
 
+  // dont load in iframes
+  if (window.self !== window.top) return;
+
   // timeout after file change was detected
   // you can set this to 5000 if you see multiple redirects
   // that means that something triggers another reload on reload

@@ -350,7 +350,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     // we only add live reloading to the frontend
     if ($this->wire->page->template == 'admin') return;
-    $this->scripts('rockfrontend')->add($this->path . "livereload.min.js", "defer");
+    $file = $this->minifyFile($this->path . "livereload.js");
+    $this->scripts('rockfrontend')->add($file, "defer");
   }
 
   /**
