@@ -1019,7 +1019,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
-  function HumanDates($locale = "de_AT"): HumanDates
+  function humandates($locale = "de_AT"): HumanDates
   {
     require_once __DIR__ . "/HumanDates.php";
     return new HumanDates($locale);
