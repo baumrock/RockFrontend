@@ -5,6 +5,7 @@ namespace ProcessWire;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use RockFrontend\Asset;
+use RockFrontend\HumanDates;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
@@ -211,10 +212,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       function (HookEvent $event) {
         $html = $event->return;
 
-        // early exit if asset injection is disabled
-        // Usage: place "$rockfrontend->noAssets = true" somewhere in your
-        // template file to prevent loading of any rockfrontend assets
-        if ($this->noAssets) return;
+        // this feature is deprecated
+        // it was a quick hack to prevent RockFrontend from loading assets but
+        // with unwanted side effects. RockFrontend should now only load
+        // assets if they need to be loaded. If you find something is loaded
+        // that you don't want and there is no setting to prevent that please
+        // let me know in the forum!
+        if ($this->noAssets) throw new WireException("This feature is deprecated");
 
         // early exit if html does not contain a head section
         if (!strpos($html, "</head>")) return;
@@ -236,13 +240,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // load RockFrontend frontend js file
         $file = __DIR__ . "/RockFrontend.js";
-        if ($this->wire->config->debug) {
-          // load the non-minified script
-          $this->scripts('rockfrontend')->add($file, "defer");
-          // when logged in as superuser we make sure to create the minified
-          // file even if the non-minified version is used.
-          if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-        } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+        if ($this->isEnabled('RockFrontend.js')) {
+          if ($this->wire->config->debug) {
+            // load the non-minified script
+            $this->scripts('rockfrontend')->add($file, "defer");
+            // when logged in as superuser we make sure to create the minified
+            // file even if the non-minified version is used.
+            if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
+          } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+        }
 
         // load alfred?
         if ($this->loadAlfred()) {
@@ -275,8 +281,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // at the very end we inject the js variables
         $assets = '';
-        $json = count($this->js) ? json_encode($this->js) : '{}';
-        $assets .= "\n  <script>let RockFrontend = $json</script>\n";
+        if (count($this->js)) {
+          $json = json_encode($this->js);
+          $assets .= "\n  <script>var RockFrontend = $json</script>\n";
+        }
         foreach ($this->autoloadScripts as $script) $assets .= $script->render();
         foreach ($this->autoloadStyles as $style) $assets .= $style->render();
         // return replaced markup
@@ -350,7 +358,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     // we only add live reloading to the frontend
     if ($this->wire->page->template == 'admin') return;
-    $this->scripts('rockfrontend')->add($this->path . "livereload.min.js", "defer");
+    $file = $this->minifyFile($this->path . "livereload.js");
+    $this->scripts('rockfrontend')->add($file, "defer");
   }
 
   /**
@@ -1010,6 +1019,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
+  function HumanDates($locale = "de_AT"): HumanDates
+  {
+    require_once __DIR__ . "/HumanDates.php";
+    return new HumanDates($locale);
+  }
+
   /**
    * Render icon link
    * @return string
@@ -1267,6 +1282,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       require_once $this->path . "vendor/autoload.php";
       $latte = new Engine();
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
+      if ($this->wire->modules->isInstalled("TracyDebugger")) {
+        $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
+      }
       return $this->latte = $latte;
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
@@ -2075,9 +2093,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = $this->wire->modules->get('InputfieldCheckboxes');
     $f->name = 'features';
     $f->label = "Features";
-    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax)');
-    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature))');
-    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview)');
+    $f->addOption('RockFrontend.js', 'RockFrontend.js - Load this file on the frontend (eg to use consent tools).');
+    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax).');
+    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature)).');
+    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
     $f->value = (array)$this->features;
     $fs->add($f);
 
