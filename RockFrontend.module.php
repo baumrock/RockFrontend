@@ -5,6 +5,7 @@ namespace ProcessWire;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use RockFrontend\Asset;
+use RockFrontend\HumanDates;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
@@ -1016,6 +1017,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     } catch (\Throwable $th) {
       return $str;
     }
+  }
+
+  function HumanDates($locale = "de_AT"): HumanDates
+  {
+    require_once __DIR__ . "/HumanDates.php";
+    return new HumanDates($locale);
   }
 
   /**
