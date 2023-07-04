@@ -1267,6 +1267,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       require_once $this->path . "vendor/autoload.php";
       $latte = new Engine();
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
+      if ($this->wire->modules->isInstalled("TracyDebugger")) {
+        $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
+      }
       return $this->latte = $latte;
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
