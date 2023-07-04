@@ -1,5 +1,7 @@
 "use strict";
 
+if (typeof RockFrontend === "undefined") var RockFrontend = {};
+
 // RockFrontend helper functions
 (() => {
   /**
@@ -193,16 +195,14 @@
  *   <a href="/foo/bar.jpg" id="foo">Show Image</a>
  * </div>
  */
-(() => {
-  document.addEventListener("click", function (e) {
-    let click = e.target.closest("[rf-click]");
-    if (!click) return;
-    e.preventDefault();
-    let selector = click.getAttribute("rf-click");
-    let target = document.querySelector(selector);
-    if (target) target.click();
-  });
-})();
+document.addEventListener("click", function (e) {
+  let click = e.target.closest("[rf-click]");
+  if (!click) return;
+  e.preventDefault();
+  let selector = click.getAttribute("rf-click");
+  let target = document.querySelector(selector);
+  if (target) target.click();
+});
 
 /**
  * Toggle the "hidden" attribute of another element
@@ -210,14 +210,12 @@
  * <a href=# rf-toggle='#foo'>toggle foo</a>
  * <div id='foo'>hello world</div>
  */
-(() => {
-  document.addEventListener("click", function (e) {
-    let toggle = e.target.closest("[rf-toggle]");
-    if (!toggle) return;
-    e.preventDefault();
-    let selector = toggle.getAttribute("rf-toggle");
-    let target = document.querySelector(selector);
-    if (target.hasAttribute("hidden")) target.removeAttribute("hidden");
-    else target.setAttribute("hidden", "");
-  });
-})();
+document.addEventListener("click", function (e) {
+  let toggle = e.target.closest("[rf-toggle]");
+  if (!toggle) return;
+  e.preventDefault();
+  let selector = toggle.getAttribute("rf-toggle");
+  let target = document.querySelector(selector);
+  if (target.hasAttribute("hidden")) target.removeAttribute("hidden");
+  else target.setAttribute("hidden", "");
+});

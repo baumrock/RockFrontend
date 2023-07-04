@@ -214,6 +214,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         // early exit if asset injection is disabled
         // Usage: place "$rockfrontend->noAssets = true" somewhere in your
         // template file to prevent loading of any rockfrontend assets
+        // note that this may break some of the features of RockFrontend
         if ($this->noAssets) return;
 
         // early exit if html does not contain a head section
@@ -275,8 +276,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // at the very end we inject the js variables
         $assets = '';
-        $json = count($this->js) ? json_encode($this->js) : '{}';
-        $assets .= "\n  <script>let RockFrontend = $json</script>\n";
+        if (count($this->js)) {
+          $json = json_encode($this->js);
+          $assets .= "\n  <script>var RockFrontend = $json</script>\n";
+        }
         foreach ($this->autoloadScripts as $script) $assets .= $script->render();
         foreach ($this->autoloadStyles as $style) $assets .= $style->render();
         // return replaced markup
