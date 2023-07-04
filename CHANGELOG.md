@@ -1,3 +1,12 @@
+## [3.2.2](https://github.com/baumrock/RockFrontend/compare/v3.2.1...v3.2.2) (2023-07-04)
+
+
+### Bug Fixes
+
+* update composer dependencies ([6c2dd06](https://github.com/baumrock/RockFrontend/commit/6c2dd06c1ef43e4e471fdc183b86055347ad9f56))
+
+
+
 ## [3.2.1](https://github.com/baumrock/RockFrontend/compare/v3.2.0...v3.2.1) (2023-07-04)
 
 
@@ -47,38 +56,6 @@
 ### Bug Fixes
 
 * remove unused options reference ([7ad201e](https://github.com/baumrock/RockFrontend/commit/7ad201eb99ea91085557f7fdf124dc744333c010))
-
-
-
-# [3.0.0](https://github.com/baumrock/RockFrontend/compare/v2.40.0...v3.0.0) (2023-06-01)
-
-
-### Bug Fixes
-
-* script loaded twice when using addAll() and minify() ([fbe21b1](https://github.com/baumrock/RockFrontend/commit/fbe21b1439d8e45b2586155dcb1147ed93e6e81d))
-* typecast string in getChangedFiles ([3b5d43a](https://github.com/baumrock/RockFrontend/commit/3b5d43a02f7ecbea6309643f38144c020246683c))
-
-
-* feat!: new concept of autoload assets ([527d4fa](https://github.com/baumrock/RockFrontend/commit/527d4fa5e1b31b866703a05a80eabf6abe4ee2d0))
-
-
-### Features
-
-* add .no-alfred class to prevent doubleclick popup ([af40517](https://github.com/baumrock/RockFrontend/commit/af40517ef27cd0f878b4bcc4e6902f9e466e0fb2))
-* add dedicated method loadLatte() ([b0d1ac6](https://github.com/baumrock/RockFrontend/commit/b0d1ac6b24bdf5085272d4c324db1b1f0e58fcd6))
-* add dom() method ([a564290](https://github.com/baumrock/RockFrontend/commit/a564290780c226ebee4841f3211d863ec487fde8))
-* add livereload to debug info ([87bb33d](https://github.com/baumrock/RockFrontend/commit/87bb33d743aca46ea9b323d09fb22298c1c0e699))
-* add RockFrontend.debounce() ([a6f1af0](https://github.com/baumrock/RockFrontend/commit/a6f1af0017840803e057c21253fd225876371896))
-* add support for topbar prepend/append markup ([c33665c](https://github.com/baumrock/RockFrontend/commit/c33665c552b9e928ec3e3f6c41dc33280cc80d39))
-* add topbar toggle ([f9bf247](https://github.com/baumrock/RockFrontend/commit/f9bf247ef526fb726518377f726670b65127776a))
-* auto-update htaccess to block access to latte/twig/blade/less files ([229277c](https://github.com/baumrock/RockFrontend/commit/229277cb09d8b89a68e31793f02133efc1d4f790))
-* hide url+user in livereload logs ([3e25a01](https://github.com/baumrock/RockFrontend/commit/3e25a01fd55cee4bfc568f12065125e5a67dc9a8))
-* update vendor and add HtmlPageDom ([a705851](https://github.com/baumrock/RockFrontend/commit/a70585152dad9eb67a90f1f6298f3c2ab66e0a7c))
-
-
-### BREAKING CHANGES
-
-* This might introduce a breaking change in existing sites. Also improves logging.
 
 
 
