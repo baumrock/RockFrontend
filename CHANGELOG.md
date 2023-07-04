@@ -1,3 +1,21 @@
+# [3.2.0](https://github.com/baumrock/RockFrontend/compare/v3.1.0...v3.2.0) (2023-07-04)
+
+
+### Bug Fixes
+
+* RockFrontend script tag in markup when not needed ([25364be](https://github.com/baumrock/RockFrontend/commit/25364bec85a3c24e74127304e4131ee0e824bb5e))
+
+
+### Features
+
+* add deprecation note for noAssets ([a5a200f](https://github.com/baumrock/RockFrontend/commit/a5a200fbf69eeae09e04e431fef9b75f0434281c))
+* add HumanDates ([e5cb3d9](https://github.com/baumrock/RockFrontend/commit/e5cb3d9e7d0212d88f5e92dbfb759bc2d91dcff7))
+* add lattepanel again ([82957c0](https://github.com/baumrock/RockFrontend/commit/82957c08621529452fda5fe1e6045733ee193507))
+* don't load livereload in iframes and update minification ([75e6699](https://github.com/baumrock/RockFrontend/commit/75e66994813946ce943913b768ee640e9188528c))
+* only load RockFrontend.js if enabled ([f62ec7e](https://github.com/baumrock/RockFrontend/commit/f62ec7e4790dbb13a913c4bce1ca52ea72a89319))
+
+
+
 # [3.1.0](https://github.com/baumrock/RockFrontend/compare/v3.0.1...v3.1.0) (2023-06-07)
 
 
@@ -77,15 +95,6 @@
 * reset uikit cache on modules refresh ([9c78245](https://github.com/baumrock/RockFrontend/commit/9c78245cccecc8d688f7cfaf7ba80dc7af1ec1e3))
 * show alfred element ID if present ([3991af1](https://github.com/baumrock/RockFrontend/commit/3991af1ee5270af471e628a7842dc550432f09da))
 * show template in topbar ([239d64b](https://github.com/baumrock/RockFrontend/commit/239d64b185c2e64bb5117ae5bc16db7b4d58c725))
-
-
-
-## [2.39.2](https://github.com/baumrock/RockFrontend/compare/v2.39.1...v2.39.2) (2023-04-02)
-
-
-### Bug Fixes
-
-* add docs about seo fields ([9dcbd3a](https://github.com/baumrock/RockFrontend/commit/9dcbd3ab91b1f079749cacec9b30664f3063f5f0))
 
 
 
