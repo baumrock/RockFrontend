@@ -237,13 +237,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         // load RockFrontend frontend js file
         $file = __DIR__ . "/RockFrontend.js";
-        if ($this->wire->config->debug) {
-          // load the non-minified script
-          $this->scripts('rockfrontend')->add($file, "defer");
-          // when logged in as superuser we make sure to create the minified
-          // file even if the non-minified version is used.
-          if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-        } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+        if ($this->isEnabled('RockFrontend.js')) {
+          if ($this->wire->config->debug) {
+            // load the non-minified script
+            $this->scripts('rockfrontend')->add($file, "defer");
+            // when logged in as superuser we make sure to create the minified
+            // file even if the non-minified version is used.
+            if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
+          } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+        }
 
         // load alfred?
         if ($this->loadAlfred()) {
@@ -2082,9 +2084,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = $this->wire->modules->get('InputfieldCheckboxes');
     $f->name = 'features';
     $f->label = "Features";
-    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax)');
-    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature))');
-    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview)');
+    $f->addOption('RockFrontend.js', 'RockFrontend.js - Load this file on the frontend (eg to use consent tools).');
+    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax).');
+    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature)).');
+    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
     $f->value = (array)$this->features;
     $fs->add($f);
 
