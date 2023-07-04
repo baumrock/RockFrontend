@@ -1,6 +1,43 @@
 {
     "packages": [
         {
+            "name": "baumrock/humandates",
+            "version": "v1.0.4",
+            "version_normalized": "1.0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/baumrock/HumanDates.git",
+                "reference": "1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/baumrock/HumanDates/zipball/1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7",
+                "reference": "1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "time": "2023-06-13T17:10:56+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "HumanDates.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Format date ranges in a human-readable format with automatic pattern selection and localization support.",
+            "support": {
+                "issues": "https://github.com/baumrock/HumanDates/issues",
+                "source": "https://github.com/baumrock/HumanDates/tree/v1.0.4"
+            },
+            "install-path": "../baumrock/humandates"
+        },
+        {
             "name": "latte/latte",
             "version": "v3.0.6",
             "version_normalized": "3.0.6.0",
@@ -160,17 +197,17 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.70",
-            "version_normalized": "1.3.70.0",
+            "version": "1.3.71",
+            "version_normalized": "1.3.71.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "2807d9f9bece6877577ad44acb5c801bb3ae536b"
+                "reference": "ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/2807d9f9bece6877577ad44acb5c801bb3ae536b",
-                "reference": "2807d9f9bece6877577ad44acb5c801bb3ae536b",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1",
+                "reference": "ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1",
                 "shasum": ""
             },
             "require": {
@@ -187,7 +224,7 @@
             "suggest": {
                 "psr/cache-implementation": "Cache implementation to use with Minify::cache"
             },
-            "time": "2022-12-09T12:56:44+00:00",
+            "time": "2023-04-25T20:33:03+00:00",
             "bin": [
                 "bin/minifycss",
                 "bin/minifyjs"
@@ -222,7 +259,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.70"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.71"
             },
             "funding": [
                 {
@@ -346,23 +383,23 @@
         },
         {
             "name": "symfony/css-selector",
-            "version": "v6.2.7",
-            "version_normalized": "6.2.7.0",
+            "version": "v6.3.0",
+            "version_normalized": "6.3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/css-selector.git",
-                "reference": "aedf3cb0f5b929ec255d96bbb4909e9932c769e0"
+                "reference": "88453e64cd86c5b60e8d2fb2c6f953bbc353ffbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/css-selector/zipball/aedf3cb0f5b929ec255d96bbb4909e9932c769e0",
-                "reference": "aedf3cb0f5b929ec255d96bbb4909e9932c769e0",
+                "url": "https://api.github.com/repos/symfony/css-selector/zipball/88453e64cd86c5b60e8d2fb2c6f953bbc353ffbf",
+                "reference": "88453e64cd86c5b60e8d2fb2c6f953bbc353ffbf",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1"
             },
-            "time": "2023-02-14T08:44:56+00:00",
+            "time": "2023-03-20T16:43:42+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -394,7 +431,7 @@
             "description": "Converts CSS selectors to XPath expressions",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/css-selector/tree/v6.2.7"
+                "source": "https://github.com/symfony/css-selector/tree/v6.3.0"
             },
             "funding": [
                 {
@@ -414,17 +451,17 @@
         },
         {
             "name": "symfony/dom-crawler",
-            "version": "v6.2.9",
-            "version_normalized": "6.2.9.0",
+            "version": "v6.3.0",
+            "version_normalized": "6.3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/dom-crawler.git",
-                "reference": "328bc3795059651d2d4e462e8febdf7ec2d7a626"
+                "reference": "2611ec97006953c3b21ac9f3c52a6a252483e637"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/dom-crawler/zipball/328bc3795059651d2d4e462e8febdf7ec2d7a626",
-                "reference": "328bc3795059651d2d4e462e8febdf7ec2d7a626",
+                "url": "https://api.github.com/repos/symfony/dom-crawler/zipball/2611ec97006953c3b21ac9f3c52a6a252483e637",
+                "reference": "2611ec97006953c3b21ac9f3c52a6a252483e637",
                 "shasum": ""
             },
             "require": {
@@ -436,10 +473,7 @@
             "require-dev": {
                 "symfony/css-selector": "^5.4|^6.0"
             },
-            "suggest": {
-                "symfony/css-selector": ""
-            },
-            "time": "2023-04-11T16:03:19+00:00",
+            "time": "2023-04-28T16:05:33+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -467,7 +501,7 @@
             "description": "Eases DOM navigation for HTML and XML documents",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/dom-crawler/tree/v6.2.9"
+                "source": "https://github.com/symfony/dom-crawler/tree/v6.3.0"
             },
             "funding": [
                 {
