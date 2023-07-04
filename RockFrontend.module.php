@@ -211,11 +211,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       function (HookEvent $event) {
         $html = $event->return;
 
-        // early exit if asset injection is disabled
-        // Usage: place "$rockfrontend->noAssets = true" somewhere in your
-        // template file to prevent loading of any rockfrontend assets
-        // note that this may break some of the features of RockFrontend
-        if ($this->noAssets) return;
+        // this feature is deprecated
+        // it was a quick hack to prevent RockFrontend from loading assets but
+        // with unwanted side effects. RockFrontend should now only load
+        // assets if they need to be loaded. If you find something is loaded
+        // that you don't want and there is no setting to prevent that please
+        // let me know in the forum!
+        if ($this->noAssets) throw new WireException("This feature is deprecated");
 
         // early exit if html does not contain a head section
         if (!strpos($html, "</head>")) return;
