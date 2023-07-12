@@ -969,9 +969,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Get uikit versions from github
    */
-  public function getUikitVersions()
+  public function getUikitVersions($noCache = false)
   {
-    return $this->wire->cache->get(self::cache, 60 * 5, function () {
+    $expire = 60 * 5;
+    if ($noCache) $expire = WireCache::expireNow;
+    $versions = $this->wire->cache->get(self::cache, $expire, function () {
       $http = new WireHttp();
       $json = $http->get('https://api.github.com/repos/uikit/uikit/git/refs/tags');
       $refs = json_decode($json);
@@ -986,6 +988,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       uasort($versions, "version_compare");
       return array_reverse($versions);
     });
+    if ($versions) return $versions;
+    if (!$noCache) return $this->getUikitVersions(true);
+    return [];
   }
 
   /**
@@ -2090,7 +2095,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = new InputfieldText();
     $f->label = 'Webfonts';
     $f->name = 'webfonts';
-    $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed.";
+    $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed."
+      . "\nExample URL: https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700";
     $f->value = $this->webfonts;
     $f->notes = $this->showFontFileSize();
     $fs->add($f);
