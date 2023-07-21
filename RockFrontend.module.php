@@ -512,6 +512,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'type' => $opt->type,
     ]);
 
+    // entity encode alfred string
+    // this is to avoid "invalid json" errors when using labels with apostrophes
+    // like "Don't miss any updates"
+    $str = $this->wire->sanitizer->entities1($str);
+
     // save markup to cache and generate alfred tag
     // the tag will be replaced on page render
     // this is to make it possible to use alfred() without |noescape filter)
