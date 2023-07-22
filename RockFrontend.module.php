@@ -2046,7 +2046,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->migrate();
 
     $video = new InputfieldMarkup();
-    $video->label = 'processwire-rocks.com';
+    $video->label = 'processwire.rocks';
     $video->value = '
       <style>
       .flex-videos {
