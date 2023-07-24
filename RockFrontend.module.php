@@ -486,7 +486,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
     $opt->setArray($options);
 
-
     // add quick-add-icons for rockpagebuilder
     if ($rpb = $this->wire->modules->get("RockPageBuilder")) {
       /** @var RockPageBuilder $rpb */
@@ -929,6 +928,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $paths = $this->wire->config->paths;
     foreach ($trace as $step) {
       $file = $step['file'];
+
+      // first check for latte cache files
+      // these files are .php files compiled from the original .latte file
+      // we use these files because that also works when using latte "include" statements
+      if (str_contains($file, ".latte--") and str_ends_with($file, ".php")) {
+        // the template file seems to be a latte file
+        // get source file from the cached content
+        $content = file_get_contents($file);
+        $pattern = '/\/\*\* source: (.+?) \*\//s';
+        if (preg_match($pattern, $content, $matches)) {
+          $sourceFile = $matches[1];
+          return $sourceFile;
+        }
+      }
+
       $skip = [
         $paths->cache,
         $paths($this),
