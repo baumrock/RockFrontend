@@ -1,6 +1,9 @@
 .pw-edit-buttons {
   z-index: 99;
 }
+.ui-front {
+  z-index: 990 !important;
+}
 body:not(.uk-offcanvas-container) .alfred:hover {
   outline: 4px groove #ececec;
   z-index: 10;

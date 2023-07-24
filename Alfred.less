@@ -7,6 +7,10 @@
 .pw-edit-buttons {
   z-index: 99;
 }
+// make sure that frontend editing modals are on top of default uikit navbar
+.ui-front {
+  z-index: 990 !important;
+}
 
 // block hover
 body:not(.uk-offcanvas-container) .alfred:hover {
