@@ -2059,36 +2059,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->migrate();
 
-    $video = new InputfieldMarkup();
-    $video->label = 'processwire.rocks';
-    $video->value = '
-      <style>
-      .flex-videos {
-        gap: 20px;
-      }
-      .flex-videos > div {
-        width: 300px;
-      }
-      .video-responsive{
-        overflow:hidden;
-        padding-bottom:56.25%;
-        position:relative;
-        height:0;
-      }
-      .video-responsive iframe{
-        left:0;
-        top:0;
-        height:100%;
-        width:100%;
-        position:absolute;
-      }
-      </style>
-      <div class="uk-flex uk-flex-wrap flex-videos">
-        <div><div class="video-responsive"><iframe src="https://www.youtube.com/embed/7CoIj--u4ps" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
-        <div><div class="video-responsive"><iframe src="https://www.youtube.com/embed/6ld4daFDQlY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
-      </div>
-    ';
-    $inputfields->add($video);
+    $name = strtolower($this);
+    $inputfields->add([
+      'type' => 'markup',
+      'label' => 'Documentation & Updates',
+      'icon' => 'life-ring',
+      'value' => "<p>Hey there, coding rockstars! 👋</p>
+        <ul>
+          <li><a href=https://www.baumrock.com/modules/$name/docs>Read the docs</a> and level up your coding game! 🚀💻😎</li>
+          <li><a href=https://github.com/baumrock/$name>Show some love by starring the project</a> and keep us motivated to build more awesome stuff for you! 🌟💻😊</li>
+          <li><a href=https://www.baumrock.com/rock-monthly>Sign up now for our monthly newsletter</a> and receive the latest updates and exclusive offers right to your inbox! 🚀💻📫</li>
+        </ul>",
+    ]);
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
