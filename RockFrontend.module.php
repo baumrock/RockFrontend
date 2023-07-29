@@ -1637,6 +1637,90 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get markup of a single view file
+   */
+  public function ___view(string $file): Html|string
+  {
+    $file = $this->viewFile($file);
+    $markup = $this->render($file);
+    return $this->html($markup);
+  }
+
+  /**
+   * Check if main content file exists and if not throw a 404
+   */
+  public function viewCheck404(): void
+  {
+    $file = $this->wire->input->urlSegmentStr;
+    if (!$this->viewFile("main/$file")) throw new Wire404Exception("Page not found");
+  }
+
+  private function viewFile(string $file): string|false
+  {
+    $file = Paths::normalizeSeparators($file);
+    foreach ($this->viewfolders as $folder) {
+      $folder = Paths::normalizeSeparators($folder);
+      $path = $this->wire->config->paths->root . trim($folder, "/") . "/";
+      $f = $this->getFile($path . ltrim($file, "/"));
+      if (is_file($f)) return $f;
+    }
+    return false;
+  }
+
+  /**
+   * View files in folders based on the url segment string of a page
+   *
+   * Usage:
+   * echo $rf->viewFolders([
+   *   '/site/templates/foo',
+   *   '/site/modules/MyModule/frontend',
+   * ], [
+   *   // options
+   * ]);
+   */
+  public function viewFolders(array $folders, array $options = []): Html|string
+  {
+    // prepare options
+    $opt = new WireData();
+    $opt->setArray([
+      'removeMainStyles' => true,
+      'trailingslash' => false,
+      'entry' => '_main.php',
+    ]);
+    $opt->setArray($options);
+
+    // save folders for later
+    $this->viewfolders = $folders;
+
+    // check trailing slash setting and redirect if needed
+    $this->viewTrailingSlash($opt->trailingslash);
+
+    // remove all styles that have been added to the main styles array
+    // this is because the mail style array is for the main website
+    // and we usually don't need it for custom frontends
+    if ($opt->removeMainStyles) $this->styles('main')->removeAll();
+
+    // render the main markup file
+    return $this->view($opt->entry);
+  }
+
+  private function viewTrailingSlash(bool $slash): void
+  {
+    // we only check this if we have an url segment
+    // otherwise it's a regular page request to the rootpage
+    // in that case we use the page's native slash setting
+    if (!$this->wire->input->urlSegmentStr) return;
+    $session = $this->wire->session;
+
+    $url = $this->wire->input->url;
+    $query = $this->wire->input->queryString();
+
+    $hasSlash = str_ends_with($url, "/");
+    if ($slash and !$hasSlash) $session->redirect("$url/$query");
+    if (!$slash and $hasSlash) $session->redirect(rtrim($url, "/") . "?" . $query);
+  }
+
+  /**
    * Proxy to render method if condition is met
    *
    * Usage:
