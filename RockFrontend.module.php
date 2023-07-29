@@ -113,6 +113,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var array */
   private $translations = [];
 
+  /** @var array */
+  private $viewfolders = [];
+
   public function __construct()
   {
     if (!$this->wire->config->livereload) return;
@@ -212,86 +215,77 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       function (HookEvent $event) {
         $html = $event->return;
 
-        // this feature is deprecated
-        // it was a quick hack to prevent RockFrontend from loading assets but
-        // with unwanted side effects. RockFrontend should now only load
-        // assets if they need to be loaded. If you find something is loaded
-        // that you don't want and there is no setting to prevent that please
-        // let me know in the forum!
-        if ($this->noAssets) throw new WireException("This feature is deprecated");
-
-        // early exit if html does not contain a head section
+        // early exits
+        if (!strpos($html, "</body>")) return;
         if (!strpos($html, "</head>")) return;
 
-        // add livereload secret
-        if ($this->wire->config->livereload) {
-          $this->js("rootUrl", $this->wire->config->urls->root);
-
-          // create secret and send it to js
-          /** @var WireRandom $rand */
-          $rand = $this->wire(new WireRandom());
-          $cache = $this->wire->cache->get(self::livereloadCacheName);
-          if (!is_array($cache)) $cache = [];
-          $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
-          $merged = array_merge($cache, [$secret]);
-          $this->wire->cache->save(self::livereloadCacheName, $merged);
-          $this->js("livereloadSecret", $secret);
-        }
-
-        // load RockFrontend frontend js file
-        $file = __DIR__ . "/RockFrontend.js";
-        if ($this->isEnabled('RockFrontend.js')) {
-          if ($this->wire->config->debug) {
-            // load the non-minified script
-            $this->scripts('rockfrontend')->add($file, "defer");
-            // when logged in as superuser we make sure to create the minified
-            // file even if the non-minified version is used.
-            if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-          } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
-        }
-
-        // load alfred?
-        if ($this->loadAlfred()) {
-          $this->js("rootUrl", $this->wire->config->urls->root);
-          $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-          $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
-          $this->addAlfredStyles();
-
-          // replace alfred cache markup
-          // if alfred was added without |noescape it has quotes around
-          if (strpos($html, '"#alfredcache-')) {
-            foreach ($this->alfredCache as $key => $str) {
-              $html = str_replace("\"$key\"", $str, $html);
-            }
-          }
-          // if alfred was added with |noescape filter we don't have quotes
-          if (strpos($html, '#alfredcache-')) {
-            foreach ($this->alfredCache as $key => $str) {
-              $html = str_replace("$key", $str, $html);
-            }
-          }
-
-          // add a fake edit tag to the page body
-          // this ensures that jQuery is loaded via PageFrontEdit
-          $faketag = "<div edit=title hidden>title</div>";
-          $html = str_replace("</body", "$faketag</body", $html);
-        }
-
+        $this->addLiveReloadSecret();
+        $this->addRockFrontendJS();
+        $this->addAlfredMarkup($html);
         $this->addTopBar($html);
-
-        // at the very end we inject the js variables
-        $assets = '';
-        if (count($this->js)) {
-          $json = json_encode($this->js);
-          $assets .= "\n  <script>var RockFrontend = $json</script>\n";
-        }
-        foreach ($this->autoloadScripts as $script) $assets .= $script->render();
-        foreach ($this->autoloadStyles as $style) $assets .= $style->render();
-        // return replaced markup
-        $html = str_replace("</head>", "$assets</head>", $html);
+        $this->injectJavascriptSettings($html);
+        $this->injectAssets($html);
         $event->return = $html;
       }
     );
+  }
+
+  private function addAlfredMarkup(string &$html): void
+  {
+    if (!$this->loadAlfred()) return;
+
+    $this->js("rootUrl", $this->wire->config->urls->root);
+    $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
+    $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
+    $this->addAlfredStyles();
+
+    // replace alfred cache markup
+    // if alfred was added without |noescape it has quotes around
+    if (strpos($html, '"#alfredcache-')) {
+      foreach ($this->alfredCache as $key => $str) {
+        $html = str_replace("\"$key\"", $str, $html);
+      }
+    }
+    // if alfred was added with |noescape filter we don't have quotes
+    if (strpos($html, '#alfredcache-')) {
+      foreach ($this->alfredCache as $key => $str) {
+        $html = str_replace("$key", $str, $html);
+      }
+    }
+
+    // add a fake edit tag to the page body
+    // this ensures that jQuery is loaded via PageFrontEdit
+    $faketag = "<div edit=title hidden>title</div>";
+    $html = str_replace("</body", "$faketag</body", $html);
+  }
+
+  private function addLiveReloadSecret(): void
+  {
+    if (!$this->wire->config->livereload) return;
+    $this->js("rootUrl", $this->wire->config->urls->root);
+
+    // create secret and send it to js
+    /** @var WireRandom $rand */
+    $rand = $this->wire(new WireRandom());
+    $cache = $this->wire->cache->get(self::livereloadCacheName);
+    if (!is_array($cache)) $cache = [];
+    $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
+    $merged = array_merge($cache, [$secret]);
+    $this->wire->cache->save(self::livereloadCacheName, $merged);
+    $this->js("livereloadSecret", $secret);
+  }
+
+  private function addRockFrontendJS(): void
+  {
+    if (!$this->isEnabled('RockFrontend.js')) return;
+    $file = __DIR__ . "/RockFrontend.js";
+    if ($this->wire->config->debug) {
+      // load the non-minified script
+      $this->scripts('rockfrontend')->add($file, "defer");
+      // when logged in as superuser we make sure to create the minified
+      // file even if the non-minified version is used.
+      if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
+    } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
   }
 
   /**
@@ -1141,60 +1135,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->postCSS = $data;
   }
 
-  public function rfGrow($_data, $shrink = false): string
+  private function injectAssets(string &$html): void
   {
-    if (is_string($_data)) {
-      $tmp = explode(",", $_data);
-      $_data = [
-        'min' => trim($tmp[0]),
-        'max' => trim($tmp[1]),
-      ];
-    }
-    if (!is_array($_data)) {
-      // bd(Debug::backtrace());
-      throw new WireException("data for rfGrow must be an array");
-    }
-    $data = new WireData();
-    $data->setArray([
-      'min' => null,
-      'max' => null,
-      'growMin' => $this->wire->config->growMin ?: 360,
-      'growMax' => $this->wire->config->growMax ?: 1440,
-      'scale' => 1,
-    ]);
-    $data->setArray($_data);
+    $assets = '';
+    foreach ($this->autoloadScripts as $script) $assets .= $script->render();
+    foreach ($this->autoloadStyles as $style) $assets .= $style->render();
+    $html = str_replace("</head>", "$assets</head>", $html);
+  }
 
-    $scale = $data->scale;
-
-    // prepare growmin and growmax values
-    // we remove px to make sure we can use less variables in rfGrow()
-    // eg: @min = 360px; @max = 1440px;
-    // rfGrow(20, 50, @min, @max);
-    $growMin = str_replace("px", "", $data->growMin);
-    $growMax = str_replace("px", "", $data->growMax);
-
-    $min = $this->rem($data->min);
-    $max = $this->rem($data->max);
-    if ($min->unit !== $max->unit) throw new WireException(
-      "rfGrow(error: min and max value must have the same unit)"
-    );
-
-    $diff = $max->val - $min->val;
-    if ($max->unit == 'rem') $diff = $diff * $this->remBase;
-    // return $min;
-
-    $percent = "((100vw - {$growMin}px) / ($growMax - $growMin))";
-    if ($shrink) {
-      $grow = "$max - $diff * $percent";
-      return "clamp($min, $grow, $max)";
-    } else {
-      // if scale is one we return a nicer syntax
-      if ($scale === 1 or $scale === '1') {
-        return "clamp($min, $min + $diff * $percent, $max)";
-      }
-      $grow = "$min * $scale + $diff * $scale * $percent";
-      return "clamp($min * $scale, $grow, $max * $scale)";
-    }
+  private function injectJavascriptSettings(string &$html): void
+  {
+    // at the very end we inject the js variables
+    if (!count($this->js)) return;
+    $json = json_encode($this->js);
+    $markup = "<script>var RockFrontend = $json</script>";
+    $html = str_replace("</head>", "$markup</head>", $html);
   }
 
   /**
@@ -1281,6 +1236,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // add script that triggers stream on frontend
     $this->addLiveReloadScript();
+  }
+
+  /**
+   * Get the script tag that is necessary for livereload to be present
+   */
+  public function livereloadScriptTag(): string
+  {
+    $file = $this->minifyFile($this->path . "livereload.js");
+    $url = $this->url($file, true);
+    return "<script>var RockFrontend;</script><script src=$url defer></script>";
   }
 
   /**
@@ -1776,6 +1741,62 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $content = $this->render($file);
     if ($content) return $content;
     return false;
+  }
+
+  public function rfGrow($_data, $shrink = false): string
+  {
+    if (is_string($_data)) {
+      $tmp = explode(",", $_data);
+      $_data = [
+        'min' => trim($tmp[0]),
+        'max' => trim($tmp[1]),
+      ];
+    }
+    if (!is_array($_data)) {
+      // bd(Debug::backtrace());
+      throw new WireException("data for rfGrow must be an array");
+    }
+    $data = new WireData();
+    $data->setArray([
+      'min' => null,
+      'max' => null,
+      'growMin' => $this->wire->config->growMin ?: 360,
+      'growMax' => $this->wire->config->growMax ?: 1440,
+      'scale' => 1,
+    ]);
+    $data->setArray($_data);
+
+    $scale = $data->scale;
+
+    // prepare growmin and growmax values
+    // we remove px to make sure we can use less variables in rfGrow()
+    // eg: @min = 360px; @max = 1440px;
+    // rfGrow(20, 50, @min, @max);
+    $growMin = str_replace("px", "", $data->growMin);
+    $growMax = str_replace("px", "", $data->growMax);
+
+    $min = $this->rem($data->min);
+    $max = $this->rem($data->max);
+    if ($min->unit !== $max->unit) throw new WireException(
+      "rfGrow(error: min and max value must have the same unit)"
+    );
+
+    $diff = $max->val - $min->val;
+    if ($max->unit == 'rem') $diff = $diff * $this->remBase;
+    // return $min;
+
+    $percent = "((100vw - {$growMin}px) / ($growMax - $growMin))";
+    if ($shrink) {
+      $grow = "$max - $diff * $percent";
+      return "clamp($min, $grow, $max)";
+    } else {
+      // if scale is one we return a nicer syntax
+      if ($scale === 1 or $scale === '1') {
+        return "clamp($min, $min + $diff * $percent, $max)";
+      }
+      $grow = "$min * $scale + $diff * $scale * $percent";
+      return "clamp($min * $scale, $grow, $max * $scale)";
+    }
   }
 
   /**
