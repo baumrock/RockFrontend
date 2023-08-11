@@ -1,3 +1,23 @@
+# [3.3.0](https://github.com/baumrock/RockFrontend/compare/v3.2.2...v3.3.0) (2023-08-11)
+
+
+### Bug Fixes
+
+* apostrophes breaking alfred() ([3bcc291](https://github.com/baumrock/RockFrontend/commit/3bcc291f4288181cb7860ef85e93059e3a36676a))
+* improve getUikitVersions in module config ([5743df9](https://github.com/baumrock/RockFrontend/commit/5743df9c84943949ca1db3a8a3447e095d7197c1))
+* remove outdated uikit profile - please use the rock profile instead! ([e92f9bc](https://github.com/baumrock/RockFrontend/commit/e92f9bc88334af6fb3b8c0457b747215306fef94))
+* wrong template path when using latte includes ([f2277e7](https://github.com/baumrock/RockFrontend/commit/f2277e70a603b1139734aab9a7a60c85b315c4a6))
+
+
+### Features
+
+* add static site rendering feature ([1a87bf9](https://github.com/baumrock/RockFrontend/commit/1a87bf9c10218de8e7073d10d3eda50ed57c0a1b))
+* add view folder feature ([dab548b](https://github.com/baumrock/RockFrontend/commit/dab548bd64d4fa66f7dcad8945d49345882a533f))
+* improve topbar hidden style ([959f797](https://github.com/baumrock/RockFrontend/commit/959f79783b687dea9a6895601fa170c765e8fdcd))
+* tweak frontend modal z-index for uikit nav ([20f4362](https://github.com/baumrock/RockFrontend/commit/20f4362658a9a3a9dfcadf52d26e3135d7c5b7c7))
+
+
+
 ## [3.2.2](https://github.com/baumrock/RockFrontend/compare/v3.2.1...v3.2.2) (2023-07-04)
 
 
@@ -47,15 +67,6 @@
 ### Features
 
 * rename default asset name from head to main ([fc3d1ae](https://github.com/baumrock/RockFrontend/commit/fc3d1ae36795c09cb74f08db585dfb8579d95b3b))
-
-
-
-## [3.0.1](https://github.com/baumrock/RockFrontend/compare/v3.0.0...v3.0.1) (2023-06-02)
-
-
-### Bug Fixes
-
-* remove unused options reference ([7ad201e](https://github.com/baumrock/RockFrontend/commit/7ad201eb99ea91085557f7fdf124dc744333c010))
 
 
 
