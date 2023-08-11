@@ -113,6 +113,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var array */
   private $translations = [];
 
+  /** @var array */
+  private $viewfolders = [];
+
   public function __construct()
   {
     if (!$this->wire->config->livereload) return;
@@ -212,86 +215,77 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       function (HookEvent $event) {
         $html = $event->return;
 
-        // this feature is deprecated
-        // it was a quick hack to prevent RockFrontend from loading assets but
-        // with unwanted side effects. RockFrontend should now only load
-        // assets if they need to be loaded. If you find something is loaded
-        // that you don't want and there is no setting to prevent that please
-        // let me know in the forum!
-        if ($this->noAssets) throw new WireException("This feature is deprecated");
-
-        // early exit if html does not contain a head section
+        // early exits
+        if (!strpos($html, "</body>")) return;
         if (!strpos($html, "</head>")) return;
 
-        // add livereload secret
-        if ($this->wire->config->livereload) {
-          $this->js("rootUrl", $this->wire->config->urls->root);
-
-          // create secret and send it to js
-          /** @var WireRandom $rand */
-          $rand = $this->wire(new WireRandom());
-          $cache = $this->wire->cache->get(self::livereloadCacheName);
-          if (!is_array($cache)) $cache = [];
-          $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
-          $merged = array_merge($cache, [$secret]);
-          $this->wire->cache->save(self::livereloadCacheName, $merged);
-          $this->js("livereloadSecret", $secret);
-        }
-
-        // load RockFrontend frontend js file
-        $file = __DIR__ . "/RockFrontend.js";
-        if ($this->isEnabled('RockFrontend.js')) {
-          if ($this->wire->config->debug) {
-            // load the non-minified script
-            $this->scripts('rockfrontend')->add($file, "defer");
-            // when logged in as superuser we make sure to create the minified
-            // file even if the non-minified version is used.
-            if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-          } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
-        }
-
-        // load alfred?
-        if ($this->loadAlfred()) {
-          $this->js("rootUrl", $this->wire->config->urls->root);
-          $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-          $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
-          $this->addAlfredStyles();
-
-          // replace alfred cache markup
-          // if alfred was added without |noescape it has quotes around
-          if (strpos($html, '"#alfredcache-')) {
-            foreach ($this->alfredCache as $key => $str) {
-              $html = str_replace("\"$key\"", $str, $html);
-            }
-          }
-          // if alfred was added with |noescape filter we don't have quotes
-          if (strpos($html, '#alfredcache-')) {
-            foreach ($this->alfredCache as $key => $str) {
-              $html = str_replace("$key", $str, $html);
-            }
-          }
-
-          // add a fake edit tag to the page body
-          // this ensures that jQuery is loaded via PageFrontEdit
-          $faketag = "<div edit=title hidden>title</div>";
-          $html = str_replace("</body", "$faketag</body", $html);
-        }
-
+        $this->addLiveReloadSecret();
+        $this->addRockFrontendJS();
+        $this->addAlfredMarkup($html);
         $this->addTopBar($html);
-
-        // at the very end we inject the js variables
-        $assets = '';
-        if (count($this->js)) {
-          $json = json_encode($this->js);
-          $assets .= "\n  <script>var RockFrontend = $json</script>\n";
-        }
-        foreach ($this->autoloadScripts as $script) $assets .= $script->render();
-        foreach ($this->autoloadStyles as $style) $assets .= $style->render();
-        // return replaced markup
-        $html = str_replace("</head>", "$assets</head>", $html);
+        $this->injectJavascriptSettings($html);
+        $this->injectAssets($html);
         $event->return = $html;
       }
     );
+  }
+
+  private function addAlfredMarkup(string &$html): void
+  {
+    if (!$this->loadAlfred()) return;
+
+    $this->js("rootUrl", $this->wire->config->urls->root);
+    $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
+    $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
+    $this->addAlfredStyles();
+
+    // replace alfred cache markup
+    // if alfred was added without |noescape it has quotes around
+    if (strpos($html, '"#alfredcache-')) {
+      foreach ($this->alfredCache as $key => $str) {
+        $html = str_replace("\"$key\"", $str, $html);
+      }
+    }
+    // if alfred was added with |noescape filter we don't have quotes
+    if (strpos($html, '#alfredcache-')) {
+      foreach ($this->alfredCache as $key => $str) {
+        $html = str_replace("$key", $str, $html);
+      }
+    }
+
+    // add a fake edit tag to the page body
+    // this ensures that jQuery is loaded via PageFrontEdit
+    $faketag = "<div edit=title hidden>title</div>";
+    $html = str_replace("</body", "$faketag</body", $html);
+  }
+
+  private function addLiveReloadSecret(): void
+  {
+    if (!$this->wire->config->livereload) return;
+    $this->js("rootUrl", $this->wire->config->urls->root);
+
+    // create secret and send it to js
+    /** @var WireRandom $rand */
+    $rand = $this->wire(new WireRandom());
+    $cache = $this->wire->cache->get(self::livereloadCacheName);
+    if (!is_array($cache)) $cache = [];
+    $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
+    $merged = array_merge($cache, [$secret]);
+    $this->wire->cache->save(self::livereloadCacheName, $merged);
+    $this->js("livereloadSecret", $secret);
+  }
+
+  private function addRockFrontendJS(): void
+  {
+    if (!$this->isEnabled('RockFrontend.js')) return;
+    $file = __DIR__ . "/RockFrontend.js";
+    if ($this->wire->config->debug) {
+      // load the non-minified script
+      $this->scripts('rockfrontend')->add($file, "defer");
+      // when logged in as superuser we make sure to create the minified
+      // file even if the non-minified version is used.
+      if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
+    } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
   }
 
   /**
@@ -486,7 +480,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
     $opt->setArray($options);
 
-
     // add quick-add-icons for rockpagebuilder
     if ($rpb = $this->wire->modules->get("RockPageBuilder")) {
       /** @var RockPageBuilder $rpb */
@@ -511,6 +504,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'widgetStyle' => $opt->widgetStyle,
       'type' => $opt->type,
     ]);
+
+    // entity encode alfred string
+    // this is to avoid "invalid json" errors when using labels with apostrophes
+    // like "Don't miss any updates"
+    $str = $this->wire->sanitizer->entities1($str);
 
     // save markup to cache and generate alfred tag
     // the tag will be replaced on page render
@@ -924,6 +922,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $paths = $this->wire->config->paths;
     foreach ($trace as $step) {
       $file = $step['file'];
+
+      // first check for latte cache files
+      // these files are .php files compiled from the original .latte file
+      // we use these files because that also works when using latte "include" statements
+      if (str_contains($file, ".latte--") and str_ends_with($file, ".php")) {
+        // the template file seems to be a latte file
+        // get source file from the cached content
+        $content = file_get_contents($file);
+        $pattern = '/\/\*\* source: (.+?) \*\//s';
+        if (preg_match($pattern, $content, $matches)) {
+          $sourceFile = $matches[1];
+          return $sourceFile;
+        }
+      }
+
       $skip = [
         $paths->cache,
         $paths($this),
@@ -969,9 +982,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Get uikit versions from github
    */
-  public function getUikitVersions()
+  public function getUikitVersions($noCache = false)
   {
-    return $this->wire->cache->get(self::cache, 60 * 5, function () {
+    $expire = 60 * 5;
+    if ($noCache) $expire = WireCache::expireNow;
+    $versions = $this->wire->cache->get(self::cache, $expire, function () {
       $http = new WireHttp();
       $json = $http->get('https://api.github.com/repos/uikit/uikit/git/refs/tags');
       $refs = json_decode($json);
@@ -986,6 +1001,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       uasort($versions, "version_compare");
       return array_reverse($versions);
     });
+    if ($versions) return $versions;
+    if (!$noCache) return $this->getUikitVersions(true);
+    return [];
   }
 
   /**
@@ -1117,60 +1135,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->postCSS = $data;
   }
 
-  public function rfGrow($_data, $shrink = false): string
+  private function injectAssets(string &$html): void
   {
-    if (is_string($_data)) {
-      $tmp = explode(",", $_data);
-      $_data = [
-        'min' => trim($tmp[0]),
-        'max' => trim($tmp[1]),
-      ];
-    }
-    if (!is_array($_data)) {
-      // bd(Debug::backtrace());
-      throw new WireException("data for rfGrow must be an array");
-    }
-    $data = new WireData();
-    $data->setArray([
-      'min' => null,
-      'max' => null,
-      'growMin' => $this->wire->config->growMin ?: 360,
-      'growMax' => $this->wire->config->growMax ?: 1440,
-      'scale' => 1,
-    ]);
-    $data->setArray($_data);
+    $assets = '';
+    foreach ($this->autoloadScripts as $script) $assets .= $script->render();
+    foreach ($this->autoloadStyles as $style) $assets .= $style->render();
+    $html = str_replace("</head>", "$assets</head>", $html);
+  }
 
-    $scale = $data->scale;
-
-    // prepare growmin and growmax values
-    // we remove px to make sure we can use less variables in rfGrow()
-    // eg: @min = 360px; @max = 1440px;
-    // rfGrow(20, 50, @min, @max);
-    $growMin = str_replace("px", "", $data->growMin);
-    $growMax = str_replace("px", "", $data->growMax);
-
-    $min = $this->rem($data->min);
-    $max = $this->rem($data->max);
-    if ($min->unit !== $max->unit) throw new WireException(
-      "rfGrow(error: min and max value must have the same unit)"
-    );
-
-    $diff = $max->val - $min->val;
-    if ($max->unit == 'rem') $diff = $diff * $this->remBase;
-    // return $min;
-
-    $percent = "((100vw - {$growMin}px) / ($growMax - $growMin))";
-    if ($shrink) {
-      $grow = "$max - $diff * $percent";
-      return "clamp($min, $grow, $max)";
-    } else {
-      // if scale is one we return a nicer syntax
-      if ($scale === 1 or $scale === '1') {
-        return "clamp($min, $min + $diff * $percent, $max)";
-      }
-      $grow = "$min * $scale + $diff * $scale * $percent";
-      return "clamp($min * $scale, $grow, $max * $scale)";
-    }
+  private function injectJavascriptSettings(string &$html): void
+  {
+    // at the very end we inject the js variables
+    if (!count($this->js)) return;
+    $json = json_encode($this->js);
+    $markup = "<script>var RockFrontend = $json</script>";
+    $html = str_replace("</head>", "$markup</head>", $html);
   }
 
   /**
@@ -1257,6 +1236,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // add script that triggers stream on frontend
     $this->addLiveReloadScript();
+  }
+
+  /**
+   * Get the script tag that is necessary for livereload to be present
+   */
+  public function livereloadScriptTag(): string
+  {
+    $file = $this->minifyFile($this->path . "livereload.js");
+    $url = $this->url($file, true);
+    return "<script>var RockFrontend;</script><script src=$url defer></script>";
   }
 
   /**
@@ -1648,6 +1637,90 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get markup of a single view file
+   */
+  public function ___view(string $file): Html|string
+  {
+    $file = $this->viewFile($file);
+    $markup = $this->render($file);
+    return $this->html($markup);
+  }
+
+  /**
+   * Check if main content file exists and if not throw a 404
+   */
+  public function viewCheck404(): void
+  {
+    $file = $this->wire->input->urlSegmentStr;
+    if (!$this->viewFile("main/$file")) throw new Wire404Exception("Page not found");
+  }
+
+  private function viewFile(string $file): string|false
+  {
+    $file = Paths::normalizeSeparators($file);
+    foreach ($this->viewfolders as $folder) {
+      $folder = Paths::normalizeSeparators($folder);
+      $path = $this->wire->config->paths->root . trim($folder, "/") . "/";
+      $f = $this->getFile($path . ltrim($file, "/"));
+      if (is_file($f)) return $f;
+    }
+    return false;
+  }
+
+  /**
+   * View files in folders based on the url segment string of a page
+   *
+   * Usage:
+   * echo $rf->viewFolders([
+   *   '/site/templates/foo',
+   *   '/site/modules/MyModule/frontend',
+   * ], [
+   *   // options
+   * ]);
+   */
+  public function viewFolders(array $folders, array $options = []): Html|string
+  {
+    // prepare options
+    $opt = new WireData();
+    $opt->setArray([
+      'removeMainStyles' => true,
+      'trailingslash' => false,
+      'entry' => '_main.php',
+    ]);
+    $opt->setArray($options);
+
+    // save folders for later
+    $this->viewfolders = $folders;
+
+    // check trailing slash setting and redirect if needed
+    $this->viewTrailingSlash($opt->trailingslash);
+
+    // remove all styles that have been added to the main styles array
+    // this is because the mail style array is for the main website
+    // and we usually don't need it for custom frontends
+    if ($opt->removeMainStyles) $this->styles('main')->removeAll();
+
+    // render the main markup file
+    return $this->view($opt->entry);
+  }
+
+  private function viewTrailingSlash(bool $slash): void
+  {
+    // we only check this if we have an url segment
+    // otherwise it's a regular page request to the rootpage
+    // in that case we use the page's native slash setting
+    if (!$this->wire->input->urlSegmentStr) return;
+    $session = $this->wire->session;
+
+    $url = $this->wire->input->url;
+    $query = $this->wire->input->queryString();
+
+    $hasSlash = str_ends_with($url, "/");
+    if ($slash and !$hasSlash) $session->redirect("$url/$query");
+    if (!$slash and $hasSlash) $session->redirect(rtrim($url, "/") . "?" . $query);
+  }
+
+  /**
    * Proxy to render method if condition is met
    *
    * Usage:
@@ -1697,7 +1770,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // provided by the user
     if (!$noMerge) $fallback = $fallback + $defaultFallback;
 
-    // bd($fallback);
+    // if a static file matches the url of the requested page we return that one
+    $static = $this->renderStaticFile($page);
+    if ($static) return $static;
 
     // try to find layout from layout field of the page editor
     $layout = $this->getLayout($page);
@@ -1738,6 +1813,74 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'currentItemClass' => 'uk-active',
     ], $options);
     return $this->html($items->renderPager($options));
+  }
+
+  /**
+   * Render file from /site/templates/static for given page
+   */
+  public function renderStaticFile(Page $page): string|false
+  {
+    $file = $this->wire->config->paths->templates . "static" . $page->url;
+    $file = rtrim($file, "/");
+    $content = $this->render($file);
+    if ($content) return $content;
+    return false;
+  }
+
+  public function rfGrow($_data, $shrink = false): string
+  {
+    if (is_string($_data)) {
+      $tmp = explode(",", $_data);
+      $_data = [
+        'min' => trim($tmp[0]),
+        'max' => trim($tmp[1]),
+      ];
+    }
+    if (!is_array($_data)) {
+      // bd(Debug::backtrace());
+      throw new WireException("data for rfGrow must be an array");
+    }
+    $data = new WireData();
+    $data->setArray([
+      'min' => null,
+      'max' => null,
+      'growMin' => $this->wire->config->growMin ?: 360,
+      'growMax' => $this->wire->config->growMax ?: 1440,
+      'scale' => 1,
+    ]);
+    $data->setArray($_data);
+
+    $scale = $data->scale;
+
+    // prepare growmin and growmax values
+    // we remove px to make sure we can use less variables in rfGrow()
+    // eg: @min = 360px; @max = 1440px;
+    // rfGrow(20, 50, @min, @max);
+    $growMin = str_replace("px", "", $data->growMin);
+    $growMax = str_replace("px", "", $data->growMax);
+
+    $min = $this->rem($data->min);
+    $max = $this->rem($data->max);
+    if ($min->unit !== $max->unit) throw new WireException(
+      "rfGrow(error: min and max value must have the same unit)"
+    );
+
+    $diff = $max->val - $min->val;
+    if ($max->unit == 'rem') $diff = $diff * $this->remBase;
+    // return $min;
+
+    $percent = "((100vw - {$growMin}px) / ($growMax - $growMin))";
+    if ($shrink) {
+      $grow = "$max - $diff * $percent";
+      return "clamp($min, $grow, $max)";
+    } else {
+      // if scale is one we return a nicer syntax
+      if ($scale === 1 or $scale === '1') {
+        return "clamp($min, $min + $diff * $percent, $max)";
+      }
+      $grow = "$min * $scale + $diff * $scale * $percent";
+      return "clamp($min * $scale, $grow, $max * $scale)";
+    }
   }
 
   /**
@@ -2021,36 +2164,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->migrate();
 
-    $video = new InputfieldMarkup();
-    $video->label = 'processwire-rocks.com';
-    $video->value = '
-      <style>
-      .flex-videos {
-        gap: 20px;
-      }
-      .flex-videos > div {
-        width: 300px;
-      }
-      .video-responsive{
-        overflow:hidden;
-        padding-bottom:56.25%;
-        position:relative;
-        height:0;
-      }
-      .video-responsive iframe{
-        left:0;
-        top:0;
-        height:100%;
-        width:100%;
-        position:absolute;
-      }
-      </style>
-      <div class="uk-flex uk-flex-wrap flex-videos">
-        <div><div class="video-responsive"><iframe src="https://www.youtube.com/embed/7CoIj--u4ps" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
-        <div><div class="video-responsive"><iframe src="https://www.youtube.com/embed/6ld4daFDQlY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>
-      </div>
-    ';
-    $inputfields->add($video);
+    $name = strtolower($this);
+    $inputfields->add([
+      'type' => 'markup',
+      'label' => 'Documentation & Updates',
+      'icon' => 'life-ring',
+      'value' => "<p>Hey there, coding rockstars! 👋</p>
+        <ul>
+          <li><a href=https://www.baumrock.com/modules/$name/docs>Read the docs</a> and level up your coding game! 🚀💻😎</li>
+          <li><a href=https://github.com/baumrock/$name>Show some love by starring the project</a> and keep us motivated to build more awesome stuff for you! 🌟💻😊</li>
+          <li><a href=https://www.baumrock.com/rock-monthly>Sign up now for our monthly newsletter</a> and receive the latest updates and exclusive offers right to your inbox! 🚀💻📫</li>
+        </ul>",
+    ]);
 
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
@@ -2076,7 +2201,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = new InputfieldText();
     $f->label = 'Webfonts';
     $f->name = 'webfonts';
-    $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed.";
+    $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed."
+      . "\nExample URL: https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700 (see here: [screenshot](https://i.imgur.com/b8aJPQW.png))";
     $f->value = $this->webfonts;
     $f->notes = $this->showFontFileSize();
     $fs->add($f);
