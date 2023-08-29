@@ -325,8 +325,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->html($enabled . $disabled);
   }
 
-  public function consentOptout($name, $script)
+  public function consentOptout($name, $script, $condition = true)
   {
+    if (!$condition) return;
     $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
     return $this->html($enabled);
   }
