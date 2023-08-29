@@ -6,13 +6,12 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
 (() => {
   /**
    * Debounce
-   *
    * Usage:
-      window.addEventListener("resize", () => {
-        RockFrontend.debounce(() => {
-          console.log("resized");
-        }, 1000);
-      });
+   * window.addEventListener("resize", () => {
+   *   RockFrontend.debounce(() => {
+   *     console.log("resized");
+   *   }, 1000);
+   * });
    */
   let timer;
   RockFrontend.debounce = function (func, timeout = 300) {
@@ -44,8 +43,40 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
     return !!this.getStorage()[name];
   };
 
+  // get status checked/unchecked
+  Consent.prototype.getStatus = function (name) {
+    if (this.isEnabled(name)) return "checked";
+    return "unchecked";
+  };
+
   // init all containers and checkboxes
   Consent.prototype.init = function () {
+    // toggle markup based on consent
+    // this will loop through all <template rf-consent="..."> tags
+    this.each(document.querySelectorAll("template[rf-consent]"), (el) => {
+      let name = el.getAttribute("rf-consent");
+      let status = this.getStatus(name);
+
+      // the "loadif" attribute defines whether to load this markup or not
+      // based on the value of the consent checkbox
+      let loadif = el.getAttribute("loadif");
+
+      // the target for the template content is <div rf-consent=name>
+      // that div can be placed by the user wherever he/she needs
+      // if that div does not exist it will be added to the dom automatically
+      let target = document.querySelector("div[rf-consent=" + name + "]");
+      if (!target) {
+        // div does not exist -> insert it before the <template> tag
+        target = document.createElement("div");
+        target.setAttribute("rf-consent", name);
+        el.parentNode.insertBefore(target, el);
+      }
+      if (loadif === status) {
+        target.innerHTML = "";
+        target.append(el.content.cloneNode(true));
+      }
+    });
+
     // show containers for enabled services
     let show = document.querySelectorAll("[data-rfc-show]");
     this.each(show, function (container) {
@@ -94,6 +125,9 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
         cb.removeAttribute("checked");
       }
     });
+
+    // debugging
+    // console.log(C.getStorage());
   };
 
   // save consent state to localstorage
