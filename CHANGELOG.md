@@ -1,3 +1,21 @@
+# [3.4.0](https://github.com/baumrock/RockFrontend/compare/v3.3.0...v3.4.0) (2023-09-11)
+
+
+### Bug Fixes
+
+* IntlDateFormatter use statement missing ([00ef357](https://github.com/baumrock/RockFrontend/commit/00ef35717f4e09bfb3581cbf11451774786f89d5))
+
+
+### Features
+
+* add <template> based consent feature ([d2e7984](https://github.com/baumrock/RockFrontend/commit/d2e79849fe1a14cde75c1a94fd23c105c961c570))
+* add condition param for consentOptout() ([9a31a96](https://github.com/baumrock/RockFrontend/commit/9a31a965ecefb1d10e9fa1d0ca31fae08f662c99))
+* add css to force alfred spinner position ([fc283da](https://github.com/baumrock/RockFrontend/commit/fc283da12209260bddb61262c9a0fb6052d3a7cf))
+* add docs for static rendering feature ([76c4c6c](https://github.com/baumrock/RockFrontend/commit/76c4c6c4e35087bd3cf5fe77e8a0323bc75e0340))
+* minify topbar css ([9eca5cf](https://github.com/baumrock/RockFrontend/commit/9eca5cfadd2cc8f14c04c789a320ff09305b79fa))
+
+
+
 # [3.3.0](https://github.com/baumrock/RockFrontend/compare/v3.2.2...v3.3.0) (2023-08-11)
 
 
@@ -51,22 +69,6 @@
 * add lattepanel again ([82957c0](https://github.com/baumrock/RockFrontend/commit/82957c08621529452fda5fe1e6045733ee193507))
 * don't load livereload in iframes and update minification ([75e6699](https://github.com/baumrock/RockFrontend/commit/75e66994813946ce943913b768ee640e9188528c))
 * only load RockFrontend.js if enabled ([f62ec7e](https://github.com/baumrock/RockFrontend/commit/f62ec7e4790dbb13a913c4bce1ca52ea72a89319))
-
-
-
-# [3.1.0](https://github.com/baumrock/RockFrontend/compare/v3.0.1...v3.1.0) (2023-06-07)
-
-
-### Bug Fixes
-
-* empty string leads to empty filename ([f929762](https://github.com/baumrock/RockFrontend/commit/f9297625df6b6ef9353af01d8965dfb1742b25c9))
-* prevent double adding of assets ([14b9b10](https://github.com/baumrock/RockFrontend/commit/14b9b10e01c731a172f2c0532dcc6b9d7adebc71))
-* remove lattepanel causing compile error ([119e97c](https://github.com/baumrock/RockFrontend/commit/119e97c00db37cfa4c6d18a901bb67eee4b89e9e))
-
-
-### Features
-
-* rename default asset name from head to main ([fc3d1ae](https://github.com/baumrock/RockFrontend/commit/fc3d1ae36795c09cb74f08db585dfb8579d95b3b))
 
 
 
