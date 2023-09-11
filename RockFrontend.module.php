@@ -325,8 +325,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->html($enabled . $disabled);
   }
 
-  public function consentOptout($name, $script)
+  public function consentOptout($name, $script, $condition = true)
   {
+    if (!$condition) return;
     $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
     return $this->html($enabled);
   }
@@ -393,12 +394,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     /** @var RockMigrations $rm */
     $less = __DIR__ . "/bar/bar.less";
-    if ($rm = $this->wire->modules->get('RockMigrations')) {
-      // recompile less if changed
-      // check for method saveCSS to prevent errors on old installations
-      if (method_exists($rm, "saveCSS")) $rm->saveCSS($less);
-    }
-    $css = $this->toUrl("$less.css", true);
+    /** @var RockMigrations $rm */
+    $rm = $this->wire->modules->get('RockMigrations');
+    if ($rm) $rm->saveCSS($less, minify: true);
+    $css = $this->toUrl(__DIR__ . "/bar/bar.min.css", true);
     $style = "<link rel='stylesheet' href='$css'>";
     $html = str_replace("</head", "$style</head", $html);
 

@@ -151,3 +151,7 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   left: 0;
   right: 0;
 }
+.ui-dialog + .fa-spin {
+  position: fixed !important;
+  top: 50% !important;
+}
