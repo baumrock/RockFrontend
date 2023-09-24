@@ -58,6 +58,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const field_favicon = self::prefix . "favicon";
   const field_ogimage = self::prefix . "ogimage";
   const field_footerlinks = self::prefix . "footerlinks";
+  const field_images = self::prefix . "images";
+  const field_less = self::prefix . "less";
 
   /** @var WireData */
   public $alfredCache;
@@ -191,9 +193,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
     $this->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
     $this->addHookBefore("Inputfield::render", $this, "addFooterlinksNote");
+    $this->addHookAfter("Pages::saved", $this, "createAndSaveLESS");
 
     // health checks
     $this->checkHealth();
+  }
+
+  public function createAndSaveLESS(HookEvent $event): void
+  {
+    /** @var Page $page */
+    $page = $event->arguments(0);
+    $field = $page->fields->get(self::field_less);
+    if (!$field) return;
+    $code = $page->getUnformatted(self::field_less);
+
+    $path = $page->filesManager->path() . "custom.less";
+    if (!$code) $this->wire->files->unlink($path);
+    else $this->wire->files->filePutContents($path, $code);
   }
 
   public function ready()
@@ -1298,6 +1314,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function migrate()
   {
+    $this->migrateLess();
+    $this->migrateImages();
     $this->migrateFavicon();
     $this->migrateOgImage();
     $this->migrateFooterlinks();
@@ -1349,6 +1367,32 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->addFieldToTemplate(self::field_footerlinks, 'home');
   }
 
+  private function migrateImages()
+  {
+    if (!in_array("images", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
+        self::field_images => [
+          'type' => 'image',
+          'label' => 'Media',
+          'maxFiles' => 1,
+          'descriptionRows' => 0,
+          'columnWidth' => 50,
+          'extensions' => 'png jpg jpeg svg',
+          'okExtensions' => ['svg'],
+          'maxSize' => 3, // max 3 megapixels
+          'icon' => 'picture-o',
+          'outputFormat' => FieldtypeFile::outputFormatArray,
+          'description' => 'Images that can be included somewhere (eg in Hanna Codes).',
+          'tags' => self::tags,
+          'notes' => 'API: $home->images()->get("name=foo.jpg");',
+        ],
+      ],
+    ]);
+    $rm->addFieldToTemplate(self::field_images, 'home');
+  }
+
   private function mgirateLatteTranslations()
   {
     if (!in_array("lattetranslations", $this->migrations)) return;
@@ -1357,6 +1401,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $ext = $rm->getModuleConfig('ProcessLanguageTranslator', 'extensions');
     if (strpos((string)$ext, "latte") !== false) return;
     $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
+  }
+
+  private function migrateLess()
+  {
+    if (!in_array("less", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
+        self::field_less => [
+          'type' => 'textarea',
+          'label' => 'LESS',
+          'rows' => 5,
+          'icon' => 'css3',
+        ],
+      ],
+    ]);
+    $rm->addFieldToTemplate(self::field_less, 'home');
   }
 
   private function migrateOgImage()
@@ -2239,9 +2300,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Migrations";
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
     $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
+    $f->addOption('images', 'images - Create an image field for general image uploads and add it to the home template');
     $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
     $url = $this->wire->pages->get(2)->url . "module/edit?name=ProcessLanguageTranslator";
     $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
+    $f->addOption('less', "less - Add textarea to inject custom LESS/CSS");
     $f->value = (array)$this->migrations;
     $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
     $fs->add($f);

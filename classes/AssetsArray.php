@@ -42,10 +42,18 @@ class AssetsArray extends \ProcessWire\WireArray
    *
    * @return self
    */
-  public function add($file, $suffix = '', $properties = [])
-  {
+  public function add(
+    $file,
+    $suffix = '',
+    $properties = [],
+    $quiet = false,
+  ) {
     $debug = $this->getDebugNote($file);
     if (is_string($file)) $file = new Asset($file, $suffix);
+
+    // early quiet exit if file does not exist and quiet parameter is set
+    if (!is_file($file->path) and $quiet) return $this;
+
     foreach ($properties as $k => $v) $file->$k = $v;
     // prevent adding file multiple times
     if ($exists = $this->get('path=' . $file->path)) {
