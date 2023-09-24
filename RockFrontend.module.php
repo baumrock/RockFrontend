@@ -193,23 +193,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
     $this->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
     $this->addHookBefore("Inputfield::render", $this, "addFooterlinksNote");
-    $this->addHookAfter("Pages::saved", $this, "createAndSaveLESS");
+    $this->addHookAfter("Page::changed", $this, "resetCustomLess");
+    $this->addHookBefore("Page::render", $this, "createCustomLess");
 
     // health checks
     $this->checkHealth();
-  }
-
-  public function createAndSaveLESS(HookEvent $event): void
-  {
-    /** @var Page $page */
-    $page = $event->arguments(0);
-    $field = $page->fields->get(self::field_less);
-    if (!$field) return;
-    $code = $page->getUnformatted(self::field_less);
-
-    $path = $page->filesManager->path() . "custom.less";
-    if (!$code) $this->wire->files->unlink($path);
-    else $this->wire->files->filePutContents($path, $code);
   }
 
   public function ready()
@@ -302,50 +290,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       // file even if the non-minified version is used.
       if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
     } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
-  }
-
-  /**
-   * Render a portion of HTML that needs consent from the user.
-   *
-   * This will replace all "src" attributes by "data-src" attributes.
-   * All scripts will therefore only be loaded when the user clicks on the
-   * consent button.
-   *
-   * Usage:
-   * $rockfrontend->consent(
-   *   'youtube',
-   *   '<iframe src=...',
-   *   '<a href=# rfc-allow=youtube>Allow YouTube-Player on this website</a>'
-   * );
-   *
-   * You can also render files instead of markup:
-   * $rockfrontend->consent(
-   *   'youtube'
-   *   'your youtube embed code',
-   *   'sections/youtube-consent.latte'
-   * );
-   */
-  public function consent($name, $enabled, $disabled = null)
-  {
-    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-src=", $enabled);
-    if ($disabled) {
-      // we only add the wrapper if we have a disabled markup
-      // if we dont have a disabled markup that means we only have
-      // a script tag (like plausible analytics) so we don't need the
-      // wrapping div!
-      $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
-      $file = $this->getFile($disabled);
-      if ($file) $disabled = $this->render($file);
-      $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
-    }
-    return $this->html($enabled . $disabled);
-  }
-
-  public function consentOptout($name, $script, $condition = true)
-  {
-    if (!$condition) return;
-    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
-    return $this->html($enabled);
   }
 
   public function ___addAlfredStyles()
@@ -594,6 +538,50 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Render a portion of HTML that needs consent from the user.
+   *
+   * This will replace all "src" attributes by "data-src" attributes.
+   * All scripts will therefore only be loaded when the user clicks on the
+   * consent button.
+   *
+   * Usage:
+   * $rockfrontend->consent(
+   *   'youtube',
+   *   '<iframe src=...',
+   *   '<a href=# rfc-allow=youtube>Allow YouTube-Player on this website</a>'
+   * );
+   *
+   * You can also render files instead of markup:
+   * $rockfrontend->consent(
+   *   'youtube'
+   *   'your youtube embed code',
+   *   'sections/youtube-consent.latte'
+   * );
+   */
+  public function consent($name, $enabled, $disabled = null)
+  {
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-src=", $enabled);
+    if ($disabled) {
+      // we only add the wrapper if we have a disabled markup
+      // if we dont have a disabled markup that means we only have
+      // a script tag (like plausible analytics) so we don't need the
+      // wrapping div!
+      $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
+      $file = $this->getFile($disabled);
+      if ($file) $disabled = $this->render($file);
+      $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
+    }
+    return $this->html($enabled . $disabled);
+  }
+
+  public function consentOptout($name, $script, $condition = true)
+  {
+    if (!$condition) return;
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
+    return $this->html($enabled);
+  }
+
+  /**
    * Create CSS from LESS file
    * @return void
    */
@@ -608,6 +596,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $less->addFile($lessFile);
     $less->saveCSS($css);
     $this->message("Created $css from $lessFile");
+  }
+
+  public function createCustomLess(HookEvent $event): void
+  {
+    $file = $this->lessFilePath();
+    if (is_file($file)) return;
+    $less = $this->wire->pages->get(1)->getFormatted(self::field_less);
+    $this->wire->files->filePutContents($file, $less);
   }
 
   /**
@@ -1222,6 +1218,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function layoutSuggestions(HookEvent $event)
   {
     return $this->findSuggestFiles($event->q);
+  }
+
+  private function lessFilePath(): string
+  {
+    return $this->wire->config->paths->templates . "less/rf-custom.less";
   }
 
   /**
@@ -1885,6 +1886,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $content = $this->render($file);
     if ($content) return $content;
     return false;
+  }
+
+  public function resetCustomLess(HookEvent $event): void
+  {
+    /** @var Page $page */
+    $page = $event->object;
+    $field = $event->arguments(0);
+    if ($field != self::field_less) return;
+    $file = $this->lessFilePath();
+    $this->wire->files->unlink($file);
+    $newValue = $event->arguments(2);
+    $this->wire->files->filePutContents($file, $newValue);
   }
 
   public function rfGrow($_data, $shrink = false): string
