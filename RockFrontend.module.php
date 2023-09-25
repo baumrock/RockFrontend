@@ -1377,7 +1377,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         self::field_images => [
           'type' => 'image',
           'label' => 'Media',
-          'maxFiles' => 1,
+          'maxFiles' => 0,
           'descriptionRows' => 0,
           'columnWidth' => 50,
           'extensions' => 'png jpg jpeg svg',
