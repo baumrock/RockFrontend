@@ -195,6 +195,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookBefore("Inputfield::render", $this, "addFooterlinksNote");
     $this->addHookAfter("Page::changed", $this, "resetCustomLess");
     $this->addHookBefore("Page::render", $this, "createCustomLess");
+    $this->addHookMethod("Page::otherLangUrl", $this, "otherLangUrl");
 
     // health checks
     $this->checkHealth();
@@ -1460,6 +1461,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $minify->minify($minFile->path);
     }
     return $minFile->path;
+  }
+
+  /**
+   * Get other's language url of current page
+   * For super-simple language switchers, see here:
+   * https://processwire.com/talk/topic/12243-language-switcher-on-front-end/?do=findComment&comment=178873
+   */
+  public function otherLangUrl(HookEvent $event): void
+  {
+    $page = $event->object;
+    $lang = $this->wire->languages->findOther()->first();
+    $event->return = $page->localUrl($lang);
   }
 
   /**
