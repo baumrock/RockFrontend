@@ -1414,8 +1414,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         self::field_less => [
           'type' => 'textarea',
           'label' => 'LESS',
-          'rows' => 5,
+          'rows' => 15,
           'icon' => 'css3',
+          'collapsed' => Inputfield::collapsedYes,
         ],
       ],
     ]);
