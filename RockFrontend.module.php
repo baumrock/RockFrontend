@@ -58,6 +58,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const field_favicon = self::prefix . "favicon";
   const field_ogimage = self::prefix . "ogimage";
   const field_footerlinks = self::prefix . "footerlinks";
+  const field_images = self::prefix . "images";
+  const field_less = self::prefix . "less";
 
   /** @var WireData */
   public $alfredCache;
@@ -191,6 +193,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
     $this->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
     $this->addHookBefore("Inputfield::render", $this, "addFooterlinksNote");
+    $this->addHookAfter("Page::changed", $this, "resetCustomLess");
+    $this->addHookBefore("Page::render", $this, "createCustomLess");
+    $this->addHookMethod("Page::otherLangUrl", $this, "otherLangUrl");
 
     // health checks
     $this->checkHealth();
@@ -286,50 +291,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       // file even if the non-minified version is used.
       if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
     } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
-  }
-
-  /**
-   * Render a portion of HTML that needs consent from the user.
-   *
-   * This will replace all "src" attributes by "data-src" attributes.
-   * All scripts will therefore only be loaded when the user clicks on the
-   * consent button.
-   *
-   * Usage:
-   * $rockfrontend->consent(
-   *   'youtube',
-   *   '<iframe src=...',
-   *   '<a href=# rfc-allow=youtube>Allow YouTube-Player on this website</a>'
-   * );
-   *
-   * You can also render files instead of markup:
-   * $rockfrontend->consent(
-   *   'youtube'
-   *   'your youtube embed code',
-   *   'sections/youtube-consent.latte'
-   * );
-   */
-  public function consent($name, $enabled, $disabled = null)
-  {
-    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-src=", $enabled);
-    if ($disabled) {
-      // we only add the wrapper if we have a disabled markup
-      // if we dont have a disabled markup that means we only have
-      // a script tag (like plausible analytics) so we don't need the
-      // wrapping div!
-      $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
-      $file = $this->getFile($disabled);
-      if ($file) $disabled = $this->render($file);
-      $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
-    }
-    return $this->html($enabled . $disabled);
-  }
-
-  public function consentOptout($name, $script, $condition = true)
-  {
-    if (!$condition) return;
-    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
-    return $this->html($enabled);
   }
 
   public function ___addAlfredStyles()
@@ -578,6 +539,50 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Render a portion of HTML that needs consent from the user.
+   *
+   * This will replace all "src" attributes by "data-src" attributes.
+   * All scripts will therefore only be loaded when the user clicks on the
+   * consent button.
+   *
+   * Usage:
+   * $rockfrontend->consent(
+   *   'youtube',
+   *   '<iframe src=...',
+   *   '<a href=# rfc-allow=youtube>Allow YouTube-Player on this website</a>'
+   * );
+   *
+   * You can also render files instead of markup:
+   * $rockfrontend->consent(
+   *   'youtube'
+   *   'your youtube embed code',
+   *   'sections/youtube-consent.latte'
+   * );
+   */
+  public function consent($name, $enabled, $disabled = null)
+  {
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-src=", $enabled);
+    if ($disabled) {
+      // we only add the wrapper if we have a disabled markup
+      // if we dont have a disabled markup that means we only have
+      // a script tag (like plausible analytics) so we don't need the
+      // wrapping div!
+      $enabled = "<div data-rfc-show='$name' hidden>$enabled</div>";
+      $file = $this->getFile($disabled);
+      if ($file) $disabled = $this->render($file);
+      $disabled = "<div data-rfc-hide='$name' hidden>$disabled</div>";
+    }
+    return $this->html($enabled . $disabled);
+  }
+
+  public function consentOptout($name, $script, $condition = true)
+  {
+    if (!$condition) return;
+    $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
+    return $this->html($enabled);
+  }
+
+  /**
    * Create CSS from LESS file
    * @return void
    */
@@ -592,6 +597,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $less->addFile($lessFile);
     $less->saveCSS($css);
     $this->message("Created $css from $lessFile");
+  }
+
+  public function createCustomLess(HookEvent $event): void
+  {
+    $file = $this->lessFilePath();
+    if (is_file($file)) return;
+    $less = $this->wire->pages->get(1)->getFormatted(self::field_less);
+    $this->wire->files->filePutContents($file, $less);
   }
 
   /**
@@ -1208,6 +1221,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->findSuggestFiles($event->q);
   }
 
+  private function lessFilePath(): string
+  {
+    return $this->wire->config->paths->templates . "less/rf-custom.less";
+  }
+
   /**
    * Setup live reloading
    */
@@ -1298,6 +1316,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function migrate()
   {
+    $this->migrateLess();
+    $this->migrateImages();
     $this->migrateFavicon();
     $this->migrateOgImage();
     $this->migrateFooterlinks();
@@ -1349,6 +1369,32 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->addFieldToTemplate(self::field_footerlinks, 'home');
   }
 
+  private function migrateImages()
+  {
+    if (!in_array("images", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
+        self::field_images => [
+          'type' => 'image',
+          'label' => 'Media',
+          'maxFiles' => 0,
+          'descriptionRows' => 0,
+          'columnWidth' => 50,
+          'extensions' => 'png jpg jpeg svg',
+          'okExtensions' => ['svg'],
+          'maxSize' => 3, // max 3 megapixels
+          'icon' => 'picture-o',
+          'outputFormat' => FieldtypeFile::outputFormatArray,
+          'description' => 'Images that can be included somewhere (eg in Hanna Codes).',
+          'tags' => self::tags,
+          'notes' => 'API: $home->images()->get("name=foo.jpg");',
+        ],
+      ],
+    ]);
+    $rm->addFieldToTemplate(self::field_images, 'home');
+  }
+
   private function mgirateLatteTranslations()
   {
     if (!in_array("lattetranslations", $this->migrations)) return;
@@ -1357,6 +1403,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $ext = $rm->getModuleConfig('ProcessLanguageTranslator', 'extensions');
     if (strpos((string)$ext, "latte") !== false) return;
     $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
+  }
+
+  private function migrateLess()
+  {
+    if (!in_array("less", $this->migrations)) return;
+    $rm = $this->rm();
+    $rm->migrate([
+      'fields' => [
+        self::field_less => [
+          'type' => 'textarea',
+          'label' => 'LESS',
+          'rows' => 15,
+          'icon' => 'css3',
+          'collapsed' => Inputfield::collapsedYes,
+          'notes' => 'This feature is experimental',
+        ],
+      ],
+    ]);
+    $rm->addFieldToTemplate(self::field_less, 'home');
   }
 
   private function migrateOgImage()
@@ -1398,6 +1463,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $minify->minify($minFile->path);
     }
     return $minFile->path;
+  }
+
+  /**
+   * Get other's language url of current page
+   * For super-simple language switchers, see here:
+   * https://processwire.com/talk/topic/12243-language-switcher-on-front-end/?do=findComment&comment=178873
+   */
+  public function otherLangUrl(HookEvent $event): void
+  {
+    $page = $event->object;
+    $lang = $this->wire->languages->findOther()->first();
+    $event->return = $page->localUrl($lang);
   }
 
   /**
@@ -1826,6 +1903,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return false;
   }
 
+  public function resetCustomLess(HookEvent $event): void
+  {
+    /** @var Page $page */
+    $page = $event->object;
+    $field = $event->arguments(0);
+    if ($field != self::field_less) return;
+    $file = $this->lessFilePath();
+    $this->wire->files->unlink($file);
+    $newValue = $event->arguments(2);
+    $this->wire->files->filePutContents($file, $newValue);
+  }
+
   public function rfGrow($_data, $shrink = false): string
   {
     if (is_string($_data)) {
@@ -2239,9 +2328,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Migrations";
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
     $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
+    $f->addOption('images', 'images - Create an image field for general image uploads and add it to the home template');
     $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
     $url = $this->wire->pages->get(2)->url . "module/edit?name=ProcessLanguageTranslator";
     $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
+    $f->addOption('less', "less - Add textarea to inject custom LESS/CSS");
     $f->value = (array)$this->migrations;
     $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
     $fs->add($f);
