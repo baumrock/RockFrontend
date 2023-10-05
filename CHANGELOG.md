@@ -1,3 +1,19 @@
+# [3.5.0](https://github.com/baumrock/RockFrontend/compare/v3.4.0...v3.5.0) (2023-10-05)
+
+
+### Bug Fixes
+
+* custom less feature not working on production ([44a3bc5](https://github.com/baumrock/RockFrontend/commit/44a3bc54b96ff27b3b9292a46c6f84baef3fd16b))
+* wrong maxfiles for field_images ([be5fca5](https://github.com/baumrock/RockFrontend/commit/be5fca51e5086db388d12203283e8ad7402546da))
+
+
+### Features
+
+* add images and less field to home template ([1010b44](https://github.com/baumrock/RockFrontend/commit/1010b44bf8afb22eae5892c67fed92fb91c63c3e))
+* add otherLangUrl() for simple language switchers ([eb0c137](https://github.com/baumrock/RockFrontend/commit/eb0c1371ba8a193d81cd12161b8405341cac9165))
+
+
+
 # [3.4.0](https://github.com/baumrock/RockFrontend/compare/v3.3.0...v3.4.0) (2023-09-11)
 
 
@@ -51,24 +67,6 @@
 ### Bug Fixes
 
 * typo ([5981247](https://github.com/baumrock/RockFrontend/commit/59812470372926658adc895ea6c0a519a5e0654e))
-
-
-
-# [3.2.0](https://github.com/baumrock/RockFrontend/compare/v3.1.0...v3.2.0) (2023-07-04)
-
-
-### Bug Fixes
-
-* RockFrontend script tag in markup when not needed ([25364be](https://github.com/baumrock/RockFrontend/commit/25364bec85a3c24e74127304e4131ee0e824bb5e))
-
-
-### Features
-
-* add deprecation note for noAssets ([a5a200f](https://github.com/baumrock/RockFrontend/commit/a5a200fbf69eeae09e04e431fef9b75f0434281c))
-* add HumanDates ([e5cb3d9](https://github.com/baumrock/RockFrontend/commit/e5cb3d9e7d0212d88f5e92dbfb759bc2d91dcff7))
-* add lattepanel again ([82957c0](https://github.com/baumrock/RockFrontend/commit/82957c08621529452fda5fe1e6045733ee193507))
-* don't load livereload in iframes and update minification ([75e6699](https://github.com/baumrock/RockFrontend/commit/75e66994813946ce943913b768ee640e9188528c))
-* only load RockFrontend.js if enabled ([f62ec7e](https://github.com/baumrock/RockFrontend/commit/f62ec7e4790dbb13a913c4bce1ca52ea72a89319))
 
 
 
