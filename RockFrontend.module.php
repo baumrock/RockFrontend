@@ -1417,6 +1417,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'rows' => 15,
           'icon' => 'css3',
           'collapsed' => Inputfield::collapsedYes,
+          'notes' => 'This feature is experimental',
         ],
       ],
     ]);
