@@ -601,14 +601,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function createCustomLess(HookEvent $event): void
   {
+    // if the less field does not exist we exit early
+    $lessField = $this->wire->fields->get(self::field_less);
+    if (!$lessField) return;
+
+    // if the less file already exists we have nothing to do
+    // the less file will be deleted on page save
     $file = $this->lessFilePath();
     if (is_file($file)) return;
     $less = $this->wire->pages->get(1)->getFormatted(self::field_less);
 
-    // create only if directory templates/less exists
+    // make sure that the less directory exists
     $dir = $this->wire->config->paths->templates . "less";
-    if ($less and !is_dir($dir)) $this->wire->files->mkdir($dir);
+    if (!is_dir($dir)) $this->wire->files->mkdir($dir);
 
+    // write less content to file
     $this->wire->files->filePutContents($file, $less);
   }
 
