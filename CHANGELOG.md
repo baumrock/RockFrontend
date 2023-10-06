@@ -1,3 +1,12 @@
+## [3.5.1](https://github.com/baumrock/RockFrontend/compare/v3.5.0...v3.5.1) (2023-10-06)
+
+
+### Bug Fixes
+
+* WireFileTools error if templates/less doesn't exist ([4c2c352](https://github.com/baumrock/RockFrontend/commit/4c2c352ed731f4efe5ce96c2e55593809f7fd966))
+
+
+
 # [3.5.0](https://github.com/baumrock/RockFrontend/compare/v3.4.0...v3.5.0) (2023-10-05)
 
 
@@ -58,15 +67,6 @@
 ### Bug Fixes
 
 * update composer dependencies ([6c2dd06](https://github.com/baumrock/RockFrontend/commit/6c2dd06c1ef43e4e471fdc183b86055347ad9f56))
-
-
-
-## [3.2.1](https://github.com/baumrock/RockFrontend/compare/v3.2.0...v3.2.1) (2023-07-04)
-
-
-### Bug Fixes
-
-* typo ([5981247](https://github.com/baumrock/RockFrontend/commit/59812470372926658adc895ea6c0a519a5e0654e))
 
 
 
