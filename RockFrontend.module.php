@@ -604,10 +604,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $file = $this->lessFilePath();
     if (is_file($file)) return;
     $less = $this->wire->pages->get(1)->getFormatted(self::field_less);
+
     // create only if directory templates/less exists
-    if (is_dir($this->wire->config->paths->templates . "less")) {
-      $this->wire->files->filePutContents($file, $less);
-    }
+    $dir = $this->wire->config->paths->templates . "less";
+    if ($less and !is_dir($dir)) $this->wire->files->mkdir($dir);
+
+    $this->wire->files->filePutContents($file, $less);
   }
 
   /**
