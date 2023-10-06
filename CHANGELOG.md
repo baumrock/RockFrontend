@@ -1,3 +1,12 @@
+## [3.5.2](https://github.com/baumrock/RockFrontend/compare/v3.5.1...v3.5.2) (2023-10-06)
+
+
+### Bug Fixes
+
+* error when less field not used ([495c186](https://github.com/baumrock/RockFrontend/commit/495c186387ba441878529a1125cd02bec77928a5))
+
+
+
 ## [3.5.1](https://github.com/baumrock/RockFrontend/compare/v3.5.0...v3.5.1) (2023-10-06)
 
 
@@ -58,15 +67,6 @@
 * add view folder feature ([dab548b](https://github.com/baumrock/RockFrontend/commit/dab548bd64d4fa66f7dcad8945d49345882a533f))
 * improve topbar hidden style ([959f797](https://github.com/baumrock/RockFrontend/commit/959f79783b687dea9a6895601fa170c765e8fdcd))
 * tweak frontend modal z-index for uikit nav ([20f4362](https://github.com/baumrock/RockFrontend/commit/20f4362658a9a3a9dfcadf52d26e3135d7c5b7c7))
-
-
-
-## [3.2.2](https://github.com/baumrock/RockFrontend/compare/v3.2.1...v3.2.2) (2023-07-04)
-
-
-### Bug Fixes
-
-* update composer dependencies ([6c2dd06](https://github.com/baumrock/RockFrontend/commit/6c2dd06c1ef43e4e471fdc183b86055347ad9f56))
 
 
 
