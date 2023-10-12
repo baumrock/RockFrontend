@@ -2388,7 +2388,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $f->addOption($label, $label);
     }
     $accordion .= "</ul>";
-    $f->prependMarkup = "<p class='uk-text-warning'>WARNING: This will overwrite existing files - make sure to have backups or use GIT for version controlling your project!</p>";
+    $f->prependMarkup = "<p class='uk-text-warning'>WARNING: This will overwrite existing files in /site/templates - make sure to have backups or use GIT for version controlling your project!</p>";
     $f->prependMarkup .= $accordion;
     $f->notes = $this->profileInstalledNote();
     $fs->add($f);
