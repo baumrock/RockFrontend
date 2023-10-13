@@ -40,6 +40,7 @@ class StylesArray extends AssetsArray
     $this->addAll('/site/templates/sections');
     $this->addAll('/site/templates/partials');
     $this->addAll('/site/assets/RockMatrix');
+    $this->addAll('/site/modules/RockBlocks/blocks');
 
     // add the webfonts.css file if it exists
     $file = $this->rockfrontend()->getFile('/site/templates/webfonts/webfonts.css');
