@@ -352,6 +352,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$page->editable()) return;
     if ($page->template == 'admin') return;
     if ($this->wire->input->get('rfpreview')) return;
+    if ($this->wire->config->hideTopBar) return;
 
     /** @var RockMigrations $rm */
     $less = __DIR__ . "/bar/bar.less";
