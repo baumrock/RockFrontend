@@ -1482,12 +1482,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Get other's language url of current page
    * For super-simple language switchers, see here:
    * https://processwire.com/talk/topic/12243-language-switcher-on-front-end/?do=findComment&comment=178873
+   *
+   * Provide true to add url segment string:
+   * $page->otherLangUrl(true);
    */
   public function otherLangUrl(HookEvent $event): void
   {
     $page = $event->object;
     $lang = $this->wire->languages->findOther()->first();
-    $event->return = $page->localUrl($lang);
+    $url = $page->localUrl($lang);
+    if ($event->arguments(0)) $url .= $this->wire->input->urlSegmentStr();
+    $event->return = $url;
   }
 
   /**
