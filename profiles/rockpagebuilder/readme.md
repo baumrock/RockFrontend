@@ -1,6 +1,6 @@
-## RockBlocks Profile
+## RockPageBuilder Profile
 
-This advanced rock profile makes it super easy to kickstart new projects based on RockPageBuilder and RockBlocks.
+This advanced profile makes it super easy to kickstart new projects based on RockPageBuilder.
 
 It uses the LESS module to compile the UIkit source files to CSS on the fly, so make sure to install that module first! https://processwire.com/modules/less/
 
