@@ -39,8 +39,12 @@ class StylesArray extends AssetsArray
     $this->addAll('/site/templates/less');
     $this->addAll('/site/templates/sections');
     $this->addAll('/site/templates/partials');
-    $this->addAll('/site/assets/RockMatrix');
-    $this->addAll('/site/modules/RockBlocks/blocks');
+
+    // load less files from rockblocks
+    $rpb = $this->wire->modules->get("RockPageBuilder");
+    if ($rpb && $rpb->useRockBlocks) {
+      $this->addAll('/site/modules/RockPageBuilder/blocks');
+    }
 
     // add the webfonts.css file if it exists
     $file = $this->rockfrontend()->getFile('/site/templates/webfonts/webfonts.css');
