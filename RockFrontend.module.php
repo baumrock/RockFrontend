@@ -312,9 +312,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function addLiveReloadScript()
   {
-    // we only add live reloading to the frontend
-    if ($this->wire->page->template == 'admin') return;
+    // get and minify the livereload script
+    // dont worry, this will only be done for superusers ;)
     $file = $this->minifyFile($this->path . "livereload.js");
+    $page = $this->wire->page;
+
+    // for backend requests we need more caution
+    // this is because live reload will break the module installation screen for example
+    if ($page->template == 'admin') {
+      // if livereload is disabled on backend pages we exit early
+      if (!$this->liveReloadBackend) return;
+
+      // on module config screens we disable livereload if it is not explicitly
+      // forced to be enabled. this is to prevent problems when downloading
+      // and installing modules!
+      if ($page->process == "ProcessModule" && !$this->liveReloadModules) return;
+    }
+
+    // if we got that far we add livereload to our site :)
     $this->scripts('rockfrontend')->add($file, "defer");
   }
 
@@ -2277,54 +2292,83 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'icon' => 'life-ring',
       'value' => "<p>Hey there, coding rockstars! 👋</p>
         <ul>
-          <li><a href=https://www.baumrock.com/modules/$name/docs>Read the docs</a> and level up your coding game! 🚀💻😎</li>
+          <li><a href=https://www.baumrock.com/en/processwire/modules/$name/docs>Read the docs</a> and level up your coding game! 🚀💻😎</li>
           <li><a href=https://github.com/baumrock/$name>Show some love by starring the project</a> and keep us motivated to build more awesome stuff for you! 🌟💻😊</li>
           <li><a href=https://www.baumrock.com/rock-monthly>Sign up now for our monthly newsletter</a> and receive the latest updates and exclusive offers right to your inbox! 🚀💻📫</li>
         </ul>",
     ]);
 
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    if (!$rm) {
-      $warn = new InputfieldMarkup();
-      $warn->label = 'Warning';
-      $warn->icon = 'exclamation-triangle';
-      $warn->value = "<div class='uk-text-warning'>RockMigrations is not installed but may be required for some features of RockFrontend. For example it will create a field to upload a Favicon to your site. RockFrontend will then generate all necessary Favicon sizes and markup for all devices.</div>";
-      $inputfields->add($warn);
-    }
+    $config = $this->wire->config;
+    $config->styles->add($config->urls($this) . "RockFrontend.module.css");
 
-    $this->wire->config->styles->add($this->wire->config->urls($this) . "RockFrontend.module.css");
+    $this->configLivereload($inputfields);
     $this->configSettings($inputfields);
     $this->configTools($inputfields);
+
     return $inputfields;
+  }
+
+  private function configLivereload(InputfieldWrapper $inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "LiveReload";
+    $fs->icon = "refresh";
+    $inputfields->add($fs);
+
+    $f = new InputfieldMarkup();
+    if ($live = $this->wire->config->livereload) {
+      if (is_numeric($live)) $value = "LiveReload is enabled (via config.php) - Interval: $live seconds.";
+      else $value = var_export($live, true);
+    } else $value = 'LiveReload is disabled. To enable it set this in your config.php:
+      <pre class="uk-margin-small-top uk-margin-remove-bottom">$config->livereload = 1;</pre>';
+    $f->value = $value;
+    $fs->add($f);
+
+    // early exit if live reload is disabled
+    if (!$live) return;
+
+    $fs->add([
+      'type' => 'checkbox',
+      'name' => 'liveReloadBackend',
+      'label' => 'Add livereload to backend pages',
+      'checked' => $this->liveReloadBackend ? 'checked' : '',
+      'columnWidth' => 50,
+      'notes' => 'Really handy when working with RockMigrations!',
+    ]);
+
+    $fs->add([
+      'type' => 'checkbox',
+      'name' => 'liveReloadModules',
+      'label' => 'Add livereload to module pages',
+      'checked' => $this->liveReloadModules ? 'checked' : '',
+      'columnWidth' => 50,
+      'notes' => 'Caution: LiveReload on module pages can cause problems, '
+        . 'for example module installations might not work. Enable this only '
+        . 'when needed!',
+    ]);
   }
 
   private function configSettings($inputfields)
   {
     $fs = new InputfieldFieldset();
     $fs->label = "Settings";
+    $fs->icon = "cogs";
+    $inputfields->add($fs);
 
     $f = new InputfieldText();
     $f->label = 'Webfonts';
     $f->name = 'webfonts';
+    $f->icon = "font";
     $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed."
       . "\nExample URL: https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700 (see here: [screenshot](https://i.imgur.com/b8aJPQW.png))";
     $f->value = $this->webfonts;
     $f->notes = $this->showFontFileSize();
     $fs->add($f);
 
-    $f = new InputfieldMarkup();
-    $f->label = 'LiveReload';
-    if ($live = $this->wire->config->livereload) {
-      if (is_numeric($live)) $value = "LiveReload is enabled (via config.php) - Interval: $live";
-      else $value = var_export($live, true);
-    } else $value = 'LiveReload is disabled. To enable it set $config->livereload = 1; in your config.php';
-    $f->value = $value;
-    $fs->add($f);
-
     $f = $this->wire->modules->get('InputfieldCheckboxes');
     $f->name = 'features';
     $f->label = "Features";
+    $f->icon = "star-o";
     $f->addOption('RockFrontend.js', 'RockFrontend.js - Load this file on the frontend (eg to use consent tools).');
     $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax).');
     $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature)).');
@@ -2344,6 +2388,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = $this->wire->modules->get('InputfieldCheckboxes');
     $f->name = 'migrations';
     $f->label = "Migrations";
+    $f->icon = "rocket";
     $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
     $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
     $f->addOption('images', 'images - Create an image field for general image uploads and add it to the home template');
@@ -2353,15 +2398,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->addOption('less', "less - Add textarea to inject custom LESS/CSS");
     $f->value = (array)$this->migrations;
     $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
+    if (!$this->wire->modules->isInstalled("RockMigrations")) {
+      $f->prependMarkup = "<div class='uk-alert uk-alert-warning uk-margin-remove'>These features will only work if RockMigrations is installed!</div>";
+      $f->collapsed = Inputfield::collapsedYes;
+    }
     $fs->add($f);
-
-    $inputfields->add($fs);
   }
 
   private function configTools(&$inputfields)
   {
     $fs = new InputfieldFieldset();
     $fs->label = "Tools";
+    $fs->icon = "wrench";
 
     $this->manifestConfig($fs);
 
