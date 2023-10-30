@@ -64,7 +64,7 @@ class StylesArray extends AssetsArray
     $less = $this->wire->modules->get('Less');
     $lessCache = $this->wire->cache->get($cacheName);
     $lessCurrent = ''; // string to store file info
-    $m = 0;
+    $mtime = 0;
     $parse = false;
     $entries = new WireArray();
     $intro = "Recompile $cacheName";
@@ -82,10 +82,16 @@ class StylesArray extends AssetsArray
       }
       $less->addFile($asset->path);
       $parse = true;
-      if ($asset->m > $m) $m = $asset->m;
+      if ($asset->m > $mtime) $mtime = $asset->m;
       $lessCurrent .= $asset->path . "|" . $asset->m . "--";
     }
 
+    // if a modification timestamp is set in the options we apply it now
+    // this is necessary for making LESS recompile if less variables in
+    // PHP have been changed without updating any less files
+    $mtime = max($mtime, $opt->lessVarsModified);
+
+    // prepare variables needed for recompile check
     $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
     $cssFile = $cssPath . $opt->cssName . ".css";
     $lessCacheArray = $this->getChangedFiles($lessCache, $lessCurrent);
@@ -93,23 +99,42 @@ class StylesArray extends AssetsArray
     // we have a less parser installed and some less files to parse
     if ($less and $parse) {
       $recompile = false;
+
       // if it is a livereload stream we do not recompile
       if ($this->rockfrontend()->isLiveReload) $recompile = false;
+
+      // if css file does not exist we recompile
       elseif (!is_file($cssFile)) {
         $this->log("$intro: $cssFile does not exist.");
         $recompile = true;
-      } elseif ($lessCurrent !== $lessCache) {
+      }
+
+      // cache strings are different
+      // that means a file or a timestamp has changed
+      elseif ($lessCurrent !== $lessCache) {
+        // show info which file changed to log
         foreach ($lessCacheArray as $str) {
           $parts = explode("|", $str);
           $url = $this->rockfrontend()->toUrl($parts[0]);
           $this->log("$intro: Change detected in $url");
         }
         $recompile = true;
-      } elseif ($this->wire->session->get(RockFrontend::recompile)) {
+      }
+
+      // nothing changed so far, check for mtime variable
+      elseif ($mtime > filemtime($cssFile)) {
+        $recompile = true;
+        $this->log("$intro: Change detected in less variables from PHP file");
+      }
+
+      // maybe recompile is forced by the session flag?
+      elseif ($this->wire->session->get(RockFrontend::recompile)) {
         $this->log("$intro: Forced by RockFrontend::recompile.");
         $recompile = true;
-      } else {
-        // check if any of the less files in RockFrontend module folder have changed
+      }
+
+      // check if any of the less files in RockFrontend folder have changed
+      else {
         foreach (glob(__DIR__ . "/less/*.less") as $f) {
           if (filemtime($f) > filemtime($cssFile)) {
             $this->log("$intro: $f changed.");
@@ -118,12 +143,7 @@ class StylesArray extends AssetsArray
         }
       }
 
-      // create css file
-      $url = str_replace(
-        $this->wire->config->paths->root,
-        $this->wire->config->urls->root,
-        $cssFile
-      );
+      // recompile CSS
       if ($recompile) {
         if (!is_dir($cssPath)) $this->wire->files->mkdir($cssPath);
         $less->setOptions([
@@ -139,6 +159,8 @@ class StylesArray extends AssetsArray
         $less->saveCss($cssFile);
         $this->wire->cache->save($cacheName, $lessCurrent);
         $this->wire->session->set(RockFrontend::recompile, false);
+
+        $url = $this->rockfrontend()->toUrl($cssFile);
         $this->log("RockFrontend recompiled $url");
       }
 
@@ -205,6 +227,11 @@ class StylesArray extends AssetsArray
       'cssDir' => $this->cssDir ?: "/site/templates/bundle/",
       'cssName' => $this->name,
       'sourcemaps' => $this->wire->config->debug,
+
+      // manual file modification timestamp provided by calling module
+      // this is needed in RockPdf to make the less update when variables
+      // in PHP changed but no less file was changed
+      'lessVarsModified' => false,
     ]);
     $opt->setArray($options);
 

@@ -184,7 +184,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       self::permission_alfred,
       "Is allowed to use ALFRED frontend editing"
     );
-    $this->createCSS();
+    $this->lessToCss($this->path . "Alfred.less");
 
     // hooks
     $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
@@ -600,19 +600,36 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Create CSS from LESS file
-   * @return void
+   *
+   * This will only be executed for superusers as it is intended to be used
+   * on dev environments to parse module styles on the fly.
+   *
+   * Usage:
+   * $rockfrontend->lessToCss("/path/to/file.less", $minify = true);
    */
-  private function createCSS()
+  public function lessToCss($lessFile, $minify = true): void
   {
     if (!$this->wire->user->isSuperuser()) return;
-    $css = $this->path . "Alfred.css";
-    $lessFile = $this->path . "Alfred.less";
-    if (filemtime($css) > filemtime($lessFile)) return;
+
+    // get path of less file
+    $lessFile = $this->getFile($lessFile);
+    if (!is_file($lessFile)) throw new WireException("$lessFile not found");
+
+    // get path of css file
+    $css = substr($lessFile, 0, -5) . ".css";
+
+    // if css file is newer we don't do anything
+    if (@filemtime($css) > @filemtime($lessFile)) return;
+
+    // we need to create CSS from less
     if (!$less = $this->wire->modules->get("Less")) return;
     /** @var Less $less */
     $less->addFile($lessFile);
     $less->saveCSS($css);
-    $this->message("Created $css from $lessFile");
+
+    // if minify option is true we minify the file
+    // and return the path of the minified css file
+    if ($minify) $this->minifyFile($css);
   }
 
   public function createCustomLess(HookEvent $event): void
