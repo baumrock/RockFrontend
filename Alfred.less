@@ -17,6 +17,14 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   outline: @outline;
   z-index: 10;
 }
+body.no-alfred {
+  .alfred:hover {
+    outline: none !important;
+  }
+  .alfredelements {
+    display: none !important;
+  }
+}
 
 // mixin for icons
 .alfred-icon {
