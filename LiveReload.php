@@ -26,6 +26,8 @@ class LiveReload extends Wire
       'interval' => 1,
       'includeDefaults' => [
         $this->wire->config->paths->site,
+        $this->wire->config->paths->root . "RockShell/docs",
+        $this->wire->config->paths->root . "RockShell/App",
       ],
       // user defined includes
       'include' => [],

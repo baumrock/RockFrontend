@@ -8,6 +8,12 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   outline: 4px groove #ececec;
   z-index: 10;
 }
+body.no-alfred .alfred:hover {
+  outline: none !important;
+}
+body.no-alfred .alfredelements {
+  display: none !important;
+}
 .alfred-icon {
   pointer-events: all;
   border-radius: 0;

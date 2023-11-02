@@ -23,17 +23,21 @@ class TextformatterRockFrontend extends Textformatter implements ConfigurableMod
 
   public function format(&$str)
   {
-    if (strpos($str, "[rf-consent=") === false) return;
-    $str = preg_replace_callback("/\[rf-consent=(.*?)\](.*?)\[\/rf-consent\]/", function ($matches) {
-      $name = $matches[1];
-      $str = $matches[2];
-      return "<label>
-        <input type='checkbox' class='rf-consent-checkbox {$this->checkboxclass}' data-name='$name'>
-        $str
-        </label>";
-    }, $str);
-  }
+    // replace consent checkboxes
+    if (strpos($str, "[rf-consent=") !== false) {
+      $str = preg_replace_callback("/\[rf-consent=(.*?)\](.*?)\[\/rf-consent\]/", function ($matches) {
+        $name = $matches[1];
+        $str = $matches[2];
+        return "<label>
+          <input type='checkbox' class='rf-consent-checkbox {$this->checkboxclass}' data-name='$name'>
+          $str
+          </label>";
+      }, $str);
+    }
 
+    // replace [[year]] with current year
+    $str = str_replace("[rf-year]", date("Y"), $str);
+  }
 
   /**
    * Config inputfields

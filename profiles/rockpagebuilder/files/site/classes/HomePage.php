@@ -4,6 +4,10 @@ namespace ProcessWire;
 
 use RockMigrations\MagicPage;
 
+/**
+ * This is a custom page class for the HomePage
+ * You can delete this file if you don't need it.
+ */
 class HomePage extends Page
 {
   use MagicPage;

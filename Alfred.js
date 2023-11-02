@@ -90,7 +90,7 @@
 
   Alfred.prototype.initItem = function (el) {
     $(el).addClass("alfred");
-    $(el).append("<div class=alfredelements>");
+    $(el).append("<div class='alfredelements no-sortable'>");
     let $elements = $(el).find(".alfredelements");
     try {
       let config = JSON.parse($(el).attr("alfred"));

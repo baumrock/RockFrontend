@@ -1,9 +1,9 @@
 {* here you can exclude items from main + mobile menu, eg template!=blogitem *}
-{do $wire->mainMenuSelector = ""}
+{do $wire->mainMenuSelector = "include=hidden"}
 {do $wire->mobileMenuSelector = $wire->mainMenuSelector}
 
 <header {alfred($page)}>
-  <div class="rf-box">
+  <div class="uk-container">
     <nav class="uk-navbar-container uk-navbar-transparent" uk-navbar>
 
       {* navbar left - logo *}
@@ -15,7 +15,7 @@
           title="Back to Home"
           uk-tooltip
         >
-          {$rockfrontend->svg("/img/logo-mit-slogan.svg")}
+          Your Logo
         </a>
       </div>
 
@@ -66,7 +66,7 @@
         </ul>
 
         {* burger *}
-        <ul class="uk-navbar-nav">
+        <ul class="uk-navbar-nav uk-hidden@m">
           <li>
             <a href="#mobile-menu" uk-toggle>
               <svg width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
