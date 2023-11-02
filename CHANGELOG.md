@@ -1,3 +1,28 @@
+# [3.6.0](https://github.com/baumrock/RockFrontend/compare/v3.5.2...v3.6.0) (2023-11-02)
+
+
+### Bug Fixes
+
+* add missing layout file for blank profile ([677154d](https://github.com/baumrock/RockFrontend/commit/677154d9b68c285d5e811cc950c1fefc86d49a40))
+* add rockshell to livereload folders ([8bc1558](https://github.com/baumrock/RockFrontend/commit/8bc15584eb9204414eecff3b68c8831822afbb32))
+* less not recompiling when using variables from PHP ([7f805a1](https://github.com/baumrock/RockFrontend/commit/7f805a10af8b02af967abaf1cf81d146c693f21c))
+* rename profile ([42ee849](https://github.com/baumrock/RockFrontend/commit/42ee8492c124e3612bd84c7f0fe5cf6f761d87f7))
+
+
+### Features
+
+* add $config->hideTopBar flag ([dd8e926](https://github.com/baumrock/RockFrontend/commit/dd8e926b23bd8cbd66dba56893339bc6f4f3453f))
+* add new icons for RockPageBuilder ([4b46a19](https://github.com/baumrock/RockFrontend/commit/4b46a19b13d6a2b0a9b695f2c47e2557f8d21586))
+* add rf-year to formatter ([2d84485](https://github.com/baumrock/RockFrontend/commit/2d844858d9fc06542ccacdd19b5a875ff462380b))
+* add rock-beginner profile ([55c4791](https://github.com/baumrock/RockFrontend/commit/55c479197b628ca98a98870af5f762d91b1a231d))
+* add rockblocks profile ([27ded7a](https://github.com/baumrock/RockFrontend/commit/27ded7afb32be088c1b934517808945f8227cf8e))
+* add support for rockblocks folder ([bf91d6f](https://github.com/baumrock/RockFrontend/commit/bf91d6f06a2ecaa37f4ba64225e17c963126a2ba))
+* add support for RockPageBuilder sortable 🤩🚀 ([bf8ab5c](https://github.com/baumrock/RockFrontend/commit/bf8ab5c618c709ef07e8c3c44d734cfb39c739e9))
+* move livereload settings to RockFrontend ([7e0ba90](https://github.com/baumrock/RockFrontend/commit/7e0ba904758ce223b9c6512d8762b1a26ced0ce5))
+* option to add urlsegmentstr to otherLangUrl() ([0e4e042](https://github.com/baumrock/RockFrontend/commit/0e4e04211e4cc6b58055e0b9070a742331eaf106))
+
+
+
 ## [3.5.2](https://github.com/baumrock/RockFrontend/compare/v3.5.1...v3.5.2) (2023-10-06)
 
 
@@ -47,26 +72,6 @@
 * add css to force alfred spinner position ([fc283da](https://github.com/baumrock/RockFrontend/commit/fc283da12209260bddb61262c9a0fb6052d3a7cf))
 * add docs for static rendering feature ([76c4c6c](https://github.com/baumrock/RockFrontend/commit/76c4c6c4e35087bd3cf5fe77e8a0323bc75e0340))
 * minify topbar css ([9eca5cf](https://github.com/baumrock/RockFrontend/commit/9eca5cfadd2cc8f14c04c789a320ff09305b79fa))
-
-
-
-# [3.3.0](https://github.com/baumrock/RockFrontend/compare/v3.2.2...v3.3.0) (2023-08-11)
-
-
-### Bug Fixes
-
-* apostrophes breaking alfred() ([3bcc291](https://github.com/baumrock/RockFrontend/commit/3bcc291f4288181cb7860ef85e93059e3a36676a))
-* improve getUikitVersions in module config ([5743df9](https://github.com/baumrock/RockFrontend/commit/5743df9c84943949ca1db3a8a3447e095d7197c1))
-* remove outdated uikit profile - please use the rock profile instead! ([e92f9bc](https://github.com/baumrock/RockFrontend/commit/e92f9bc88334af6fb3b8c0457b747215306fef94))
-* wrong template path when using latte includes ([f2277e7](https://github.com/baumrock/RockFrontend/commit/f2277e70a603b1139734aab9a7a60c85b315c4a6))
-
-
-### Features
-
-* add static site rendering feature ([1a87bf9](https://github.com/baumrock/RockFrontend/commit/1a87bf9c10218de8e7073d10d3eda50ed57c0a1b))
-* add view folder feature ([dab548b](https://github.com/baumrock/RockFrontend/commit/dab548bd64d4fa66f7dcad8945d49345882a533f))
-* improve topbar hidden style ([959f797](https://github.com/baumrock/RockFrontend/commit/959f79783b687dea9a6895601fa170c765e8fdcd))
-* tweak frontend modal z-index for uikit nav ([20f4362](https://github.com/baumrock/RockFrontend/commit/20f4362658a9a3a9dfcadf52d26e3135d7c5b7c7))
 
 
 
