@@ -25,7 +25,7 @@ $rockfrontend->scripts()
   // check if Less module is installed
   // once installed you can remove this if/else and just render the layout
   if ($modules->get('Less')) echo $rockfrontend->renderLayout($page);
-  else echo "<h1 style='text-align:center;padding:50px;color:red;'>Please install the Less module to use this profile!</h1>";
+  else echo $rockfrontend->installLessModule($page);
   ?>
 </body>
 

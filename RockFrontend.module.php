@@ -1210,6 +1210,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Install less module for the pagebuilder profile
+   */
+  public function installLessModule(Page $page)
+  {
+    if ($this->wire->modules->get('Less')) return;
+
+    // less module is not installed
+    // if rockmigrations is installed we use it to install the less module
+    /** @var RockMigrations $rm */
+    $rm = $this->wire->modules->get('RockMigrations');
+    if ($rm) {
+      $rm->installModule("Less", "https://github.com/ryancramerdesign/Less/archive/refs/heads/main.zip");
+      return $this->renderLayout($page);
+    }
+
+    // rockmigrations not installed, show info to install less manually
+    return "<h1 style='text-align:center;padding:50px;color:red;'>Please install the Less module to use this profile!</h1>";
+  }
+
+  /**
    * Is the given page active in the menu?
    *
    * The root page will only be active if itself is viewed (not any descendant)
