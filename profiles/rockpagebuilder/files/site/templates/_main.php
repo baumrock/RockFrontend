@@ -5,6 +5,7 @@ namespace ProcessWire;
 /** @var RockFrontend $rockfrontend */
 $rockfrontend->styles()
   ->add('/site/templates/uikit/src/less/uikit.theme.less')
+  ->add('/site/templates/less/blockmargins.less')
   ->addDefaultFolders(); // autoload styles in sections, partials, etc
 $rockfrontend->scripts()
   ->add('/site/templates/uikit/dist/js/uikit.min.js');
