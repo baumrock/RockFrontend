@@ -1,3 +1,12 @@
+## [3.6.1](https://github.com/baumrock/RockFrontend/compare/v3.6.0...v3.6.1) (2023-11-03)
+
+
+### Bug Fixes
+
+* add missing blockmargins style for RockPageBuilder profile ([0670d75](https://github.com/baumrock/RockFrontend/commit/0670d75edb0210a21dd64b88a8cdf859d22c1a37))
+
+
+
 # [3.6.0](https://github.com/baumrock/RockFrontend/compare/v3.5.2...v3.6.0) (2023-11-02)
 
 
@@ -54,24 +63,6 @@
 
 * add images and less field to home template ([1010b44](https://github.com/baumrock/RockFrontend/commit/1010b44bf8afb22eae5892c67fed92fb91c63c3e))
 * add otherLangUrl() for simple language switchers ([eb0c137](https://github.com/baumrock/RockFrontend/commit/eb0c1371ba8a193d81cd12161b8405341cac9165))
-
-
-
-# [3.4.0](https://github.com/baumrock/RockFrontend/compare/v3.3.0...v3.4.0) (2023-09-11)
-
-
-### Bug Fixes
-
-* IntlDateFormatter use statement missing ([00ef357](https://github.com/baumrock/RockFrontend/commit/00ef35717f4e09bfb3581cbf11451774786f89d5))
-
-
-### Features
-
-* add <template> based consent feature ([d2e7984](https://github.com/baumrock/RockFrontend/commit/d2e79849fe1a14cde75c1a94fd23c105c961c570))
-* add condition param for consentOptout() ([9a31a96](https://github.com/baumrock/RockFrontend/commit/9a31a965ecefb1d10e9fa1d0ca31fae08f662c99))
-* add css to force alfred spinner position ([fc283da](https://github.com/baumrock/RockFrontend/commit/fc283da12209260bddb61262c9a0fb6052d3a7cf))
-* add docs for static rendering feature ([76c4c6c](https://github.com/baumrock/RockFrontend/commit/76c4c6c4e35087bd3cf5fe77e8a0323bc75e0340))
-* minify topbar css ([9eca5cf](https://github.com/baumrock/RockFrontend/commit/9eca5cfadd2cc8f14c04c789a320ff09305b79fa))
 
 
 
