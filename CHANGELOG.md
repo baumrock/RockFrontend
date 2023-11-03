@@ -1,3 +1,12 @@
+# [3.7.0](https://github.com/baumrock/RockFrontend/compare/v3.6.1...v3.7.0) (2023-11-03)
+
+
+### Features
+
+* install Less module automatically ([e7b0916](https://github.com/baumrock/RockFrontend/commit/e7b09164851ddefab0198dc417a17e330a7c4368))
+
+
+
 ## [3.6.1](https://github.com/baumrock/RockFrontend/compare/v3.6.0...v3.6.1) (2023-11-03)
 
 
@@ -47,22 +56,6 @@
 ### Bug Fixes
 
 * WireFileTools error if templates/less doesn't exist ([4c2c352](https://github.com/baumrock/RockFrontend/commit/4c2c352ed731f4efe5ce96c2e55593809f7fd966))
-
-
-
-# [3.5.0](https://github.com/baumrock/RockFrontend/compare/v3.4.0...v3.5.0) (2023-10-05)
-
-
-### Bug Fixes
-
-* custom less feature not working on production ([44a3bc5](https://github.com/baumrock/RockFrontend/commit/44a3bc54b96ff27b3b9292a46c6f84baef3fd16b))
-* wrong maxfiles for field_images ([be5fca5](https://github.com/baumrock/RockFrontend/commit/be5fca51e5086db388d12203283e8ad7402546da))
-
-
-### Features
-
-* add images and less field to home template ([1010b44](https://github.com/baumrock/RockFrontend/commit/1010b44bf8afb22eae5892c67fed92fb91c63c3e))
-* add otherLangUrl() for simple language switchers ([eb0c137](https://github.com/baumrock/RockFrontend/commit/eb0c1371ba8a193d81cd12161b8405341cac9165))
 
 
 
