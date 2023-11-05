@@ -2168,7 +2168,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $root = $tracy['localRootPath'];
     else $root = $this->wire->config->paths->root;
     $link = str_replace($this->wire->config->paths->root, $root, $path);
-    return "vscode://file/$link";
+    $link = Paths::normalizeSeparators($link);
+    return "vscode://file/" . ltrim($link, "/");
   }
 
   /** translation support in LATTE files */
