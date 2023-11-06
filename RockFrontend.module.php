@@ -146,6 +146,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->wire->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
 
+    // if settings are set in config.php we make sure to use these settings
+    $config = $this->wire->config;
+    if ($config->livereloadBackend !== null) {
+      $this->livereloadBackend = $config->livereloadBackend;
+    }
+
     $this->path = $this->wire->config->paths($this);
     $this->home = $this->wire->pages->get(1);
 
@@ -321,7 +327,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this is because live reload will break the module installation screen for example
     if ($page->template == 'admin') {
       // if livereload is disabled on backend pages we exit early
-      if (!$this->liveReloadBackend) return;
+      if (!$this->livereloadBackend) return;
 
       // on module config screens we disable livereload if it is not explicitly
       // forced to be enabled. this is to prevent problems when downloading
@@ -2367,9 +2373,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $fs->add([
       'type' => 'checkbox',
-      'name' => 'liveReloadBackend',
+      'name' => 'livereloadBackend',
       'label' => 'Add livereload to backend pages',
-      'checked' => $this->liveReloadBackend ? 'checked' : '',
+      'checked' => $this->livereloadBackend ? 'checked' : '',
       'columnWidth' => 50,
       'notes' => 'Really handy when working with RockMigrations!',
     ]);
