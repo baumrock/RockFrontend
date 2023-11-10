@@ -10,18 +10,38 @@
 
 use function ProcessWire\wire;
 
+function getTextdomain($file){
+//  bd($file);
+  if (!str_contains($file, '.latte')) return false;
+  $content = file_get_contents($file);
+  // get the string between single quotes from  public const Source = 'something';
+  $pattern = "/public const Source = '(.*?)';/";
+  preg_match($pattern, $content, $matches);
+  return $matches[1];
+}
+
 function __($str)
 {
-  $rf = wire()->modules->get('RockFrontend');
-  return \ProcessWire\__($str, $rf->textdomain());
+  $backtrace = debug_backtrace();
+  $file = $backtrace[0]["file"];
+  $textdomain = getTextdomain($file);
+//  bd($textdomain, 'textdomain');
+  return \ProcessWire\__($str, $textdomain);
 }
-function _x($str, $context)
+
+function _x($str, $context): bool|array|string|null
 {
-  $rf = wire()->modules->get('RockFrontend');
-  return \ProcessWire\_x($str, $context, $rf->textdomain());
+  $backtrace = debug_backtrace();
+  $file = $backtrace[0]["file"];
+  $textdomain = getTextdomain($file);
+//  bd($textdomain, 'textdomain');
+  return \ProcessWire\_x($str, $context,$textdomain);
 }
-function _n($textsingular, $textplural, $count)
+function _n($textsingular, $textplural, $count): bool|array|string|null
 {
-  $rf = wire()->modules->get('RockFrontend');
-  return \ProcessWire\_n($textsingular, $textplural, $count, $rf->textdomain());
+  $backtrace = debug_backtrace();
+  $file = $backtrace[0]["file"];
+  $textdomain = getTextdomain($file);
+//  bd($textdomain, 'textdomain');
+  return \ProcessWire\_n($textsingular, $textplural, $count, $textdomain);
 }
