@@ -2366,6 +2366,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     } else $value = 'LiveReload is disabled. To enable it set this in your config.php:
       <pre class="uk-margin-small-top uk-margin-remove-bottom">$config->livereload = 1;</pre>';
     $f->value = $value;
+    $f->notes = "LiveReload saved you from hitting refresh <span id=live-cnt></span> times on this device :)";
+    $f->entityEncodeText = false;
+    $f->appendMarkup = "<script>document.getElementById('live-cnt').innerText = localStorage.getItem('livereload-count') || 0;</script>";
     $fs->add($f);
 
     // early exit if live reload is disabled
