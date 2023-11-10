@@ -2751,21 +2751,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
-  private function drop($str)
-  {
-    $str = str_replace(
-      ["/**\n", " * ", "\n */"],
-      "",
-      $str
-    );
-    return "<div class='uk-inline'>
-      <span uk-icon='info' class='uk-margin-small-left'></span>
-      <div class='uk-card uk-card-body uk-card-default' uk-drop>"
-      . nl2br($this->wire->sanitizer->entities($str))
-      . "</div>
-    </div>";
-  }
-
   public function isEnabled($feature): bool
   {
     if (!is_array($this->features)) return false;
