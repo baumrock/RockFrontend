@@ -83,6 +83,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var Engine */
   private $latte;
 
+  /** @var Engine */
+  private $latteWithLayout;
+
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
 
@@ -211,6 +214,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $this->liveReload();
     $this->addAssets();
+    $this->copyLayoutFileIfNewer();
   }
 
   /**
@@ -602,6 +606,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$condition) return;
     $enabled = str_replace(" src=", " rfconsent='$name' rfconsent-type=optout rfconsent-src=", $script);
     return $this->html($enabled);
+  }
+
+  /**
+   * Copy the appendFile to /site/templates
+   */
+  public function copyLayoutFileIfNewer()
+  {
+    if ($this->noLayoutFile) return;
+    if (!$this->copyLayoutFile) return;
+    $src = __DIR__ . "/stubs/_rockfrontend.php";
+    $dst = $this->wire->config->paths->templates . "_rockfrontend.php";
+    $msrc = @filemtime($src);
+    $mdst = @filemtime($dst);
+    $files = $this->wire->files;
+    if ($msrc > $mdst) $files->copy($src, $dst);
   }
 
   /**
@@ -1285,6 +1304,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get path to latte layout file
+   */
+  public function latteLayoutFile()
+  {
+    if ($this->noLayoutFile) return false;
+    $tpl = rtrim($this->wire->config->paths->templates, "/");
+    $layoutFile = ltrim($this->layoutFile, "/");
+    if ($layoutFile) return "$tpl/$layoutFile";
+    return "$tpl/layout.latte";
+  }
+
+  /**
    * Return layout suggestions
    */
   public function layoutSuggestions(HookEvent $event)
@@ -1351,17 +1382,36 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * @return Engine
    */
-  public function loadLatte()
+  public function loadLatte($withLayout = false)
   {
+    if ($withLayout && $this->latteWithLayout) return $this->latteWithLayout;
     if ($this->latte) return $this->latte;
+
     try {
       require_once __DIR__ . "/translate.php";
       require_once $this->path . "vendor/autoload.php";
-      $latte = new Engine();
+
+      $latte = new Engine;
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
       if ($this->wire->modules->isInstalled("TracyDebugger")) {
         $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
       }
+
+      // latte with layout was requested
+      if ($withLayout) {
+        $latte->addProvider(
+          'coreParentFinder',
+          function (\Latte\Runtime\Template $template) {
+            // if no {layout} is set in the template we use the default
+            if (!$template->getReferenceType()) {
+              // this returns /site/templates/layout.latte by default
+              return $this->latteLayoutFile();
+            }
+          }
+        );
+        return $this->latteWithLayout = $latte;
+      }
+
       return $this->latte = $latte;
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
@@ -1750,7 +1800,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   protected function renderFileLatte($file, $vars)
   {
-    $latte = $this->loadLatte();
+    // should we load latte with layout file or without?
+    // for regular page rendering we want the auto-prepend-layout feature
+    // but for RockPdf rendering we don't want it.
+    if ($this->noLayoutFile) $withLayout = false;
+    else {
+      $withLayout = $file === __DIR__ . "/default.latte"
+        || dirname($file) . "/" === $this->wire->config->paths->templates;
+    }
+
+    // load latte and return rendered file
+    $latte = $this->loadLatte($withLayout);
     if (!$latte) throw new WireException("Unable to load Latte");
     return $latte->renderToString($file, $vars);
   }
@@ -2207,20 +2267,29 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $trace = Debug::backtrace();
     if ($this->textdomain) return $this->textdomain;
+
+    // loop the backtrace to find the file where the translation happens
     foreach ($trace as $item) {
       $call = $item['call'];
-      // renderFile[Latte|Twig]
+      $file = explode(":", $item['file'], 2)[0];
 
-      // Translations in RockPageBuilder
-      $match = false;
-      if (strpos($item['file'], "/modules/RockPageBuilder/Block.php")) $match = true;
-      elseif (strpos($call, '$rockfrontend->renderFile') === 0) $match = true;
-      if (!$match) continue;
+      // no latte file? continue!
+      if (!strpos($file, ".latte--")) continue;
 
-      if (strpos($call, '$rockfrontend->renderFile') !== 0) continue;
-      preg_match("/(.*)\"(.*)\"(.*)/", $call, $matches);
-      // path to file that was rendered (eg main.latte)
-      return $this->url($matches[2], false);
+      // we have a translation in a latte file
+      if (
+        str_starts_with($call, '$rockfrontend->_(')
+        || str_starts_with($call, '__(')
+        || str_starts_with($call, '_x(')
+        || str_starts_with($call, '_n(')
+      ) {
+        // get the sourcefile from the note in the cached file
+        $content = file_get_contents($this->toPath($file));
+        $from = strpos($content, "/** source: ") + 12;
+        $to = strpos($file, ".latte--") - 5;
+        $templateFile = substr($content, $from, $to);
+        return $templateFile;
+      }
     }
     return false;
   }
@@ -2346,10 +2415,54 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $config->styles->add($config->urls($this) . "RockFrontend.module.css");
 
     $this->configLivereload($inputfields);
+    $this->configLatte($inputfields);
     $this->configSettings($inputfields);
     $this->configTools($inputfields);
 
     return $inputfields;
+  }
+
+  private function configLatte(InputfieldWrapper $inputfields): void
+  {
+    $hasLatteFiles = $this->wire->files->find(
+      $this->wire->config->paths->templates,
+      ['extensions' => ['latte']]
+    );
+    $fs = new InputfieldFieldset();
+    $fs->label = "Latte";
+    $fs->icon = "code";
+    $fs->collapsed = $hasLatteFiles
+      ? Inputfield::collapsedNo
+      : Inputfield::collapsedYes;
+    $inputfields->add($fs);
+
+    $f = new InputfieldCheckbox();
+    $f->name = "noLayoutFile";
+    $f->label = "Disable Autoload-Layout";
+    $f->attr('checked', $this->noLayoutFile);
+    $f->columnWidth = 50;
+    $fs->add($f);
+
+    $f = new InputfieldCheckbox();
+    $f->name = "copyLayoutFile";
+    $f->entityEncodeLabel = false;
+    $f->label = "Copy file <i class='uk-background-muted' style='padding: 5px 10px;'>_rockfrontend.php</i> to /site/templates";
+    $f->attr('checked', $this->copyLayoutFile);
+    $f->columnWidth = 50;
+    $f->showIf = "noLayoutFile=0";
+    $f->notes = 'Make sure to also set this in /site/config.php:
+      $config->appendTemplateFile = "_rockfrontend.php";';
+    $fs->add($f);
+
+    $dir = $this->wire->config->paths->templates;
+    $f = new InputfieldText();
+    $f->name = 'layoutFile';
+    $f->label = 'Filename of Autoload-Layout';
+    $f->icon = 'file-code-o';
+    $f->value = $this->layoutFile ?: 'layout.latte';
+    $f->notes = "File relative to $dir";
+    $f->showIf = "noLayoutFile=0";
+    $fs->add($f);
   }
 
   private function configLivereload(InputfieldWrapper $inputfields)
