@@ -33,14 +33,54 @@ final class Escaper
 		HtmlText = 'html',
 		HtmlComment = 'html/comment',
 		HtmlBogusTag = 'html/bogus',
-		HtmlCss = 'html/css',
-		HtmlJavaScript = 'html/js',
+		HtmlRawText = 'html/raw',
 		HtmlTag = 'html/tag',
 		HtmlAttribute = 'html/attr';
 
+	private const Convertors = [
+		self::Text => [
+			self::HtmlText => 'escapeHtmlText',
+			self::HtmlAttribute => 'escapeHtmlAttr',
+			self::HtmlAttribute . '/' . self::JavaScript => 'escapeHtmlAttr',
+			self::HtmlAttribute . '/' . self::Css => 'escapeHtmlAttr',
+			self::HtmlAttribute . '/' . self::Url => 'escapeHtmlAttr',
+			self::HtmlComment => 'escapeHtmlComment',
+			'xml' => 'escapeXml',
+			'xml/attr' => 'escapeXml',
+		],
+		self::JavaScript => [
+			self::HtmlText => 'escapeHtmlText',
+			self::HtmlAttribute => 'escapeHtmlAttr',
+			self::HtmlAttribute . '/' . self::JavaScript => 'escapeHtmlAttr',
+			self::HtmlRawText . '/' . self::JavaScript => 'convertJSToHtmlRawText',
+			self::HtmlComment => 'escapeHtmlComment',
+		],
+		self::Css => [
+			self::HtmlText => 'escapeHtmlText',
+			self::HtmlAttribute => 'escapeHtmlAttr',
+			self::HtmlAttribute . '/' . self::Css => 'escapeHtmlAttr',
+			self::HtmlRawText . '/' . self::Css => 'convertJSToHtmlRawText',
+			self::HtmlComment => 'escapeHtmlComment',
+		],
+		self::HtmlText => [
+			self::HtmlAttribute => 'convertHtmlToHtmlAttr',
+			self::HtmlAttribute . '/' . self::JavaScript => 'convertHtmlToHtmlAttr',
+			self::HtmlAttribute . '/' . self::Css => 'convertHtmlToHtmlAttr',
+			self::HtmlAttribute . '/' . self::Url => 'convertHtmlToHtmlAttr',
+			self::HtmlComment => 'escapeHtmlComment',
+			self::HtmlRawText . '/' . self::HtmlText => 'convertHtmlToHtmlRawText',
+		],
+		self::HtmlAttribute => [
+			self::HtmlText => 'convertHtmlToHtmlAttr',
+		],
+		self::HtmlAttribute . '/' . self::Url => [
+			self::HtmlText => 'convertHtmlToHtmlAttr',
+			self::HtmlAttribute => 'nop',
+		],
+	];
+
 	private string $state = '';
 	private string $tag = '';
-	private string $quote = '';
 	private string $subType = '';
 
 
@@ -65,8 +105,7 @@ final class Escaper
 
 	public function export(): string
 	{
-		return ($this->state === self::HtmlAttribute && $this->quote === '' ? 'html/unquoted-attr' : $this->state)
-			. ($this->subType ? '/' . $this->subType : '');
+		return $this->state . ($this->subType ? '/' . $this->subType : '');
 	}
 
 
@@ -76,20 +115,29 @@ final class Escaper
 	}
 
 
-	public function enterHtmlText(?ElementNode $node): void
+	public function enterHtmlText(ElementNode $el): void
 	{
-		$this->state = self::HtmlText;
-		if ($this->contentType === ContentType::Html && $node) {
-			$name = strtolower($node->name);
-			if (
-				($name === 'script' || $name === 'style')
-				&& is_string($attr = $node->getAttribute('type') ?? 'css')
-				&& preg_match('#(java|j|ecma|live)script|module|json|css|plain#i', $attr)
-			) {
-				$this->state = $name === 'script'
-					? self::HtmlJavaScript
-					: self::HtmlCss;
+		if ($el->isRawText()) {
+			$this->state = self::HtmlRawText;
+			$this->subType = self::Text;
+			if ($el->is('script')) {
+				$type = $el->getAttribute('type');
+				if ($type === true || $type === null
+					|| is_string($type) && preg_match('#((application|text)/(((x-)?java|ecma|j|live)script|json)|text/plain|module|importmap|)$#Ai', $type)
+				) {
+					$this->subType = self::JavaScript;
+
+				} elseif (is_string($type) && preg_match('#text/((x-)?template|html)$#Ai', $type)) {
+					$this->subType = self::HtmlText;
+				}
+
+			} elseif ($el->is('style')) {
+				$this->subType = self::Css;
 			}
+
+		} else {
+			$this->state = self::HtmlText;
+			$this->subType = '';
 		}
 	}
 
@@ -101,10 +149,9 @@ final class Escaper
 	}
 
 
-	public function enterHtmlAttribute(?string $name = null, string $quote = ''): void
+	public function enterHtmlAttribute(?string $name = null): void
 	{
 		$this->state = self::HtmlAttribute;
-		$this->quote = $quote;
 		$this->subType = '';
 
 		if ($this->contentType === ContentType::Html && is_string($name)) {
@@ -122,12 +169,6 @@ final class Escaper
 	}
 
 
-	public function enterHtmlAttributeQuote(string $quote = '"'): void
-	{
-		$this->quote = $quote;
-	}
-
-
 	public function enterHtmlBogusTag(): void
 	{
 		$this->state = self::HtmlBogusTag;
@@ -142,27 +183,30 @@ final class Escaper
 
 	public function escape(string $str): string
 	{
-		[$lq, $rq] = $this->state === self::HtmlAttribute && !$this->quote ? ["'\"' . ", " . '\"'"] : ['', ''];
 		return match ($this->contentType) {
 			ContentType::Html => match ($this->state) {
 				self::HtmlText => 'LR\Filters::escapeHtmlText(' . $str . ')',
 				self::HtmlTag => 'LR\Filters::escapeHtmlTag(' . $str . ')',
 				self::HtmlAttribute => match ($this->subType) {
 					'',
-					self::Url => $lq . 'LR\Filters::escapeHtmlAttr(' . $str . ')' . $rq,
-					self::JavaScript => $lq . 'LR\Filters::escapeHtmlAttr(LR\Filters::escapeJs(' . $str . '))' . $rq,
-					self::Css => $lq . 'LR\Filters::escapeHtmlAttr(LR\Filters::escapeCss(' . $str . '))' . $rq,
+					self::Url => 'LR\Filters::escapeHtmlAttr(' . $str . ')',
+					self::JavaScript => 'LR\Filters::escapeHtmlAttr(LR\Filters::escapeJs(' . $str . '))',
+					self::Css => 'LR\Filters::escapeHtmlAttr(LR\Filters::escapeCss(' . $str . '))',
 				},
 				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
 				self::HtmlBogusTag => 'LR\Filters::escapeHtml(' . $str . ')',
-				self::HtmlJavaScript => 'LR\Filters::escapeJs(' . $str . ')',
-				self::HtmlCss => 'LR\Filters::escapeCss(' . $str . ')',
+				self::HtmlRawText => match ($this->subType) {
+					self::Text => 'LR\Filters::convertJSToHtmlRawText(' . $str . ')', // sanitization, escaping is not possible
+					self::HtmlText => 'LR\Filters::escapeHtmlRawTextHtml(' . $str . ')',
+					self::JavaScript => 'LR\Filters::escapeJs(' . $str . ')',
+					self::Css => 'LR\Filters::escapeCss(' . $str . ')',
+				},
 				default => throw new \LogicException("Unknown context $this->contentType, $this->state."),
 			},
 			ContentType::Xml => match ($this->state) {
 				self::HtmlText,
 				self::HtmlBogusTag => 'LR\Filters::escapeXml(' . $str . ')',
-				self::HtmlAttribute => $lq . 'LR\Filters::escapeXml(' . $str . ')' . $rq,
+				self::HtmlAttribute => 'LR\Filters::escapeXml(' . $str . ')',
 				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
 				self::HtmlTag => 'LR\Filters::escapeXmlTag(' . $str . ')',
 				default => throw new \LogicException("Unknown context $this->contentType, $this->state."),
@@ -172,6 +216,28 @@ final class Escaper
 			ContentType::ICal => 'LR\Filters::escapeIcal(' . $str . ')',
 			ContentType::Text => '($this->filters->escape)(' . $str . ')',
 			default => throw new \LogicException("Unknown content-type $this->contentType."),
+		};
+	}
+
+
+	public function escapeMandatory(string $str): string
+	{
+		return match ($this->contentType) {
+			ContentType::Html => match ($this->state) {
+				self::HtmlAttribute => "LR\\Filters::escapeHtmlQuotes($str)",
+				self::HtmlRawText => match ($this->subType) {
+					self::HtmlText => 'LR\Filters::convertHtmlToHtmlRawText(' . $str . ')',
+					default => "LR\\Filters::convertJSToHtmlRawText($str)",
+				},
+				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
+				default => $str,
+			},
+			ContentType::Xml => match ($this->state) {
+				self::HtmlAttribute => "LR\\Filters::escapeHtmlQuotes($str)",
+				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
+				default => $str,
+			},
+			default => $str,
 		};
 	}
 
@@ -187,58 +253,10 @@ final class Escaper
 
 	public static function getConvertor(string $source, string $dest): ?callable
 	{
-		$table = [
-			self::Text => [
-				'html' => 'escapeHtmlText',
-				'html/attr' => 'escapeHtmlAttr',
-				'html/attr/js' => 'escapeHtmlAttr',
-				'html/attr/css' => 'escapeHtmlAttr',
-				'html/attr/url' => 'escapeHtmlAttr',
-				'html/comment' => 'escapeHtmlComment',
-				'xml' => 'escapeXml',
-				'xml/attr' => 'escapeXml',
-			],
-			self::JavaScript => [
-				'html' => 'escapeHtmlText',
-				'html/attr' => 'escapeHtmlAttr',
-				'html/attr/js' => 'escapeHtmlAttr',
-				'html/js' => 'convertJSToHtmlRawText',
-				'html/comment' => 'escapeHtmlComment',
-			],
-			self::Css => [
-				'html' => 'escapeHtmlText',
-				'html/attr' => 'escapeHtmlAttr',
-				'html/attr/css' => 'escapeHtmlAttr',
-				'html/css' => 'convertJSToHtmlRawText',
-				'html/comment' => 'escapeHtmlComment',
-			],
-			'html' => [
-				'html/attr' => 'convertHtmlToHtmlAttr',
-				'html/attr/js' => 'convertHtmlToHtmlAttr',
-				'html/attr/css' => 'convertHtmlToHtmlAttr',
-				'html/attr/url' => 'convertHtmlToHtmlAttr',
-				'html/comment' => 'escapeHtmlComment',
-				'html/unquoted-attr' => 'convertHtmlToUnquotedAttr',
-			],
-			'html/attr' => [
-				'html' => 'convertHtmlToHtmlAttr',
-				'html/unquoted-attr' => 'convertHtmlAttrToUnquotedAttr',
-			],
-			'html/attr/url' => [
-				'html' => 'convertHtmlToHtmlAttr',
-				'html/attr' => 'nop',
-			],
-			'html/unquoted-attr' => [
-				'html' => 'convertHtmlToHtmlAttr',
-			],
-		];
-
-		if ($source === $dest) {
-			return [Filters::class, 'nop'];
-		}
-
-		return isset($table[$source][$dest])
-			? [Filters::class, $table[$source][$dest]]
-			: null;
+		return match (true) {
+			$source === $dest => [Filters::class, 'nop'],
+			isset(self::Convertors[$source][$dest]) => [Filters::class, self::Convertors[$source][$dest]],
+			default => null,
+		};
 	}
 }

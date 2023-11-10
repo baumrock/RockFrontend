@@ -75,9 +75,12 @@ class Filters
 	public static function escapeHtmlTag($s): string
 	{
 		$s = (string) $s;
-		return preg_match('#^[a-z0-9:-]+$#i', $s)
-			? $s
-			: '"' . self::escapeHtmlAttr($s) . '"';
+		$s = htmlspecialchars($s, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
+		return preg_replace_callback(
+			'#[=/\s]#',
+			fn($m) => '&#' . ord($m[0]) . ';',
+			$s,
+		);
 	}
 
 
@@ -97,6 +100,28 @@ class Filters
 		}
 
 		return $s;
+	}
+
+
+	/**
+	 * Escapes HTML for usage in <script type=text/html>
+	 */
+	public static function escapeHtmlRawTextHtml($s): string
+	{
+		if ($s instanceof HtmlStringable || $s instanceof Nette\HtmlStringable) {
+			return self::convertHtmlToHtmlRawText($s->__toString());
+		}
+
+		return htmlspecialchars((string) $s, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
+	}
+
+
+	/**
+	 * Escapes only quotes.
+	 */
+	public static function escapeHtmlQuotes($s): string
+	{
+		return strtr((string) $s, ['"' => '&quot;', "'" => '&apos;']);
 	}
 
 
@@ -122,10 +147,12 @@ class Filters
 	 */
 	public static function escapeXmlTag($s): string
 	{
-		$s = (string) $s;
-		return preg_match('#^[a-z0-9:-]+$#i', $s)
-			? $s
-			: '"' . self::escapeXml($s) . '"';
+		$s = self::escapeXml((string) $s);
+		return preg_replace_callback(
+			'#[=/\s]#',
+			fn($m) => '&#' . ord($m[0]) . ';',
+			$s,
+		);
 	}
 
 
@@ -170,15 +197,6 @@ class Filters
 
 
 	/**
-	 * Converts JS and CSS for usage in <script> or <style>
-	 */
-	public static function convertJSToHtmlRawText($s): string
-	{
-		return preg_replace('#</(script|style)#i', '<\/$1', (string) $s);
-	}
-
-
-	/**
 	 * Converts ... to ...
 	 */
 	public static function convertTo(FilterInfo $info, string $dest, string $s): string
@@ -202,29 +220,29 @@ class Filters
 
 
 	/**
+	 * Converts JS and CSS for usage in <script> or <style>
+	 */
+	public static function convertJSToHtmlRawText($s): string
+	{
+		return preg_replace('#</(script|style)#i', '<\/$1', (string) $s);
+	}
+
+
+	/**
+	 * Sanitizes <script> in <script type=text/html>
+	 */
+	public static function convertHtmlToHtmlRawText(string $s): string
+	{
+		return preg_replace('#(</?)(script)#i', '$1x-$2', $s);
+	}
+
+
+	/**
 	 * Converts HTML text to quoted attribute. The quotation marks need to be escaped.
 	 */
 	public static function convertHtmlToHtmlAttr(string $s): string
 	{
 		return self::escapeHtmlAttr($s, false);
-	}
-
-
-	/**
-	 * Converts HTML text to unquoted attribute. The quotation marks need to be escaped.
-	 */
-	public static function convertHtmlToUnquotedAttr(string $s): string
-	{
-		return '"' . self::escapeHtmlAttr($s, false) . '"';
-	}
-
-
-	/**
-	 * Converts HTML quoted attribute to unquoted.
-	 */
-	public static function convertHtmlAttrToUnquotedAttr(string $s): string
-	{
-		return '"' . $s . '"';
 	}
 
 
@@ -241,12 +259,28 @@ class Filters
 	/**
 	 * Sanitizes string for use inside href attribute.
 	 */
-	public static function safeUrl(string|HtmlStringable $s): string
+	public static function safeUrl(string|\Stringable $s): string
 	{
-		if ($s instanceof HtmlStringable) {
-			$s = self::convertHtmlToText((string) $s);
-		}
+		$s = $s instanceof HtmlStringable
+			? self::convertHtmlToText((string) $s)
+			: (string) $s;
 
 		return preg_match('~^(?:(?:https?|ftp)://[^@]+(?:/.*)?|(?:mailto|tel|sms):.+|[/?#].*|[^:]+)$~Di', $s) ? $s : '';
+	}
+
+
+	/**
+	 * Validates HTML tag name.
+	 */
+	public static function safeTag(mixed $name, bool $xml = false): string
+	{
+		if (!is_string($name)) {
+			throw new Latte\RuntimeException('Tag name must be string, ' . get_debug_type($name) . ' given');
+		} elseif (!preg_match('~' . Latte\Compiler\TemplateLexer::ReTagName . '$~DA', $name)) {
+			throw new Latte\RuntimeException("Invalid tag name '$name'");
+		} elseif (!$xml && in_array(strtolower($name), ['style', 'script'], true)) {
+			throw new Latte\RuntimeException("Forbidden variable tag name <$name>");
+		}
+		return $name;
 	}
 }
