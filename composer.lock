@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "latte/latte",
-            "version": "v3.0.10",
+            "version": "v3.0.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/latte.git",
-                "reference": "794f252da7437499e467766d633eed85e1a437b7"
+                "reference": "3306b03613077b8f1533865bb0c9b0f72160a65f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/latte/zipball/794f252da7437499e467766d633eed85e1a437b7",
-                "reference": "794f252da7437499e467766d633eed85e1a437b7",
+                "url": "https://api.github.com/repos/nette/latte/zipball/3306b03613077b8f1533865bb0c9b0f72160a65f",
+                "reference": "3306b03613077b8f1533865bb0c9b0f72160a65f",
                 "shasum": ""
             },
             "require": {
@@ -87,9 +87,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/latte/issues",
-                "source": "https://github.com/nette/latte/tree/v3.0.10"
+                "source": "https://github.com/nette/latte/tree/v3.0.11"
             },
-            "time": "2023-10-11T13:42:28+00:00"
+            "time": "2023-11-11T14:16:13+00:00"
         },
         {
             "name": "masterminds/html5",

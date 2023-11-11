@@ -24,8 +24,6 @@ use Latte\SecurityViolationException;
  */
 final class TemplateParserHtml
 {
-	use Latte\Strict;
-
 	/** @var array<string, callable(Tag, TemplateParser): (Node|\Generator|void)> */
 	private array /*readonly*/ $attrParsers;
 	private ?Html\ElementNode $element = null;
@@ -432,7 +430,7 @@ final class TemplateParserHtml
 			prefix: $this->getPrefix($name),
 			inTag: true,
 			htmlElement: $this->element,
-			data: (object) ['node' => $node = new Nodes\TextNode('')], // TODO: better
+			attrNode: $node = new Nodes\TextNode(''),
 		);
 		return $node;
 	}
