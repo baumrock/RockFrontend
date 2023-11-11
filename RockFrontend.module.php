@@ -1442,7 +1442,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->migrateFavicon();
     $this->migrateOgImage();
     $this->migrateFooterlinks();
-    $this->mgirateLatteTranslations();
+    $this->migrateLatteTranslations();
     // $this->migrateLayoutField();
   }
 
@@ -1516,7 +1516,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->addFieldToTemplate(self::field_images, 'home');
   }
 
-  private function mgirateLatteTranslations()
+  private function migrateLatteTranslations()
   {
     if (!in_array("lattetranslations", $this->migrations)) return;
     /** @var RockMigrations $rm */
