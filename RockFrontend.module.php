@@ -86,6 +86,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var Engine */
   private $latteWithLayout;
 
+  public $layoutFile = 'layout.latte';
+
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
 
@@ -113,7 +115,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private $scripts;
   private $styles;
-  private $textdomain;
 
   /** @var array */
   private $translations = [];
