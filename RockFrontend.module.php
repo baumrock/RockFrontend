@@ -2242,17 +2242,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function _($str)
   {
-    return \ProcessWire\__($str, $this->textdomain());
+    $backtrace = debug_backtrace(limit: 1);
+    $textdomain = self::textdomain($backtrace[0]["file"]);
+    return \ProcessWire\__($str, $textdomain);
   }
 
   public function _x($str, $context)
   {
-    return \ProcessWire\_x($str, $context, $this->textdomain());
+    $backtrace = debug_backtrace(limit: 1);
+    $textdomain = self::textdomain($backtrace[0]["file"]);
+    return \ProcessWire\_x($str, $context, $textdomain);
   }
 
   public function _n($textsingular, $textplural, $count)
   {
-    return \ProcessWire\_n($textsingular, $textplural, $count, $this->textdomain());
+    $backtrace = debug_backtrace(limit: 1);
+    $textdomain = self::textdomain($backtrace[0]["file"]);
+    return \ProcessWire\_n($textsingular, $textplural, $count, $textdomain);
   }
 
   public function setTextdomain($file = false)
@@ -2263,35 +2269,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Method to find the correct textdomain file for translations in latte files
    */
-  public function textdomain()
+  public static function textdomain($file)
   {
-    $trace = Debug::backtrace();
-    if ($this->textdomain) return $this->textdomain;
-
-    // loop the backtrace to find the file where the translation happens
-    foreach ($trace as $item) {
-      $call = $item['call'];
-      $file = explode(":", $item['file'], 2)[0];
-
-      // no latte file? continue!
-      if (!strpos($file, ".latte--")) continue;
-
-      // we have a translation in a latte file
-      if (
-        str_starts_with($call, '$rockfrontend->_(')
-        || str_starts_with($call, '__(')
-        || str_starts_with($call, '_x(')
-        || str_starts_with($call, '_n(')
-      ) {
-        // get the sourcefile from the note in the cached file
-        $content = file_get_contents($this->toPath($file));
-        $from = strpos($content, "/** source: ") + 12;
-        $to = strpos($file, ".latte--") - 5;
-        $templateFile = substr($content, $from, $to);
-        return $templateFile;
-      }
-    }
-    return false;
+    if (!str_contains($file, '.latte')) return false;
+    $content = file_get_contents($file);
+    preg_match('/source: (.*?) /', $content, $matches);
+    return $matches[1];
   }
 
   /** END translation support in LATTE files */

@@ -8,20 +8,25 @@
  * {=_n('found one item', 'fount multiple items', $num)}
  */
 
-use function ProcessWire\wire;
+use ProcessWire\RockFrontend;
 
 function __($str)
 {
-  $rf = wire()->modules->get('RockFrontend');
-  return \ProcessWire\__($str, $rf->textdomain());
+  $backtrace = debug_backtrace(limit: 1);
+  $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
+  return \ProcessWire\__($str, $textdomain);
 }
-function _x($str, $context)
+
+function _x($str, $context): bool|array|string|null
 {
-  $rf = wire()->modules->get('RockFrontend');
-  return \ProcessWire\_x($str, $context, $rf->textdomain());
+  $backtrace = debug_backtrace(limit: 1);
+  $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
+  return \ProcessWire\_x($str, $context, $textdomain);
 }
-function _n($textsingular, $textplural, $count)
+
+function _n($textsingular, $textplural, $count): bool|array|string|null
 {
-  $rf = wire()->modules->get('RockFrontend');
-  return \ProcessWire\_n($textsingular, $textplural, $count, $rf->textdomain());
+  $backtrace = debug_backtrace(limit: 1);
+  $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
+  return \ProcessWire\_n($textsingular, $textplural, $count, $textdomain);
 }
