@@ -2206,17 +2206,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function updateHtaccess()
   {
     $file = $this->wire->config->paths->templates . ".htaccess";
+
+    // if htaccess file does not exist, create it
     if (!is_file($file)) $this->wire->files->filePutContents($file, "");
+
+    // get content of files and content of rules to apply
     $content = $this->wire->files->fileGetContents($file);
     $rules = $this->wire->files->fileGetContents(__DIR__ . "/stubs/htaccess.txt");
+
+    // prepare error message
     $err = "/site/templates/.htaccess not writeable - some template files might be publicly accessible!";
-    if (!strpos($content, "# RockFrontend: ")) {
-      // add rockfrontend rules
+
+    // check if rules are added to htaccess file
+    if (strpos($content, "# RockFrontend: ") === false) {
+      // no rockfrontend rules in the htaccess file, try to add them
       if (is_writable($file)) {
         $this->wire->files->filePutContents($file, $rules, FILE_APPEND);
       } else $this->error($err);
-    } elseif (!strpos($content, $rules)) {
-      // update rockfrontend rules
+    } elseif (strpos($content, $rules) === false) {
+      // rockfrontend rules found, but outdated
       $newcontent = preg_replace(
         "/# RockFrontend: (.*)# End RockFrontend/s",
         $rules,
