@@ -10,23 +10,23 @@
 
 use ProcessWire\RockFrontend;
 
-function __($str)
+function __($str, $textdomain = null, $context = '')
 {
   $backtrace = debug_backtrace(limit: 1);
-  $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
-  return \ProcessWire\__($str, $textdomain);
+  if (!$textdomain) $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
+  return \ProcessWire\__($str, $textdomain, $context);
 }
 
-function _x($str, $context): bool|array|string|null
+function _x($str, $context, $textdomain = null): bool|array|string|null
 {
   $backtrace = debug_backtrace(limit: 1);
-  $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
+  if (!$textdomain) $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
   return \ProcessWire\_x($str, $context, $textdomain);
 }
 
-function _n($textsingular, $textplural, $count): bool|array|string|null
+function _n($textsingular, $textplural, $count, $textdomain = null): bool|array|string|null
 {
   $backtrace = debug_backtrace(limit: 1);
-  $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
+  if (!$textdomain) $textdomain = RockFrontend::textdomain($backtrace[0]["file"]);
   return \ProcessWire\_n($textsingular, $textplural, $count, $textdomain);
 }

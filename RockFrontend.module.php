@@ -2280,7 +2280,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public static function textdomain($file)
   {
-    if (!str_contains($file, '.latte')) return false;
+    // if the translation was not invoked from a cached latte file
+    // we return the file itself, which is the PHP file that called the
+    // translation method
+    if (!str_contains($file, '.latte--')) return $file;
     $content = file_get_contents($file);
     preg_match('/source: (.*?) /', $content, $matches);
     return $matches[1];
