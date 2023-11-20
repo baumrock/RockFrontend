@@ -171,7 +171,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->alfredCache = $this->wire(new WireData());
 
     // JS defaults
-    $this->remBase = 16; // default base for px-->rem conversion
+    // set the remBase either from config setting or use 16 as fallback
+    $this->remBase = $this->remBase ?: 16;
     $this->initPostCSS();
 
     // watch this file and run "migrate" on change or refresh
@@ -2518,6 +2519,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       . "\nExample URL: https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700 (see here: [screenshot](https://i.imgur.com/b8aJPQW.png))";
     $f->value = $this->webfonts;
     $f->notes = $this->showFontFileSize();
+    $fs->add($f);
+
+    $f = new InputfieldInteger();
+    $f->name = 'remBase';
+    $f->label = 'REM base font size';
+    $f->value = $this->remBase;
+    $f->notes = 'See [this forum thread for more info](https://processwire.com/talk/topic/29268-fr-make-rembase-a-config-setting/)';
     $fs->add($f);
 
     $f = $this->wire->modules->get('InputfieldCheckboxes');
