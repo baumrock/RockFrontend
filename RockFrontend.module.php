@@ -469,8 +469,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $opt->setArray($options);
 
     // add quick-add-icons for rockpagebuilder
-    if ($rpb = $this->wire->modules->get("RockPageBuilder")) {
+    if ($this->wire->modules->isInstalled('RockPageBuilder')) {
       /** @var RockPageBuilder $rpb */
+      $rpb = $this->wire->modules->get("RockPageBuilder");
       $data = $this->wire(new WireData());
       $data->page = $page;
       $data->opt = $opt;
@@ -905,7 +906,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // add rockpagebuilder icons
     if ($page) {
-      $rpb = $this->wire->modules->get("RockPageBuilder");
+      $rpb = false;
+      if ($this->wire->modules->isInstalled('RockPageBuilder')) {
+        $rpb = $this->wire->modules->get("RockPageBuilder");
+      }
       if ($page instanceof Block) $page->addAlfredIcons($icons, $opt);
       elseif ($page instanceof RepeaterPage and $rpb) {
         $rpb->addAlfredIcons($page, $icons, $opt);
