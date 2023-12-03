@@ -11,9 +11,7 @@ namespace Latte\Essential\Nodes;
 
 use Latte\CompileException;
 use Latte\Compiler\Escaper;
-use Latte\Compiler\Node;
 use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\Php\Expression;
 use Latte\Compiler\Nodes\Php\ExpressionNode;
 use Latte\Compiler\Nodes\Php\ModifierNode;
 use Latte\Compiler\Nodes\StatementNode;
@@ -36,7 +34,7 @@ class CaptureNode extends StatementNode
 	{
 		$tag->expectArguments();
 		$variable = $tag->parser->parseExpression();
-		if (!self::canBeAssignedTo($variable)) {
+		if (!$variable->isWritable()) {
 			$text = '';
 			$i = 0;
 			while ($token = $tag->parser->stream->peek(--$i)) {
@@ -45,7 +43,7 @@ class CaptureNode extends StatementNode
 
 			throw new CompileException("It is not possible to write into '$text' in " . $tag->getNotation(), $tag->position);
 		}
-		$node = new static;
+		$node = $tag->node = new static;
 		$node->variable = $variable;
 		$node->modifier = $tag->parser->parseModifier();
 		[$node->content] = yield;
@@ -77,15 +75,6 @@ class CaptureNode extends StatementNode
 			$this->variable,
 			$this->modifier,
 		);
-	}
-
-
-	private static function canBeAssignedTo(Node $node): bool
-	{
-		return $node instanceof Expression\VariableNode
-			|| $node instanceof Expression\ArrayAccessNode
-			|| $node instanceof Expression\PropertyFetchNode
-			|| $node instanceof Expression\StaticPropertyFetchNode;
 	}
 
 

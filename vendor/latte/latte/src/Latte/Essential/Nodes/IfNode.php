@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Latte\Essential\Nodes;
 
 use Latte\CompileException;
-use Latte\Compiler\ExpressionBuilder;
 use Latte\Compiler\Nodes\AreaNode;
 use Latte\Compiler\Nodes\Php\Expression;
 use Latte\Compiler\Nodes\Php\ExpressionNode;
@@ -42,7 +41,7 @@ class IfNode extends StatementNode
 	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag, TemplateParser $parser): \Generator
 	{
-		$node = new static;
+		$node = $tag->node = new static;
 		$node->ifset = in_array($tag->name, ['ifset', 'elseifset'], true);
 		$node->capture = !$tag->isNAttribute() && $tag->name === 'if' && $tag->parser->isEnd();
 		$node->position = $tag->position;
@@ -83,7 +82,10 @@ class IfNode extends StatementNode
 			$block = $parser->tryConsumeTokenBeforeUnquotedString('block') ?? $parser->stream->tryConsume('#');
 			$name = $parser->parseUnquotedStringOrExpression();
 			$list[] = $block || $name instanceof StringNode
-				? ExpressionBuilder::variable('$this')->method('hasBlock', [$name])->build()
+				? new Expression\AuxiliaryNode(
+					fn(PrintContext $context, ExpressionNode $name) => '$this->hasBlock(' . $name->print($context) . ')',
+					[$name],
+				)
 				: new Expression\IssetNode([$name]);
 		} while ($parser->stream->tryConsume(','));
 

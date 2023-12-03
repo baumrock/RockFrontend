@@ -60,7 +60,9 @@ setTimeout(() => {
       }
 
       // all fine, reload page
-      console.log("detected change - reloading");
+      let cnt = localStorage.getItem("livereload-count") || 0;
+      localStorage.setItem("livereload-count", ++cnt);
+      console.log("detected change - reloading " + cnt);
       reloading = true;
       setTimeout(() => {
         document.location.reload(true);

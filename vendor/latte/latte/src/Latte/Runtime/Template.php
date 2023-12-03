@@ -19,14 +19,14 @@ use Latte\Engine;
  */
 class Template
 {
-	use Latte\Strict;
-
 	public const
 		LayerTop = 0,
 		LayerSnippet = 'snippet',
 		LayerLocal = 'local';
 
 	public const ContentType = Latte\ContentType::Html;
+
+	public const Source = null;
 
 	public const Blocks = [];
 

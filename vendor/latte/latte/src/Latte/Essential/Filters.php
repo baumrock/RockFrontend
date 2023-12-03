@@ -120,7 +120,7 @@ final class Filters
 		} elseif ($info->contentType === ContentType::Html) {
 			$s = preg_replace_callback('#<(textarea|pre).*?</\1#si', fn($m) => strtr($m[0], " \t\r\n", "\x1F\x1E\x1D\x1A"), $s);
 			if (preg_last_error()) {
-				throw new Latte\RegexpException;
+				throw new Latte\RuntimeException(preg_last_error_msg());
 			}
 
 			$s = preg_replace('#(?:^|[\r\n]+)(?=[^\r\n])#', '$0' . str_repeat($chars, $level), $s);
@@ -250,7 +250,7 @@ final class Filters
 	{
 		$res = preg_replace($pattern, $replacement, $subject);
 		if (preg_last_error()) {
-			throw new Latte\RegexpException;
+			throw new Latte\RuntimeException(preg_last_error_msg());
 		}
 
 		return $res;
@@ -372,9 +372,11 @@ final class Filters
 
 	private static function strLength(string $s): int
 	{
-		return function_exists('mb_strlen')
-			? mb_strlen($s, 'UTF-8')
-			: strlen(utf8_decode($s));
+		return match (true) {
+			extension_loaded('mbstring') => mb_strlen($s, 'UTF-8'),
+			extension_loaded('iconv') => iconv_strlen($s, 'UTF-8'),
+			default => strlen(@utf8_decode($s)), // deprecated
+		};
 	}
 
 
@@ -386,7 +388,7 @@ final class Filters
 		$charlist = preg_quote($charlist, '#');
 		$s = preg_replace('#^[' . $charlist . ']+|[' . $charlist . ']+$#Du', '', (string) $s);
 		if (preg_last_error()) {
-			throw new Latte\RegexpException;
+			throw new Latte\RuntimeException(preg_last_error_msg());
 		}
 
 		return $s;

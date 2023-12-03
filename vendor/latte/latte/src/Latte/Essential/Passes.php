@@ -11,10 +11,9 @@ namespace Latte\Essential;
 
 use Latte;
 use Latte\CompileException;
-use Latte\Compiler\ExpressionBuilder;
 use Latte\Compiler\Node;
 use Latte\Compiler\Nodes\AuxiliaryNode;
-use Latte\Compiler\Nodes\Php\Expression\FunctionCallNode;
+use Latte\Compiler\Nodes\Php\Expression;
 use Latte\Compiler\Nodes\Php\Expression\VariableNode;
 use Latte\Compiler\Nodes\Php\NameNode;
 use Latte\Compiler\Nodes\TemplateNode;
@@ -25,8 +24,6 @@ use Latte\Essential\Nodes\ForeachNode;
 
 final class Passes
 {
-	use Latte\Strict;
-
 	/**
 	 * Checks if foreach overrides template variables.
 	 */
@@ -81,7 +78,7 @@ final class Passes
 		$names = array_combine(array_map('strtolower', $names), $names);
 
 		(new NodeTraverser)->traverse($node, function (Node $node) use ($names) {
-			if (($node instanceof FunctionCallNode || $node instanceof FunctionCallableNode)
+			if (($node instanceof Expression\FunctionCallNode || $node instanceof Expression\FunctionCallableNode)
 				&& $node->name instanceof NameNode
 				&& ($orig = $names[strtolower((string) $node->name)] ?? null)
 			) {
@@ -89,10 +86,10 @@ final class Passes
 					trigger_error("Case mismatch on function name '{$node->name}', correct name is '$orig'.", E_USER_WARNING);
 				}
 
-				return ExpressionBuilder::function(
-					ExpressionBuilder::variable('$this')->property('global')->property('fn')->property($orig),
+				return new Expression\AuxiliaryNode(
+					fn(PrintContext $context, ...$args) => '($this->global->fn->' . $orig . ')(' . $context->implode($args) . ')',
 					$node->args,
-				)->build();
+				);
 			}
 		});
 	}
@@ -101,12 +98,13 @@ final class Passes
 	/**
 	 * $ʟ_xxx variables are forbidden
 	 */
-	public static function internalVariablesPass(TemplateNode $node): void
+	public static function internalVariablesPass(TemplateNode $node, bool $forbidThis = false): void
 	{
-		(new NodeTraverser)->traverse($node, function (Node $node) {
+		$forbidden = $forbidThis ? ['GLOBALS', 'this'] : ['GLOBALS'];
+		(new NodeTraverser)->traverse($node, function (Node $node) use ($forbidden) {
 			if ($node instanceof VariableNode
 				&& is_string($node->name)
-				&& (str_starts_with($node->name, 'ʟ_'))
+				&& (str_starts_with($node->name, 'ʟ_') || in_array($node->name, $forbidden, true))
 			) {
 				throw new CompileException("Forbidden variable \$$node->name.", $node->position);
 			}
