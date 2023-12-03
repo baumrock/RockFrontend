@@ -925,10 +925,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         'tooltip' => $opt->path,
       ];
 
+      // get base filepath without extension
       $ext = pathinfo($opt->path, PATHINFO_EXTENSION);
+      $base = substr($opt->path, 0, -strlen($ext) - 1);
+      if (str_ends_with($base, ".view")) $base = substr($base, 0, -5);
 
       // php file edit link
-      $php = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".php";
+      $php = "$base.php";
       if (is_file($php)) {
         $icons[] = (object)[
           'icon' => 'php',
@@ -937,8 +940,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           'tooltip' => $php,
         ];
       }
+
       // style edit link
-      $less = substr($opt->path, 0, strlen($ext) * -1 - 1) . ".less";
+      $less = "$base.less";
       if (is_file($less)) {
         $icons[] = (object)[
           'icon' => 'eye',
