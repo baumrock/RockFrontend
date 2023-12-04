@@ -1,3 +1,12 @@
+## [3.8.1](https://github.com/baumrock/RockFrontend/compare/v3.8.0...v3.8.1) (2023-12-04)
+
+
+### Bug Fixes
+
+* normalize windows file path ([7895e06](https://github.com/baumrock/RockFrontend/commit/7895e06254329b333d5ac4a38110cbb1b3804209))
+
+
+
 # [3.8.0](https://github.com/baumrock/RockFrontend/compare/v3.7.0...v3.8.0) (2023-12-03)
 
 
@@ -65,15 +74,6 @@
 * add support for RockPageBuilder sortable 🤩🚀 ([bf8ab5c](https://github.com/baumrock/RockFrontend/commit/bf8ab5c618c709ef07e8c3c44d734cfb39c739e9))
 * move livereload settings to RockFrontend ([7e0ba90](https://github.com/baumrock/RockFrontend/commit/7e0ba904758ce223b9c6512d8762b1a26ced0ce5))
 * option to add urlsegmentstr to otherLangUrl() ([0e4e042](https://github.com/baumrock/RockFrontend/commit/0e4e04211e4cc6b58055e0b9070a742331eaf106))
-
-
-
-## [3.5.2](https://github.com/baumrock/RockFrontend/compare/v3.5.1...v3.5.2) (2023-10-06)
-
-
-### Bug Fixes
-
-* error when less field not used ([495c186](https://github.com/baumrock/RockFrontend/commit/495c186387ba441878529a1125cd02bec77928a5))
 
 
 
