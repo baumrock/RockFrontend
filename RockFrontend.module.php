@@ -1013,7 +1013,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $trace = debug_backtrace();
     $paths = $this->wire->config->paths;
     foreach ($trace as $step) {
-      $file = $step['file'];
+      $file = Paths::normalizeSeparators($step['file']);
 
       // first check for latte cache files
       // these files are .php files compiled from the original .latte file
