@@ -1318,7 +1318,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function latteLayoutFile()
   {
+    // loading of layout file disabled?
     if ($this->noLayoutFile) return false;
+
+    // for RockPdf we need no layout file
+    if ($this->rockPdf) return false;
+
     $tpl = rtrim($this->wire->config->paths->templates, "/");
     $layoutFile = ltrim($this->layoutFile, "/");
     if ($layoutFile) return "$tpl/$layoutFile";
