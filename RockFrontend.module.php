@@ -19,6 +19,11 @@ use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
+function rockfrontend(): RockFrontend
+{
+  return wire()->modules->get('RockFrontend');
+}
+
 /**
  * @author Bernhard Baumrock, 05.01.2022
  * @license MIT
