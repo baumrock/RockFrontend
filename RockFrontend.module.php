@@ -1866,10 +1866,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Get markup of a single view file
    */
-  public function ___view(string $file): Html|string
+  public function ___view(string $file, array $vars = []): Html|string
   {
     $file = $this->viewFile($file);
-    $markup = $this->render($file);
+    $markup = $this->render($file, $vars);
     return $this->html($markup);
   }
 
@@ -1923,7 +1923,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->viewTrailingSlash($opt->trailingslash);
 
     // remove all styles that have been added to the main styles array
-    // this is because the mail style array is for the main website
+    // this is because the main style array is for the main website
     // and we usually don't need it for custom frontends
     if ($opt->removeMainStyles) $this->styles('main')->removeAll();
 
