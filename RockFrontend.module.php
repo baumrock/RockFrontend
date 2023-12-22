@@ -30,6 +30,7 @@ function rockfrontend(): RockFrontend
  * @link https://www.baumrock.com
  *
  * @method string render($filename, array $vars = array(), array $options = array())
+ * @method string view($filename, array $vars = array())
  */
 class RockFrontend extends WireData implements Module, ConfigurableModule
 {
@@ -2168,6 +2169,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $script = $this->scripts->get("rockfrontend-script-$name") ?: new ScriptsArray($name);
     $this->scripts->set("rockfrontend-script-$name", $script);
     return $script;
+  }
+
+  /**
+   * Set viewFolders for folder rendering feature
+   * This is required for RockCommerce htmx endpoint rendering.
+   */
+  public function setViewFolders(array $folders): void
+  {
+    $this->viewfolders = $folders;
   }
 
   /**
