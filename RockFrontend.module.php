@@ -30,7 +30,7 @@ function rockfrontend(): RockFrontend
  * @link https://www.baumrock.com
  *
  * @method string render($filename, array $vars = array(), array $options = array())
- * @method string view($filename, array $vars = array())
+ * @method string view(string $file, array|Page $vars = [], Page $page = null)
  */
 class RockFrontend extends WireData implements Module, ConfigurableModule
 {
@@ -1871,10 +1871,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Get markup of a single view file
+   *
+   * Usage:
+   * $rf->view('foo/bar');
+   * $rf->view('foo/bar', $page);
+   * $rf->view('foo/bar', ['foo' => 'Foo!'], $page);
    */
-  public function ___view(string $file, array $vars = []): Html|string
-  {
+  public function ___view(
+    string $file,
+    array|Page $vars = [],
+    Page $page = null,
+  ): Html|string {
+    if ($vars instanceof Page) {
+      $page = $vars;
+      $vars = [];
+    }
     $file = $this->viewFile($file);
+    if ($page) $vars = array_merge($vars, ['page' => $page]);
     $markup = $this->render($file, $vars);
     return $this->html($markup);
   }
