@@ -110,6 +110,22 @@ class Seo extends Wire
     return $this->setMarkup($tag, $value);
   }
 
+  /**
+   * Set og:image tag
+   *
+   * Usage:
+   * $seo->ogImage(function($page) {
+   *   if($page instanceof Foo) {
+   *     if($img = $page->image()) return $img;
+   *   }
+   * });
+   */
+  public function ogImage(callable $callback): self
+  {
+    $this->setValue("og:image", $callback);
+    return $this;
+  }
+
   public function render(): string
   {
     $out = '';
