@@ -2,6 +2,14 @@
 
 HumanDates is a PHP library that provides convenient methods for formatting dates as human-readable strings and generating human-friendly date ranges. It uses the `IntlDateFormatter` class to ensure accurate localization and formatting based on the specified locale.
 
+```html
+<!-- before --> 1.1.2023 - 3.1.2023
+<!-- after  --> 1. - 3.1.2023
+```
+
+<img width="861" alt="image" src="https://github.com/baumrock/HumanDates/assets/8488586/59a2a9fb-a925-4c79-8d99-f199583a3bcc">
+
+
 ## Usage
 
 To get started, include the HumanDates library and create a new instance:
@@ -80,6 +88,12 @@ echo $dates->range("2023-01-01", "2023-01-03", [
 ]);
 ```
 
+Note that this will set the patterns for this single request only! If you want to modify the globally used patterns you can do this:
+
+```php
+echo $dates->setPatterns(...)->range(...);
+```
+
 ## Setting Locales
 
 You can set the locale for date formatting either globally for the current `HumanDates` instance or on a per-format basis.
@@ -113,4 +127,4 @@ echo $dates->format("2023-1-1", "d. MMMM y"); // Output: 1. Jänner 2023
 
 ## Star the Repository
 
-If you find HumanDates useful or interesting, please star the repository on GitHub. By starring the repository, you show your appreciation and support for the project. It also helps us understand the level of community interest and motivates us to further improve the library. So, why not give us a star today? ⭐
+If you find HumanDates useful or interesting, please star the repository on GitHub. By starring the repository, you show your appreciation and support for the project. It also helps us understand the level of community interest and motivates us to further improve the library. ⭐

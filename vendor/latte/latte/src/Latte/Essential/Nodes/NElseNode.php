@@ -14,7 +14,6 @@ use Latte\Compiler\Node;
 use Latte\Compiler\Nodes;
 use Latte\Compiler\Nodes\AreaNode;
 use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\Nodes\TemplateNode;
 use Latte\Compiler\NodeTraverser;
 use Latte\Compiler\PrintContext;
 use Latte\Compiler\Tag;
@@ -49,13 +48,13 @@ final class NElseNode extends StatementNode
 	}
 
 
-	public static function processPass(TemplateNode $node): void
+	public static function processPass(Node $node): void
 	{
 		(new NodeTraverser)->traverse($node, function (Node $node) {
 			if ($node instanceof Nodes\FragmentNode) {
 				for ($i = count($node->children) - 1; $i >= 0; $i--) {
-					$child = $node->children[$i];
-					if (!$child instanceof self) {
+					$nElse = $node->children[$i];
+					if (!$nElse instanceof self) {
 						continue;
 					}
 
@@ -74,15 +73,15 @@ final class NElseNode extends StatementNode
 						|| $prev instanceof IfContentNode
 					) {
 						if ($prev->else) {
-							throw new CompileException('Multiple "else" found.', $child->position);
+							throw new CompileException('Multiple "else" found.', $nElse->position);
 						}
-						$prev->else = $child->content;
+						$prev->else = $nElse->content;
 					} else {
-						throw new CompileException('n:else must be immediately after n:if / n:try / n:foreach.', $child->position);
+						throw new CompileException('n:else must be immediately after n:if, n:foreach etc', $nElse->position);
 					}
 				}
 			} elseif ($node instanceof self) {
-				throw new CompileException('n:else must be immediately after n:if / n:try / n:foreach.', $node->position);
+				throw new CompileException('n:else must be immediately after n:if, n:foreach etc', $node->position);
 			}
 		});
 	}
