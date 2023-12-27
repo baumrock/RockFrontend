@@ -9,8 +9,9 @@ $info = [
   'autoload' => true,
   'singular' => true,
   'icon' => 'paint-brush',
+  // composer dependencies set to php8.1
   'requires' => [
-    'PHP>=8.0',
+    'PHP>=8.1',
   ],
   // The module will work without RockMigrations but you will have to create
   // the layout field manually and add it to templates if you want to use it
