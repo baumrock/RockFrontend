@@ -1,9 +1,5 @@
 <?php
 
-namespace RockFrontend;
-
-use IntlDateFormatter;
-
 class HumanDates
 {
   /* default range patterns */

@@ -1,6 +1,43 @@
 {
     "packages": [
         {
+            "name": "baumrock/humandates",
+            "version": "v1.0.4",
+            "version_normalized": "1.0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/baumrock/HumanDates.git",
+                "reference": "1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/baumrock/HumanDates/zipball/1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7",
+                "reference": "1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "time": "2023-06-13T17:10:56+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "HumanDates.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Format date ranges in a human-readable format with automatic pattern selection and localization support.",
+            "support": {
+                "issues": "https://github.com/baumrock/HumanDates/issues",
+                "source": "https://github.com/baumrock/HumanDates/tree/v1.0.4"
+            },
+            "install-path": "../baumrock/humandates"
+        },
+        {
             "name": "latte/latte",
             "version": "v3.0.11",
             "version_normalized": "3.0.11.0",

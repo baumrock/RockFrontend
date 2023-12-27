@@ -2,10 +2,10 @@
 
 namespace ProcessWire;
 
+use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use RockFrontend\Asset;
-use RockFrontend\HumanDates;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
@@ -1137,7 +1137,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   function humandates($locale = "de_AT"): HumanDates
   {
-    require_once __DIR__ . "/HumanDates.php";
+    require_once __DIR__ . "/vendor/autoload.php";
     return new HumanDates($locale);
   }
 

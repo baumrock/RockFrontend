@@ -1,0 +1,13 @@
+{
+  "name": "baumrock/humandates",
+  "description": "Format date ranges in a human-readable format with automatic pattern selection and localization support.",
+  "require": {
+    "php": ">=8.0"
+  },
+  "license": "MIT",
+  "autoload": {
+    "files": [
+      "HumanDates.php"
+    ]
+  }
+}

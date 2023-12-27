@@ -4,8 +4,42 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "51fe9e312aee207f6f36e49b457ce1f6",
+    "content-hash": "7e3ba2135e02dfce8d40a3661ba1f796",
     "packages": [
+        {
+            "name": "baumrock/humandates",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/baumrock/HumanDates.git",
+                "reference": "1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/baumrock/HumanDates/zipball/1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7",
+                "reference": "1ffcfa6fe8bda3e6dda378966f086c44bbe43bc7",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "HumanDates.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Format date ranges in a human-readable format with automatic pattern selection and localization support.",
+            "support": {
+                "issues": "https://github.com/baumrock/HumanDates/issues",
+                "source": "https://github.com/baumrock/HumanDates/tree/v1.0.4"
+            },
+            "time": "2023-06-13T17:10:56+00:00"
+        },
         {
             "name": "latte/latte",
             "version": "v3.0.11",
