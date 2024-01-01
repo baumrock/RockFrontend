@@ -12,6 +12,7 @@ use RecursiveIteratorIterator;
 
 class LiveReload extends Wire
 {
+  private $config;
 
   public function __construct()
   {
