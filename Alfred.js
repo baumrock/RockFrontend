@@ -90,7 +90,7 @@
 
   Alfred.prototype.initItem = function (el) {
     $(el).addClass("alfred");
-    $(el).append("<div class='alfredelements no-sortable'>");
+    $(el).append("<div class='alfredelements'>");
     let $elements = $(el).find(".alfredelements");
     try {
       let config = JSON.parse($(el).attr("alfred"));
@@ -102,6 +102,12 @@
       if (config.addLeft) $elements.append(this.plus("left", config.addLeft));
       if (config.addRight)
         $elements.append(this.plus("right", config.addRight));
+
+      if ($elements.closest("[sortable]").length) {
+        $elements.append(
+          '<div class="sortable-handle"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m18 9l3 3l-3 3m-3-3h6M6 9l-3 3l3 3m-3-3h6m0 6l3 3l3-3m-3-3v6m3-15l-3-3l-3 3m3-3v6"/></svg></div>'
+        );
+      }
       $(el).removeAttr("alfred");
     } catch (error) {
       console.log($elements);

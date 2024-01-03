@@ -2,10 +2,10 @@
 
 namespace ProcessWire;
 
+use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use RockFrontend\Asset;
-use RockFrontend\HumanDates;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\ScriptsArray;
@@ -19,12 +19,18 @@ use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
+function rockfrontend(): RockFrontend
+{
+  return wire()->modules->get('RockFrontend');
+}
+
 /**
  * @author Bernhard Baumrock, 05.01.2022
  * @license MIT
  * @link https://www.baumrock.com
  *
  * @method string render($filename, array $vars = array(), array $options = array())
+ * @method string view(string $file, array|Page $vars = [], Page $page = null)
  */
 class RockFrontend extends WireData implements Module, ConfigurableModule
 {
@@ -1131,7 +1137,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   function humandates($locale = "de_AT"): HumanDates
   {
-    require_once __DIR__ . "/HumanDates.php";
+    require_once __DIR__ . "/vendor/autoload.php";
     return new HumanDates($locale);
   }
 
@@ -1865,11 +1871,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Get markup of a single view file
+   *
+   * Usage:
+   * $rf->view('foo/bar');
+   * $rf->view('foo/bar', $page);
+   * $rf->view('foo/bar', ['foo' => 'Foo!'], $page);
    */
-  public function ___view(string $file): Html|string
-  {
+  public function ___view(
+    string $file,
+    array|Page $vars = [],
+    Page $page = null,
+  ): Html|string {
+    if ($vars instanceof Page) {
+      $page = $vars;
+      $vars = [];
+    }
     $file = $this->viewFile($file);
-    $markup = $this->render($file);
+    if ($page) $vars = array_merge($vars, ['page' => $page]);
+    $markup = $this->render($file, $vars);
     return $this->html($markup);
   }
 
@@ -1923,7 +1942,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->viewTrailingSlash($opt->trailingslash);
 
     // remove all styles that have been added to the main styles array
-    // this is because the mail style array is for the main website
+    // this is because the main style array is for the main website
     // and we usually don't need it for custom frontends
     if ($opt->removeMainStyles) $this->styles('main')->removeAll();
 
@@ -2163,6 +2182,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $script = $this->scripts->get("rockfrontend-script-$name") ?: new ScriptsArray($name);
     $this->scripts->set("rockfrontend-script-$name", $script);
     return $script;
+  }
+
+  /**
+   * Set viewFolders for folder rendering feature
+   * This is required for RockCommerce htmx endpoint rendering.
+   */
+  public function setViewFolders(array $folders): void
+  {
+    $this->viewfolders = $folders;
   }
 
   /**

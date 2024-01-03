@@ -1,9 +1,5 @@
 <?php
 
-namespace RockFrontend;
-
-use IntlDateFormatter;
-
 class HumanDates
 {
   /* default range patterns */
@@ -31,9 +27,9 @@ class HumanDates
     $format = "d. MMM y",
     $patterns = null,
   ) {
-    $this->setPatterns($patterns);
     $this->setLocale($locale);
     $this->setFormat($format);
+    $this->setPatterns($patterns);
   }
 
   /**
@@ -61,22 +57,43 @@ class HumanDates
 
   /**
    * Format a daterange as human readable date string
+   *
+   * Usage:
+   * echo $dates->range("2023-12-27", "2023-12-28");
+   *
+   * Usage with custom pattern:
+   * echo $dates->range("2023-12-27", "2023-12-28", [
+   *   'sameMonth' => ["d.", " until ", "d. MMM Y"],
+   * ]);
+   *
+   * Note: Setting a pattern for this request will not modify
+   * the globally set pattern. If you want to change the pattern globally
+   * use $dates->setPatterns(...)->range(...)
    */
-  function range($from, $to): string
+  function range($from, $to, array $patterns = []): string
   {
     $from = $this->timestamp($from);
     $to = $this->timestamp($to);
 
+    // find out which pattern we want to use
     if (date("Ymd", $from) === date("Ymd", $to)) $pattern = 'sameDay';
     elseif (date("Ym", $from) === date("Ym", $to)) $pattern = 'sameMonth';
     elseif (date("Y", $from) === date("Y", $to)) $pattern = 'sameYear';
     else $pattern = 'default';
 
-    $pattern = $this->patterns[$pattern];
+    // merge patterns
+    // use global patterns by default and merge custom set patterns
+    // for this request without modifying the default patterns
+    $patterns = array_merge($this->patterns, $patterns);
+
+    // get the pattern for this range (eg for sameDay)
+    $pattern = $patterns[$pattern];
     $pieces = array_filter([
       $this->getString($from, $pattern[0]),
       $this->getString($to, $pattern[2]),
     ]);
+
+    // return the final date range string
     return implode($pattern[1], $pieces);
   }
 

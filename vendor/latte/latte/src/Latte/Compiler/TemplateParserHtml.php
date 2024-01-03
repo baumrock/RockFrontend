@@ -430,7 +430,7 @@ final class TemplateParserHtml
 			prefix: $this->getPrefix($name),
 			inTag: true,
 			htmlElement: $this->element,
-			attrNode: $node = new Nodes\TextNode(''),
+			nAttributeNode: $node = new Nodes\TextNode(''),
 		);
 		return $node;
 	}
@@ -510,7 +510,7 @@ final class TemplateParserHtml
 			if ($res instanceof \Generator && $res->valid()) {
 				$toClose[] = [$res, $tag];
 
-			} elseif ($res instanceof Node) {
+			} elseif ($res instanceof AreaNode) {
 				$this->parser->ensureIsConsumed($tag);
 				$res->position = $tag->position;
 				$tag->replaceNAttribute($res);
