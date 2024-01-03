@@ -1,3 +1,25 @@
+# [3.9.0](https://github.com/baumrock/RockFrontend/compare/v3.8.2...v3.9.0) (2024-01-03)
+
+
+### Bug Fixes
+
+* fix livereload issue on PHP8.2 ([7660ea4](https://github.com/baumrock/RockFrontend/commit/7660ea423a6a7ac9d315f61d2c4d682f65f136c5))
+
+
+### Features
+
+* add humandates via composer ([eabbe8b](https://github.com/baumrock/RockFrontend/commit/eabbe8b2b4d9ece590ec5a30ae6b26f9afe1986c))
+* add ogImage shortcut ([2131298](https://github.com/baumrock/RockFrontend/commit/2131298635b09fcefed49fbbbdc1ba4def265a28))
+* add rockfrontend() functions api ([4991da5](https://github.com/baumrock/RockFrontend/commit/4991da52481f11d79df9e90a7635b03f7ad64e87))
+* add setViewFolders to support RockCommerce HTMX ([dc33123](https://github.com/baumrock/RockFrontend/commit/dc3312329ba620a3008e77fd2117b726c9efbe2a))
+* add variables array to view() method ([c98ee66](https://github.com/baumrock/RockFrontend/commit/c98ee667712de44bd697fade8a93dc0a40042a81))
+* improve view() method for rockcommerce ([c05576a](https://github.com/baumrock/RockFrontend/commit/c05576a3393c277d4d143938e0ac519e6df4ec6a))
+* update dependencies (requires PHP8.1) ([488e689](https://github.com/baumrock/RockFrontend/commit/488e68937c5356504b39adbebe461466c077b306))
+* update required php version in info ([529c113](https://github.com/baumrock/RockFrontend/commit/529c113eb36a2c3a47e955d5f68c1264f751811c))
+* update to support new rockpagebuilder sortable handles ([80099f5](https://github.com/baumrock/RockFrontend/commit/80099f5770803bff1ff5eee82adba769670a6f83))
+
+
+
 ## [3.8.2](https://github.com/baumrock/RockFrontend/compare/v3.8.1...v3.8.2) (2023-12-04)
 
 
@@ -49,15 +71,6 @@
 ### Features
 
 * install Less module automatically ([e7b0916](https://github.com/baumrock/RockFrontend/commit/e7b09164851ddefab0198dc417a17e330a7c4368))
-
-
-
-## [3.6.1](https://github.com/baumrock/RockFrontend/compare/v3.6.0...v3.6.1) (2023-11-03)
-
-
-### Bug Fixes
-
-* add missing blockmargins style for RockPageBuilder profile ([0670d75](https://github.com/baumrock/RockFrontend/commit/0670d75edb0210a21dd64b88a8cdf859d22c1a37))
 
 
 
