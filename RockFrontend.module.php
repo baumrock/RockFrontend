@@ -130,6 +130,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function __construct()
   {
+    $this->folders = $this->wire(new WireArray());
     if (!$this->wire->config->livereload) return;
     if ($this->wire->config->ajax) return;
     if (!array_key_exists(self::getParam, $_GET)) return;
@@ -185,7 +186,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
 
     // setup folders that are scanned for files
-    $this->folders = $this->wire(new WireArray());
     $this->folders->add($this->config->paths->templates);
     $this->folders->add($this->config->paths->assets);
     $this->folders->add($this->config->paths->root);
