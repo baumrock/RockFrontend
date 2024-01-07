@@ -1459,82 +1459,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function migrate()
   {
     $this->migrateLess();
-    $this->migrateImages();
-    $this->migrateFavicon();
-    $this->migrateOgImage();
-    $this->migrateFooterlinks();
     $this->migrateLatteTranslations();
     // $this->migrateLayoutField();
-  }
-
-  private function migrateFavicon()
-  {
-    if (!in_array("favicon", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_favicon => [
-          'type' => 'image',
-          'label' => 'Favicon',
-          'maxFiles' => 1,
-          'descriptionRows' => 0,
-          'extensions' => 'png',
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatSingle,
-          'description' => 'For best browser support and quality upload a high resolution PNG (min 512x512). You can use transparency in your favicon.',
-          'notes' => '[See here](https://loqbooq.app/blog/add-favicon-modern-browser-guide) and [here](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/) to learn more about favicons',
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_favicon, 'home');
-  }
-
-  private function migrateFooterlinks()
-  {
-    if (!in_array("footerlinks", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_footerlinks => [
-          'type' => 'page',
-          'label' => 'Footer-Menu',
-          'derefAsPage' => FieldtypePage::derefAsPageArray,
-          'inputfield' => 'InputfieldPageListSelectMultiple',
-          'findPagesSelector' => 'id>0,template!=admin',
-          'labelFieldName' => 'title',
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_footerlinks, 'home');
-  }
-
-  private function migrateImages()
-  {
-    if (!in_array("images", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_images => [
-          'type' => 'image',
-          'label' => 'Media',
-          'maxFiles' => 0,
-          'descriptionRows' => 0,
-          'columnWidth' => 50,
-          'extensions' => 'png jpg jpeg svg',
-          'okExtensions' => ['svg'],
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatArray,
-          'description' => 'Images that can be included somewhere (eg in Hanna Codes).',
-          'tags' => self::tags,
-          'notes' => 'API: $home->images()->get("name=foo.jpg");',
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_images, 'home');
   }
 
   private function migrateLatteTranslations()
@@ -1564,30 +1490,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       ],
     ]);
     $rm->addFieldToTemplate(self::field_less, 'home');
-  }
-
-  private function migrateOgImage()
-  {
-    if (!in_array("ogimage", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_ogimage => [
-          'type' => 'image',
-          'label' => 'og:image',
-          'maxFiles' => 1,
-          'descriptionRows' => 0,
-          'columnWidth' => 50,
-          'extensions' => 'png jpg jpeg',
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatSingle,
-          'description' => 'Here you can add the fallback og:image that will be used by RockFrontend\'s SEO-Tools.',
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_ogimage, 'home');
   }
 
   /**
