@@ -768,6 +768,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ");
   }
 
+  public function editorLink($path)
+  {
+    $tracy = $this->wire->config->tracy;
+    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
+      $root = $tracy['localRootPath'];
+    else $root = $this->wire->config->paths->root;
+    $link = str_replace($this->wire->config->paths->root, $root, $path);
+    $link = Paths::normalizeSeparators($link);
+
+    $handler = $this->ideLinkHandler ?: "vscode://file/%file";
+    $link = str_replace("%file", ltrim($link, "/"), $handler);
+    return $link;
+  }
+
   /**
    * Find files to suggest
    * @return array
@@ -927,7 +941,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $icons[] = (object)[
         'icon' => 'code',
         'label' => $opt->path,
-        'href' => $this->vscodeLink($opt->path),
+        'href' => $this->editorLink($opt->path),
         'tooltip' => $opt->path,
       ];
 
@@ -942,7 +956,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $icons[] = (object)[
           'icon' => 'php',
           'label' => $php,
-          'href' => $this->vscodeLink($php),
+          'href' => $this->editorLink($php),
           'tooltip' => $php,
         ];
       }
@@ -953,7 +967,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $icons[] = (object)[
           'icon' => 'eye',
           'label' => $less,
-          'href' => $this->vscodeLink($less),
+          'href' => $this->editorLink($less),
           'tooltip' => $less,
         ];
       }
@@ -2180,17 +2194,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
-  public function vscodeLink($path)
-  {
-    $tracy = $this->wire->config->tracy;
-    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
-      $root = $tracy['localRootPath'];
-    else $root = $this->wire->config->paths->root;
-    $link = str_replace($this->wire->config->paths->root, $root, $path);
-    $link = Paths::normalizeSeparators($link);
-    return "vscode://file/" . ltrim($link, "/");
-  }
-
   /** translation support in LATTE files */
 
   public function _($str)
@@ -2453,6 +2456,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs->label = "Settings";
     $fs->icon = "cogs";
     $inputfields->add($fs);
+
+    $fs->add([
+      'type' => 'text',
+      'name' => 'ideLinkHandler',
+      'label' => 'IDE Link Handler',
+      'value' => $this->ideLinkHandler,
+      'notes' => 'Default: vscode://file/%file',
+    ]);
 
     $f = new InputfieldText();
     $f->label = 'Webfonts';
