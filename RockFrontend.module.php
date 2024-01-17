@@ -2487,7 +2487,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Features";
     $f->icon = "star-o";
     $f->addOption('RockFrontend.js', 'RockFrontend.js - Load this file on the frontend (eg to use consent tools).');
-    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax).');
+    $f->addOption('postCSS', 'postCSS - Use the internal postCSS feature (eg to use rfGrow() syntax).');
     $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature)).');
     $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
     $f->value = (array)$this->features;
