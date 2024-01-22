@@ -105,6 +105,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var bool */
   public $noAssets = false;
 
+  private $onceKeys = [];
+
   /** @var string */
   public $path;
 
@@ -1524,6 +1526,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $minify->minify($minFile->path);
     }
     return $minFile->path;
+  }
+
+  /**
+   * Helper to display markup only once
+   *
+   * Usage with LATTE:
+   * <div n:if="$rockfrontend->once('demo')">
+   *   Demo Content
+   * </div>
+   */
+  public function once(string $key): bool
+  {
+    $found = in_array($key, $this->onceKeys);
+    $this->onceKeys[] = $key;
+    return !$found;
   }
 
   /**
