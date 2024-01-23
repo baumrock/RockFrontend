@@ -390,15 +390,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->wire->config->hideTopBar) return;
 
     /** @var RockMigrations $rm */
-    $less = __DIR__ . "/bar/bar.less";
+    $less = __DIR__ . "/topbar/topbar.less";
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     if ($rm) $rm->saveCSS($less, minify: true);
-    $css = $this->toUrl(__DIR__ . "/bar/bar.min.css", true);
+    $css = $this->toUrl(__DIR__ . "/topbar/topbar.min.css", true);
     $style = "<link rel='stylesheet' href='$css'>";
     $html = str_replace("</head", "$style</head", $html);
 
-    $topbar = $this->wire->files->render(__DIR__ . "/bar/topbar.php", [
+    $topbar = $this->wire->files->render(__DIR__ . "/topbar/topbar.php", [
       'rf' => $this,
       'logourl' => $this->toUrl(__DIR__ . "/RockFrontend.svg", true),
       'z' => is_int($this->topbarz) ? $this->topbarz : 999,
