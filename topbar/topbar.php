@@ -6,7 +6,7 @@
     <img id="rf-logo" src="<?= $logourl ?>">
   </a>
 
-  <a href="<?= $pages->get(2)->url ?>">
+  <a href="<?= $pages->get(2)->url ?>" title="Go to pagetree" uk-tooltip>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
         <rect width="6" height="6" x="3" y="15" rx="2" />
@@ -17,7 +17,7 @@
     </svg>
   </a>
 
-  <a href="<?= $page->editUrl() ?>">
+  <a href="<?= $page->editUrl() ?>" title="Edit this page" uk-tooltip>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
         <path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1" />
@@ -26,7 +26,16 @@
     </svg>
   </a>
 
-  <a href="#" class="rf-topbar-hide">
+  <a href="#" class="rf-toggle-sortable" title="Toggle Drag&Drop" uk-tooltip>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+        <path d="M19 11V9a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        <path d="m13 13l9 3l-4 2l-2 4l-3-9M3 3v.01M7 3v.01M11 3v.01M15 3v.01M3 7v.01M3 11v.01M3 15v.01" />
+      </g>
+    </svg>
+  </a>
+
+  <a href="#" class="rf-topbar-hide" title="Hide topbar" uk-tooltip>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
         <path d="m3 3l18 18M10.584 10.587a2 2 0 0 0 2.828 2.83" />
@@ -35,7 +44,7 @@
     </svg>
   </a>
 
-  <a href=/ class="rf-device-preview">
+  <a href=/ class="rf-device-preview" title="Responsive Preview" uk-tooltip>
     <svg width="100%" height="100%" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;">
       <g>
         <g transform="matrix(1,0,0,1,-1,0)">
@@ -59,7 +68,7 @@
   <?= $rf->topbarAppendMarkup ?>
 
   <?php if ($user->isSuperuser()) : ?>
-    <span style="margin-left: 10px;">[
+    <span style="margin-left: 10px;" title="Edit Template" uk-tooltip>[
       <a href="<?= $pages->get(2)->url ?>setup/template/edit?id=<?= $page->template->id ?>">
         <?= $page->template->name ?>
       </a>
@@ -95,10 +104,14 @@
 
     // listen to clicks
     document.addEventListener('click', function(event) {
+      let body = document.querySelector("body");
+
+      // show topbar
       if (event.target.matches('#rf-topbar')) {
         event.preventDefault();
         event.target.classList.remove('hide');
         localStorage.setItem('rf-topbar-hide', 0);
+        body.classList.remove("no-alfred");
       }
 
       let $a = event.target.closest('a');
@@ -120,6 +133,17 @@
         event.preventDefault();
         $a.closest('#rf-topbar').classList.add('hide');
         localStorage.setItem('rf-topbar-hide', 1);
+        body.classList.add("no-alfred");
+      } else if ($a.matches('.rf-toggle-sortable')) {
+        // toggle sortable
+        event.preventDefault();
+        RockSortable.sortables.forEach((sortable) => {
+          var disabled = sortable.option("disabled");
+          sortable.option("disabled", !disabled);
+          localStorage.setItem("rpb-sortable-disabled", !disabled ? '1' : '0');
+          if (!disabled) body.classList.add("no-sortable");
+          else body.classList.remove("no-sortable");
+        });
       }
     }, false);
 
