@@ -26,14 +26,16 @@
     </svg>
   </a>
 
-  <a href="#" class="rf-toggle-sortable" title="Toggle Drag&Drop" uk-tooltip>
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-        <path d="M19 11V9a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-        <path d="m13 13l9 3l-4 2l-2 4l-3-9M3 3v.01M7 3v.01M11 3v.01M15 3v.01M3 7v.01M3 11v.01M3 15v.01" />
-      </g>
-    </svg>
-  </a>
+  <?php if ($modules->isInstalled("RockPageBuilder")) : ?>
+    <a href="#" class="rf-toggle-sortable" title="Toggle Drag&Drop" uk-tooltip>
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+          <path d="M19 11V9a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+          <path d="m13 13l9 3l-4 2l-2 4l-3-9M3 3v.01M7 3v.01M11 3v.01M15 3v.01M3 7v.01M3 11v.01M3 15v.01" />
+        </g>
+      </svg>
+    </a>
+  <?php endif; ?>
 
   <a href="#" class="rf-topbar-hide" title="Hide topbar" uk-tooltip>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
@@ -137,18 +139,24 @@
       } else if ($a.matches('.rf-toggle-sortable')) {
         // toggle sortable
         event.preventDefault();
-        RockSortable.sortables.forEach((sortable) => {
-          var disabled = sortable.option("disabled");
-          sortable.option("disabled", !disabled);
-          localStorage.setItem("rpb-sortable-disabled", !disabled ? '1' : '0');
-          if (!disabled) body.classList.add("no-sortable");
-          else body.classList.remove("no-sortable");
-        });
+        if (typeof RockSortable !== 'undefined') RockSortable.toggle();
       }
     }, false);
 
+    // initial state of topbar
     if (localStorage.getItem('rf-topbar-hide') == 1) {
       document.querySelector('.rf-topbar-hide').click();
     }
+
+    // toggle topbar if CMD key or CTRL key is pressed
+    document.addEventListener('keydown', function(event) {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      let topbar = document.querySelector('#rf-topbar');
+      if (topbar.classList.contains('hide')) {
+        topbar.click()
+      } else {
+        topbar.querySelector(".rf-topbar-hide").click();
+      }
+    });
   })()
 </script>

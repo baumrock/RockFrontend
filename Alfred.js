@@ -301,24 +301,5 @@
       if ($alfred.find("*:not(.alfred) .pw-edited").length) return;
       $alfred.find("> .alfredelements > .icons > a.alfred-edit").click();
     });
-
-    // toggle alfred overlays on shift keypress
-    let $hovered = false;
-    let pressed = false;
-    $(document).on("mouseover", function (e) {
-      $hovered = $(e.target);
-      if (pressed) $hovered.closest(".alfred").addClass("alfred-disabled");
-    });
-    $(document).on("keydown keyup", function (e) {
-      pressed = false;
-      $(".alfred").removeClass("alfred-disabled");
-      try {
-        if ($hovered.closest(".alfredelements").length) return;
-      } catch (error) {}
-      if (!e.shiftKey) return;
-      pressed = true;
-      let $alfred = $hovered.closest(".alfred");
-      $alfred.addClass("alfred-disabled");
-    });
   });
 })();
