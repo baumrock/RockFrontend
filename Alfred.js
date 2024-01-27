@@ -301,5 +301,19 @@
       if ($alfred.find("*:not(.alfred) .pw-edited").length) return;
       $alfred.find("> .alfredelements > .icons > a.alfred-edit").click();
     });
+
+    // toggle alfred ui if topbar is disabled
+    $(document).on("keydown", function (e) {
+      if (document.querySelector("#rf-topbar")) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+      let body = document.querySelector("body");
+      if (localStorage.getItem("rf-topbar-hide") == "0") {
+        body.classList.add("no-alfred");
+        localStorage.setItem("rf-topbar-hide", 1);
+      } else {
+        body.classList.remove("no-alfred");
+        localStorage.setItem("rf-topbar-hide", 0);
+      }
+    });
   });
 })();

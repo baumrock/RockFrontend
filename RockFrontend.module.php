@@ -218,6 +218,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // health checks
     $this->checkHealth();
+
+    // development helpers by rockmigrations
+    if ($this->wire->modules->isInstalled('RockMigrations')) {
+      $rm = rockmigrations();
+      $rm->minify(__DIR__ . "/Alfred.js");
+    }
   }
 
   public function ready()
@@ -261,7 +267,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $this->js("rootUrl", $this->wire->config->urls->root);
     $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-    $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
+    $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js");
     $this->addAlfredStyles();
 
     // replace alfred cache markup
