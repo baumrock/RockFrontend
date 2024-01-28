@@ -1,3 +1,10 @@
+{if $modules->isInstalled('RockPageBuilder')}
 <main sortable>
   {$rockpagebuilder->render(true)}
 </main>
+{else}
+<main style="padding:40px;border:5px solid red;">
+  RockPageBuilder is not installed!<br>
+  Either add your own markup in /sections/main.latte or install RockPageBuilder
+</main>
+{/if}
