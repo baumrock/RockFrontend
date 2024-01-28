@@ -73,6 +73,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public $autoloadScripts;
   public $autoloadStyles;
 
+  public $createManifest = false;
+
   /** @var WireArray $folders */
   public $folders;
 
@@ -2094,8 +2096,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * @return Seo
    */
-  public function seo()
-  {
+  public function seo(
+    bool $createManifest = false,
+  ) {
+    $this->createManifest = $createManifest;
     if ($this->seo) return $this->seo;
     require_once __DIR__ . "/Seo.php";
     return $this->seo = new Seo();

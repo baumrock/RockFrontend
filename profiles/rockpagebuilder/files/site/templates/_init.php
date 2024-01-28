@@ -2,6 +2,8 @@
 
 namespace ProcessWire;
 
+/** @var RockFrontend $rockfrontend */
+
 $htmlLang = "de";
 
 $rockfrontend->styles()
@@ -15,5 +17,5 @@ $rockfrontend->scripts()
   ->add('/site/templates/scripts/main.js', 'defer')
   ->minify(!$config->debug);
 
-$seo = $rockfrontend->seo()
+$seo = $rockfrontend->seo(createManifest: false)
   ->title($page->title . " | example.com");
