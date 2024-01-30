@@ -415,6 +415,32 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Adjust brightness of a hex value
+   * See https://stackoverflow.com/a/54393956 for details.
+   * It might not be 100% accurate but good enough for my usecases :)
+   *
+   * @param mixed $hexCode
+   * @param mixed $adjustPercent
+   * @return string
+   */
+  private function adjustBrightness($hexCode, $adjustPercent)
+  {
+    $hexCode = ltrim($hexCode, '#');
+    if (strlen($hexCode) == 3) {
+      $hexCode = $hexCode[0] . $hexCode[0] . $hexCode[1] . $hexCode[1] . $hexCode[2] . $hexCode[2];
+    }
+
+    $hexCode = array_map('hexdec', str_split($hexCode, 2));
+    foreach ($hexCode as &$color) {
+      $adjustableLimit = $adjustPercent < 0 ? $color : 255 - $color;
+      $adjustAmount = ceil($adjustableLimit * $adjustPercent);
+      $color = str_pad(dechex($color + $adjustAmount), 2, '0', STR_PAD_LEFT);
+    }
+
+    return '#' . implode($hexCode);
+  }
+
+  /**
    * ALFRED - A Lovely FRontend EDitor
    *
    * Usage:
@@ -709,6 +735,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($p and $p->id) return;
     $p = $this->wire->permissions->add($name);
     $p->setAndSave('title', $title);
+  }
+
+  public function darken($hex, $percent): string
+  {
+    return $this->adjustBrightness($hex, -1 * ($percent / 100));
   }
 
   /**
@@ -1374,6 +1405,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function lessFilePath(): string
   {
     return $this->wire->config->paths->templates . "less/rf-custom.less";
+  }
+
+  public function lighten($hex, $percent): string
+  {
+    return $this->adjustBrightness($hex, $percent / 100);
   }
 
   /**
