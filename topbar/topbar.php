@@ -147,16 +147,5 @@
     if (localStorage.getItem('rf-topbar-hide') == 1) {
       document.querySelector('.rf-topbar-hide').click();
     }
-
-    // toggle topbar if CMD key or CTRL key is pressed
-    document.addEventListener('keydown', function(event) {
-      if (!(event.metaKey || event.ctrlKey)) return;
-      let topbar = document.querySelector('#rf-topbar');
-      if (topbar.classList.contains('hide')) {
-        topbar.click()
-      } else {
-        topbar.querySelector(".rf-topbar-hide").click();
-      }
-    });
   })()
 </script>
