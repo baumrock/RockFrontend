@@ -2207,6 +2207,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function svg($filename, $replacements = [])
   {
+    if ($filename instanceof Pagefiles) $filename = $filename->first()->filename;
+    elseif ($filename instanceof Pagefile) $filename = $filename->filename;
     $filename = $this->getFile($filename);
     if (!is_file($filename)) return;
     // we use file_get_contents because $files->render can cause parse errors
