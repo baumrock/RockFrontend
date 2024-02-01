@@ -1466,7 +1466,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * @return Engine
    */
-  public function loadLatte($withLayout = false)
+  public function ___loadLatte($withLayout = false)
   {
     if ($withLayout && $this->latteWithLayout) return $this->latteWithLayout;
     if ($this->latte) return $this->latte;
