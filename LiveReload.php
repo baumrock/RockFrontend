@@ -181,8 +181,18 @@ class LiveReload extends Wire
     header("Cache-Control: no-cache");
     header("Content-Type: text/event-stream");
     $start = time();
+    $build = $this->wire->config->livereloadBuild;
+    $debug = $this->wire->config->debug;
     while (true) {
-      $this->sse($file = $this->findModifiedFile($start));
+      $file = $this->findModifiedFile($start);
+
+      // if file changed and feature enabled run build script
+      if ($file && $debug && $build) exec("npm run build");
+
+      // send trigger to frontend
+      $this->sse($file);
+
+      // add note to log
       if ($file) {
         ob_end_flush();
         $this->wire->log->prune('livereload', 1);
@@ -193,8 +203,11 @@ class LiveReload extends Wire
       }
       while (ob_get_level() > 0) ob_end_flush();
       if (connection_aborted()) break;
-      $sleepSeconds = (float)$this->wire->config->livereload ?: 1;
-      sleep($sleepSeconds);
+
+      // sleep until next try
+      $sleepSeconds = (float)$this->wire->config->livereload ?: 1.0;
+      $sleepSeconds = 0.2;
+      usleep($sleepSeconds * 1000000);
     }
   }
 

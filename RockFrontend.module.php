@@ -2738,11 +2738,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
     if ($this->m_background_color) $create = true;
 
-    $wrapper->add([
-      'type' => 'markup',
-      'label' => 'Icon',
-      'value' => 'TBD',
-    ]);
+    // $wrapper->add([
+    //   'type' => 'markup',
+    //   'label' => 'Icon',
+    //   'value' => 'TBD',
+    // ]);
 
     if ($create) {
       $this->manifest()
