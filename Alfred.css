@@ -161,3 +161,6 @@ body.no-alfred .alfredelements {
   position: fixed !important;
   top: 50% !important;
 }
+body.no-sortable .rf-toggle-sortable {
+  opacity: 0.3;
+}

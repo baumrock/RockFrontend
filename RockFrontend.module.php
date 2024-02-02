@@ -73,6 +73,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public $autoloadScripts;
   public $autoloadStyles;
 
+  public $createManifest = false;
+
   /** @var WireArray $folders */
   public $folders;
 
@@ -105,6 +107,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var bool */
   public $noAssets = false;
 
+  private $onceKeys = [];
+
   /** @var string */
   public $path;
 
@@ -130,6 +134,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function __construct()
   {
+    $this->folders = $this->wire(new WireArray());
     if (!$this->wire->config->livereload) return;
     if ($this->wire->config->ajax) return;
     if (!array_key_exists(self::getParam, $_GET)) return;
@@ -185,7 +190,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
 
     // setup folders that are scanned for files
-    $this->folders = $this->wire(new WireArray());
     $this->folders->add($this->config->paths->templates);
     $this->folders->add($this->config->paths->assets);
     $this->folders->add($this->config->paths->root);
@@ -216,6 +220,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // health checks
     $this->checkHealth();
+
+    // development helpers by rockmigrations
+    if ($this->wire->modules->isInstalled('RockMigrations')) {
+      $rm = rockmigrations();
+      $rm->minify(__DIR__ . "/Alfred.js");
+    }
   }
 
   public function ready()
@@ -259,7 +269,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $this->js("rootUrl", $this->wire->config->urls->root);
     $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-    $this->scripts('rockfrontend')->add($this->path . "Alfred.js");
+    $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js");
     $this->addAlfredStyles();
 
     // replace alfred cache markup
@@ -388,20 +398,46 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->wire->config->hideTopBar) return;
 
     /** @var RockMigrations $rm */
-    $less = __DIR__ . "/bar/bar.less";
+    $less = __DIR__ . "/topbar/topbar.less";
     /** @var RockMigrations $rm */
     $rm = $this->wire->modules->get('RockMigrations');
     if ($rm) $rm->saveCSS($less, minify: true);
-    $css = $this->toUrl(__DIR__ . "/bar/bar.min.css", true);
+    $css = $this->toUrl(__DIR__ . "/topbar/topbar.min.css", true);
     $style = "<link rel='stylesheet' href='$css'>";
     $html = str_replace("</head", "$style</head", $html);
 
-    $topbar = $this->wire->files->render(__DIR__ . "/bar/topbar.php", [
+    $topbar = $this->wire->files->render(__DIR__ . "/topbar/topbar.php", [
       'rf' => $this,
       'logourl' => $this->toUrl(__DIR__ . "/RockFrontend.svg", true),
       'z' => is_int($this->topbarz) ? $this->topbarz : 999,
     ]);
     $html = str_replace("</body", "$topbar</body", $html);
+  }
+
+  /**
+   * Adjust brightness of a hex value
+   * See https://stackoverflow.com/a/54393956 for details.
+   * It might not be 100% accurate but good enough for my usecases :)
+   *
+   * @param mixed $hexCode
+   * @param mixed $adjustPercent
+   * @return string
+   */
+  private function adjustBrightness($hexCode, $adjustPercent)
+  {
+    $hexCode = ltrim($hexCode, '#');
+    if (strlen($hexCode) == 3) {
+      $hexCode = $hexCode[0] . $hexCode[0] . $hexCode[1] . $hexCode[1] . $hexCode[2] . $hexCode[2];
+    }
+
+    $hexCode = array_map('hexdec', str_split($hexCode, 2));
+    foreach ($hexCode as &$color) {
+      $adjustableLimit = $adjustPercent < 0 ? $color : 255 - $color;
+      $adjustAmount = ceil($adjustableLimit * $adjustPercent);
+      $color = str_pad(dechex($color + $adjustAmount), 2, '0', STR_PAD_LEFT);
+    }
+
+    return '#' . implode($hexCode);
   }
 
   /**
@@ -561,7 +597,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function autoPrepend($event)
   {
-    $event->object->setPrependFilename($this->path . "AutoPrepend.php");
+    /** @var Templatefile $tpl */
+    $tpl = $event->object;
+    $this->autoPrependFile = (string)$tpl;
+    $tpl->setPrependFilename($this->path . "AutoPrepend.php");
   }
 
   /**
@@ -698,6 +737,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $p->setAndSave('title', $title);
   }
 
+  public function darken($hex, $percent): string
+  {
+    return $this->adjustBrightness($hex, -1 * ($percent / 100));
+  }
+
   /**
    * Load HtmlPageDom
    *
@@ -766,6 +810,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         </a>
       $endli
     ");
+  }
+
+  public function editorLink($path)
+  {
+    $tracy = $this->wire->config->tracy;
+    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
+      $root = $tracy['localRootPath'];
+    else $root = $this->wire->config->paths->root;
+    $link = str_replace($this->wire->config->paths->root, $root, $path);
+    $link = Paths::normalizeSeparators($link);
+
+    $handler = $this->ideLinkHandler ?: "vscode://file/%file";
+    $link = str_replace("%file", ltrim($link, "/"), $handler);
+    return $link;
   }
 
   /**
@@ -927,7 +985,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $icons[] = (object)[
         'icon' => 'code',
         'label' => $opt->path,
-        'href' => $this->vscodeLink($opt->path),
+        'href' => $this->editorLink($opt->path),
         'tooltip' => $opt->path,
       ];
 
@@ -942,7 +1000,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $icons[] = (object)[
           'icon' => 'php',
           'label' => $php,
-          'href' => $this->vscodeLink($php),
+          'href' => $this->editorLink($php),
           'tooltip' => $php,
         ];
       }
@@ -953,7 +1011,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $icons[] = (object)[
           'icon' => 'eye',
           'label' => $less,
-          'href' => $this->vscodeLink($less),
+          'href' => $this->editorLink($less),
           'tooltip' => $less,
         ];
       }
@@ -1349,6 +1407,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->wire->config->paths->templates . "less/rf-custom.less";
   }
 
+  public function lighten($hex, $percent): string
+  {
+    return $this->adjustBrightness($hex, $percent / 100);
+  }
+
   /**
    * Setup live reloading
    */
@@ -1403,7 +1466,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * @return Engine
    */
-  public function loadLatte($withLayout = false)
+  public function ___loadLatte($withLayout = false)
   {
     if ($withLayout && $this->latteWithLayout) return $this->latteWithLayout;
     if ($this->latte) return $this->latte;
@@ -1459,82 +1522,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function migrate()
   {
     $this->migrateLess();
-    $this->migrateImages();
-    $this->migrateFavicon();
-    $this->migrateOgImage();
-    $this->migrateFooterlinks();
     $this->migrateLatteTranslations();
     // $this->migrateLayoutField();
-  }
-
-  private function migrateFavicon()
-  {
-    if (!in_array("favicon", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_favicon => [
-          'type' => 'image',
-          'label' => 'Favicon',
-          'maxFiles' => 1,
-          'descriptionRows' => 0,
-          'extensions' => 'png',
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatSingle,
-          'description' => 'For best browser support and quality upload a high resolution PNG (min 512x512). You can use transparency in your favicon.',
-          'notes' => '[See here](https://loqbooq.app/blog/add-favicon-modern-browser-guide) and [here](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/) to learn more about favicons',
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_favicon, 'home');
-  }
-
-  private function migrateFooterlinks()
-  {
-    if (!in_array("footerlinks", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_footerlinks => [
-          'type' => 'page',
-          'label' => 'Footer-Menu',
-          'derefAsPage' => FieldtypePage::derefAsPageArray,
-          'inputfield' => 'InputfieldPageListSelectMultiple',
-          'findPagesSelector' => 'id>0,template!=admin',
-          'labelFieldName' => 'title',
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_footerlinks, 'home');
-  }
-
-  private function migrateImages()
-  {
-    if (!in_array("images", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_images => [
-          'type' => 'image',
-          'label' => 'Media',
-          'maxFiles' => 0,
-          'descriptionRows' => 0,
-          'columnWidth' => 50,
-          'extensions' => 'png jpg jpeg svg',
-          'okExtensions' => ['svg'],
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatArray,
-          'description' => 'Images that can be included somewhere (eg in Hanna Codes).',
-          'tags' => self::tags,
-          'notes' => 'API: $home->images()->get("name=foo.jpg");',
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_images, 'home');
   }
 
   private function migrateLatteTranslations()
@@ -1566,30 +1555,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $rm->addFieldToTemplate(self::field_less, 'home');
   }
 
-  private function migrateOgImage()
-  {
-    if (!in_array("ogimage", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_ogimage => [
-          'type' => 'image',
-          'label' => 'og:image',
-          'maxFiles' => 1,
-          'descriptionRows' => 0,
-          'columnWidth' => 50,
-          'extensions' => 'png jpg jpeg',
-          'maxSize' => 3, // max 3 megapixels
-          'icon' => 'picture-o',
-          'outputFormat' => FieldtypeFile::outputFormatSingle,
-          'description' => 'Here you can add the fallback og:image that will be used by RockFrontend\'s SEO-Tools.',
-          'tags' => self::tags,
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_ogimage, 'home');
-  }
-
   /**
    * Minify file and return path of minified file
    */
@@ -1605,6 +1570,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $minify->minify($minFile->path);
     }
     return $minFile->path;
+  }
+
+  /**
+   * Helper to display markup only once
+   *
+   * Usage with LATTE:
+   * <div n:if="$rockfrontend->once('demo')">
+   *   Demo Content
+   * </div>
+   */
+  public function once(string $key): bool
+  {
+    $found = in_array($key, $this->onceKeys);
+    $this->onceKeys[] = $key;
+    return !$found;
   }
 
   /**
@@ -2152,8 +2132,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * @return Seo
    */
-  public function seo()
-  {
+  public function seo(
+    bool $createManifest = false,
+  ) {
+    $this->createManifest = $createManifest;
     if ($this->seo) return $this->seo;
     require_once __DIR__ . "/Seo.php";
     return $this->seo = new Seo();
@@ -2225,6 +2207,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function svg($filename, $replacements = [])
   {
+    if ($filename instanceof Pagefiles) $filename = $filename->first()->filename;
+    elseif ($filename instanceof Pagefile) $filename = $filename->filename;
     $filename = $this->getFile($filename);
     if (!is_file($filename)) return;
     // we use file_get_contents because $files->render can cause parse errors
@@ -2276,17 +2260,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $this->wire->files->filePutContents($file, $newcontent);
       } else $this->error($err);
     }
-  }
-
-  public function vscodeLink($path)
-  {
-    $tracy = $this->wire->config->tracy;
-    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
-      $root = $tracy['localRootPath'];
-    else $root = $this->wire->config->paths->root;
-    $link = str_replace($this->wire->config->paths->root, $root, $path);
-    $link = Paths::normalizeSeparators($link);
-    return "vscode://file/" . ltrim($link, "/");
   }
 
   /** translation support in LATTE files */
@@ -2552,6 +2525,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs->icon = "cogs";
     $inputfields->add($fs);
 
+    $fs->add([
+      'type' => 'text',
+      'name' => 'ideLinkHandler',
+      'label' => 'IDE Link Handler',
+      'value' => $this->ideLinkHandler,
+      'notes' => 'Default: vscode://file/%file',
+    ]);
+
     $f = new InputfieldText();
     $f->label = 'Webfonts';
     $f->name = 'webfonts';
@@ -2574,7 +2555,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = "Features";
     $f->icon = "star-o";
     $f->addOption('RockFrontend.js', 'RockFrontend.js - Load this file on the frontend (eg to use consent tools).');
-    $f->addOption('postCSS', 'postCSS - Use the internel postCSS feature (eg to use rfGrow() syntax).');
+    $f->addOption('postCSS', 'postCSS - Use the internal postCSS feature (eg to use rfGrow() syntax).');
     $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature)).');
     $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
     $f->value = (array)$this->features;

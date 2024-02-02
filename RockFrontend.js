@@ -156,6 +156,49 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
     C.init();
   });
 
+  // monitor clicks on elements having "has-consent-click"
+  // see boukal for an example
+  document.addEventListener("click", function (e) {
+    let click = e.target.closest("[has-consent-click]");
+    if (!click) return;
+
+    let selector = click.getAttribute("has-consent-click");
+    let target = document.querySelector(selector);
+    // if no target was found we let the regular click through
+    // this should be an anchor with target=_blank
+    if (!target) return;
+
+    e.preventDefault();
+    let name = click.getAttribute("rf-consent");
+    if (C.isEnabled(name)) {
+      target.click();
+    } else {
+      selector = click.getAttribute("needs-consent-click");
+      target = document.querySelector(selector);
+      if (target) target.click();
+    }
+  });
+
+  // populate src from rfc-src whenever a uikit modal is opened
+  // see boukal for an example
+  document.addEventListener("beforeshow", function (e) {
+    let modal = e.target;
+    let iframes = modal.querySelectorAll("iframe[rfc-src]");
+    iframes.forEach(function (iframe) {
+      iframe.setAttribute("src", iframe.getAttribute("rfc-src"));
+    });
+  });
+
+  // remove src attribute whenever a uikit modal is closed
+  // see boukal for an example
+  document.addEventListener("beforehide", function (e) {
+    let modal = e.target;
+    let iframes = modal.querySelectorAll("iframe[rfc-src]");
+    iframes.forEach(function (iframe) {
+      iframe.removeAttribute("src");
+    });
+  });
+
   // intercept links with "rfconsent-click" attributes
   let allowAttached = false;
   document.addEventListener("click", (e) => {

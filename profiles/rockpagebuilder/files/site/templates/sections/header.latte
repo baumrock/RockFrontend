@@ -1,6 +1,6 @@
 {* here you can exclude items from main + mobile menu, eg template!=blogitem *}
-{do $wire->mainMenuSelector = "include=hidden"}
-{do $wire->mobileMenuSelector = $wire->mainMenuSelector}
+{do $rockfrontend->mainMenuSelector = "include=hidden"}
+{do $rockfrontend->mobileMenuSelector = $rockfrontend->mainMenuSelector}
 
 <header {alfred($page)}>
   <div class="uk-container">
@@ -32,7 +32,7 @@
               {var $inDropdown = $item->parents->count()>1}
               {var $active = $inDropdown ? $item==$page : $rockfrontend->isActive($item)}
               {var $subid = "menu-".$item->id}
-              {var $numc = ($item->children($wire->mainMenuSelector)->count() && $item!==$first) }
+              {var $numc = ($item->children($rockfrontend->mainMenuSelector)->count() && $item!==$first) }
               {* list item markup *}
               <li n:class="$active ? 'uk-active'">
                 <a
@@ -52,8 +52,8 @@
                     {include
                       mainmenu,
                       $inDropdown
-                        ? $item->children($wire->mainMenuSelector)->prepend($item)
-                        : $item->children($wire->mainMenuSelector),
+                        ? $item->children($rockfrontend->mainMenuSelector)->prepend($item)
+                        : $item->children($rockfrontend->mainMenuSelector),
                       $item
                     }
                   </ul>
@@ -62,7 +62,7 @@
             {/foreach}
           {/define}
           {* now include the block for the first level of items *}
-          {include mainmenu, $home->children($wire->mainMenuSelector)}
+          {include mainmenu, $home->children($rockfrontend->mainMenuSelector)}
         </ul>
 
         {* burger *}
@@ -94,7 +94,7 @@
           {var $show = $rockfrontend->isActive($item)}
           {var $active = $item==$page}
           {var $subid = "mobile-".$item->id}
-          {var $numc = ($item->children($wire->mobileMenuSelector)->count() && $item!==$first) }
+          {var $numc = ($item->children($rockfrontend->mobileMenuSelector)->count() && $item!==$first) }
           {* list item markup *}
           <li n:class="$active ? 'uk-active'">
             <a
@@ -111,13 +111,13 @@
               class="uk-nav-sub"
               {!$show?'hidden'}
             >
-              {include mobilemenu, $item->children($wire->mobileMenuSelector)->prepend($item), $item}
+              {include mobilemenu, $item->children($rockfrontend->mobileMenuSelector)->prepend($item), $item}
             </ul>
           </li>
         {/foreach}
       {/define}
       {* now include the block for the first level of items *}
-      {include mobilemenu, $home->children($wire->mobileMenuSelector)}
+      {include mobilemenu, $home->children($rockfrontend->mobileMenuSelector)}
     </ul>
 
   </div>

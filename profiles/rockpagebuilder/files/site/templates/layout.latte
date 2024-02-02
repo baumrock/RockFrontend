@@ -1,0 +1,30 @@
+{* see _init.php *}
+<!DOCTYPE html>
+<html lang="{$htmlLang}">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {* $seo and all assets are defined in _init.php *}
+  {$seo|noescape}
+</head>
+
+<body>
+  {include "sections/header.latte"}
+  {include "sections/main.latte"}
+  {include "sections/footer.latte"}
+
+  {*
+    Example of RockFrontend's consent tools
+    You need to enable RockFrontend.js in RockFrontend's settings
+  *}
+  <template rf-consent="matomo" loadif="unchecked">
+    <script>console.log("Matomo is allowed, loading script")</script>
+  </template>
+  <template rf-consent="analytics" loadif="checked">
+    <script>console.log("This script is not loaded by default")</script>
+  </template>
+</body>
+
+</html>

@@ -12,7 +12,6 @@ use ProcessWire\WireData;
 
 class Seo extends Wire
 {
-
   /** @var array */
   protected $rawValues;
 
@@ -369,19 +368,21 @@ class Seo extends Wire
     });
 
     // webmanifest
-    $this->setMarkup('manifest', '<link rel="manifest" href="{value}">');
-    $this->setValue('manifest', function () {
-      /** @var RockFrontend $rf */
-      $rf = $this->wire->modules->get('RockFrontend');
-      $manifest = $rf->manifest();
-      return $manifest->url();
-    });
-    $this->setMarkup('theme-color', '<meta name="theme-color" content="{value}">');
-    $this->setValue('theme-color', function () {
-      /** @var RockFrontend $rf */
-      $rf = $this->wire->modules->get('RockFrontend');
-      return $rf->manifest()->themeColor;
-    });
+    if ($this->rockfrontend()->createManifest) {
+      $this->setMarkup('manifest', '<link rel="manifest" href="{value}">');
+      $this->setValue('manifest', function () {
+        /** @var RockFrontend $rf */
+        $rf = $this->wire->modules->get('RockFrontend');
+        $manifest = $rf->manifest();
+        return $manifest->url();
+      });
+      $this->setMarkup('theme-color', '<meta name="theme-color" content="{value}">');
+      $this->setValue('theme-color', function () {
+        /** @var RockFrontend $rf */
+        $rf = $this->wire->modules->get('RockFrontend');
+        return $rf->manifest()->themeColor;
+      });
+    }
   }
 
   /**
