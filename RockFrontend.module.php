@@ -815,14 +815,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function editorLink($path)
   {
-    $tracy = $this->wire->config->tracy;
-    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
-      $root = $tracy['localRootPath'];
-    else $root = $this->wire->config->paths->root;
-    $link = str_replace($this->wire->config->paths->root, $root, $path);
+    $rootPath = $this->wire->config->paths->root;
+    $editor = "vscode://file/%file";
+
+    if ($this->wire->modules->isInstalled("TracyDebugger")) {
+      $tracy = $this->wire->modules->get("TracyDebugger");
+      $rootPath = $tracy->localRootPath;
+      $editor = $tracy->editor;
+    }
+
+    $rootPath = getenv("TRACY_LOCALROOTPATH") ?: $rootPath;
+    $editor = getenv("TRACY_EDITOR") ?: $editor;
+
+    $rootPath = rtrim($rootPath, "/") . "/";
+    $link = str_replace($this->wire->config->paths->root, $rootPath, $path);
     $link = Paths::normalizeSeparators($link);
 
-    $handler = $this->ideLinkHandler ?: "vscode://file/%file";
+    $handler = str_replace(":%line", "", $editor);
     $link = str_replace("%file", ltrim($link, "/"), $handler);
     return $link;
   }
