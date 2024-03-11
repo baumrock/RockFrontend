@@ -63,3 +63,5 @@ rockfrontend()->svgDom("/path/to/baumrock-logo.svg")->addClass("foo bar");
 $time = (microtime(true) - $start) * 1000;
 bd($time); // 0.54693222045898
 ```
+
+Of course you can always use ProcessWire's great caching options so that this is not an issue!
