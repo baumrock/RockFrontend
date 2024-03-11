@@ -17,8 +17,7 @@ setTimeout(() => {
 
   let evtSource;
   let startStream = function () {
-    let rf = RockFrontend;
-    let url = rf.rootUrl + "?rockfrontend-livereload=" + rf.livereloadSecret;
+    let url = LiveReloadUrl + "?rockfrontend-livereload=" + LiveReloadSecret;
     evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
       let changed = event.data;
@@ -72,16 +71,4 @@ setTimeout(() => {
 
   startStream();
   console.log("RockFrontend is listening for file changes...");
-
-  // this causes livereload to break if vscode links are clicked
-  // TODO: find a better solution to fix the firefox issue
-  // // prevent error msg in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=833462
-  // window.addEventListener("beforeunload", () => {
-  //   evtSource.close();
-  //   setTimeout(() => {
-  //     // we restart the stream because clicks on vscode links would
-  //     // otherwise stop the livereload watcher stream!
-  //     startStream();
-  //   }, 50);
-  // });
 }, 1000);
