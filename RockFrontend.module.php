@@ -1508,6 +1508,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   protected function livereloadAddMarkup(HookEvent $event)
   {
     $config = $this->wire->config;
+    if (!$config->livereload) return;
     if ($config->ajax) return;
     if ($config->external) return;
     if ($this->livereloadAdded) return;
