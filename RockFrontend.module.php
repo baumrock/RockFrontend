@@ -5,6 +5,7 @@ namespace ProcessWire;
 use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
+use LogicException;
 use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
@@ -2221,6 +2222,27 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $svg = str_replace("{{$k}}", $v, $svg);
     }
     return $this->html($svg);
+  }
+
+  /**
+   * Load svg as DOM element
+   *
+   * Usage:
+   * echo $rf->svgDom("/path/to/file.svg")->addClass("foo");
+   *
+   * @param mixed $data
+   * @return HtmlPageCrawler
+   * @throws LogicException
+   */
+  public function svgDom($data): HtmlPageCrawler
+  {
+    $str = $data;
+    if ($data instanceof Pagefiles) $data = $data->first();
+    if ($data instanceof Pagefile) {
+      $str = file_get_contents($data->filename);
+    }
+    $dom = $this->dom($str)->filter("svg")->first();
+    return $dom;
   }
 
   /**
