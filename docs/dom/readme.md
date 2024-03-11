@@ -48,4 +48,18 @@ $dom
 bd($dom->html());
 ```
 
+## Performance
+
 While parsing HTML is generally [quite efficient](https://github.com/wasinger/htmlpagedom?tab=readme-ov-file#history), processing extensive HTML documents can be time-consuming. Therefore, it's advisable to perform this operation during saveReady or limit it to smaller HTML segments (such as an SVG) to minimize any impact on performance.
+
+```php
+$start = microtime(true);
+rockfrontend()->svg("/path/to/baumrock-logo.svg");
+$time = (microtime(true) - $start) * 1000;
+bd($time); // 0.16498565673828 ms
+
+$start = microtime(true);
+rockfrontend()->svgDom("/path/to/baumrock-logo.svg")->addClass("foo bar");
+$time = (microtime(true) - $start) * 1000;
+bd($time); // 0.54693222045898
+```
