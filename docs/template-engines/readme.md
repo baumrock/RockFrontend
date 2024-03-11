@@ -14,6 +14,20 @@ To use latte for your project all you have to do is to render a latte file like 
 echo $rockfrontend->render('sections/header.latte');
 ```
 
+### Hooking Latte
+
+To extend the functionality of Latte (for example to add custom filters), you can hook into the `RockFrontend::loadLatte` method. This allows you to modify the Latte environment before it's used to render templates. The example below demonstrates how to add a custom filter named `shortify`, which truncates a string to 10 characters.
+
+```php
+// site/ready.php
+$wire->addHookAfter("RockFrontend::loadLatte", function ($event) {
+  $latte = $event->return;
+  $latte->addFilter('shortify', fn (string $s) => mb_substr($s, 0, 10));
+});
+```
+
+You created a useful filter? Share it with us in the forum!
+
 ### Translatable Strings
 
 Since version 2.24.0 RockFrontend supports translatable strings in latte files!! 😎🥳

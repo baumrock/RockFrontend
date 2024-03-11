@@ -1594,6 +1594,30 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
       }
 
+      // add custom filters
+      // you can set $config->noLatteFilters = true to prevent loading of
+      // custom filters.
+      if (!$this->wire->config->noLatteFilters) {
+
+        // add vurl to add a cache busting suffix to image or file urls
+        // this ensures that new focus points or resized images are not loaded
+        // from the browsers cache
+        // Usage: {$img->maxSize(1920,1920)->webp->url|vurl}
+        $latte->addFilter('vurl', function ($url) {
+          return $this->wire->config->versionUrl($url, true);
+        });
+
+        // euro rendering: € 1.499,99
+        $latte->addFilter('euro', function ($price) {
+          return "€ " . number_format($price, 2, ",", ".");
+        });
+        // euro rendering: 1.499,99 €
+        // see https://de.wikipedia.org/wiki/Schreibweise_von_Zahlen#Deutschland_und_%C3%96sterreich
+        $latte->addFilter('euroAT', function ($price) {
+          return number_format($price, 2, ",", ".") . " €";
+        });
+      }
+
       // latte with layout was requested
       if ($withLayout) {
         $latte->addProvider(
