@@ -18,6 +18,7 @@ use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
+use Tracy\Dumper;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
 function rockfrontend(): RockFrontend
@@ -46,6 +47,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
   const defaultVspaceScale = 0.66;
+
+  const ajax_noaccess = "ajax-noaccess";
+  const ajax_rendererror = "ajax-render-error";
 
   const webfont_agents = [
     'woff2' => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0', // very modern browsers
@@ -219,7 +223,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->addHookBefore("Page::render", $this, "createCustomLess");
     $this->addHookMethod("Page::otherLangUrl", $this, "otherLangUrl");
 
-    // health checks
+    // others
+    $this->ajaxAddEndpoints();
     $this->checkHealth();
 
     // development helpers by rockmigrations
@@ -362,6 +367,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->scripts('rockfrontend')->add($file, "defer");
   }
 
+  public function getLiveReloadFile($returnUrl = false): string
+  {
+    $file = $this->minifyFile($this->path . "livereload.js");
+    if ($returnUrl) return $this->url($this->wire->config->versionUrl($file));
+  }
+
   /**
    * Return link to add a new page under given parent
    * @return string
@@ -439,6 +450,116 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     return '#' . implode($hexCode);
+  }
+
+  protected function ajaxAddEndpoints(): void
+  {
+    // scan for these extensions
+    // earlier listed extensions have priority
+    $extensions = ['latte', 'php'];
+
+    // attach hook for every found endpoint
+    $added = [];
+    foreach ($extensions as $ext) {
+      $endpoints = $this->wire->files->find(
+        $this->wire->config->paths->templates . "ajax",
+        ['extensions' => [$ext]]
+      );
+      foreach ($endpoints as $endpoint) {
+        $base = pathinfo($endpoint, PATHINFO_FILENAME);
+        if (in_array($base, $added)) continue;
+        $added[] = $base;
+        $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint) {
+          // make htmx endpoints only available via ajax
+          // superusers are allowed to access them directly (for debugging)
+          $sudo = $this->wire->user->isSuperuser();
+          $ajax = $this->wire->config->ajax;
+
+          if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
+          else return $this->ajaxPublic($endpoint);
+        });
+      }
+    }
+  }
+
+  private function ajaxDebug($endpoint): string
+  {
+    // get response
+    try {
+      $raw = $this->ajaxResponse($endpoint);
+      $response = Dumper::toHtml($raw);
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+      $response = var_dump($raw);
+    }
+
+    // render html
+    $markup = $this->render(__DIR__ . "/stubs/ajax-debug.latte", [
+      'endpoint' => $endpoint,
+      'response' => $response,
+      'formatted' => $this->ajaxFormatted($raw, $endpoint),
+    ]);
+
+    // add live reload and return markup
+    $this->addLiveReloadSecret();
+    $this->injectJavascriptSettings($markup);
+    return $markup;
+  }
+
+  private function ajaxFormatted($raw, $endpoint): string
+  {
+    $extension = pathinfo($endpoint, PATHINFO_EXTENSION);
+    if ($extension === "latte") {
+      $response = $this->render($endpoint);
+    } else $response = $raw;
+
+    // is response already a string?
+    if (is_string($response)) {
+      $exceptions = [
+        self::ajax_noaccess => "No access",
+        self::ajax_rendererror => "Error rendering endpoint - see logs for details.",
+      ];
+      if (array_key_exists($response, $exceptions)) {
+        throw new WireException($exceptions[$response]);
+      }
+
+      // no exception - return string
+      return $response;
+    }
+
+    // array --> json
+    if (is_array($response)) return json_encode($response, JSON_PRETTY_PRINT);
+
+    // still no string, try to cast it to string
+    try {
+      $response = (string)$response;
+    } catch (\Throwable $th) {
+      throw new WireException("Invalid return type");
+    }
+
+    return $response;
+  }
+
+  private function ajaxPublic($endpoint): string
+  {
+    try {
+      $raw = $this->ajaxResponse($endpoint);
+      $response = $this->ajaxFormatted($raw, $endpoint);
+      return $response;
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+      return "Error in AJAX endpoint";
+    }
+  }
+
+  private function ajaxResponse($endpoint)
+  {
+    try {
+      return $this->wire->files->render($endpoint);
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+      return self::ajax_rendererror;
+    }
   }
 
   /**

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RockFrontend AJAX Debugger</title>
+  <link rel="stylesheet" type="text/css" href="{$config->versionUrl('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/css/uikit.min.css')}" />
+  <script type="text/javascript" src="{$config->versionUrl('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/js/uikit.min.js')}"></script>
+  <script type="text/javascript" src="{$rockfrontend->getLiveReloadFile(true)}"></script>
+</head>
+
+<body>
+  <section class="uk-section-small uk-container">
+    <div class="uk-alert">
+      <p>Endpoint: <strong>{$endpoint}</strong></p>
+    </div>
+    <div class="uk-alert">
+      <div class="uk-text-bold">Raw response:</div>
+      <div class="uk-margin-small uk-background-default">{$response|noescape}</div>
+    </div>
+    <div class="uk-alert">
+      <div class="uk-text-bold">Formatted response:</div>
+      <div class="uk-margin-small uk-background-default">
+        <pre class="tracy-dump" style="max-height:500px;">{$formatted}</pre>
+      </div>
+    </div>
+  </section>
+</body>
+
+</html>
