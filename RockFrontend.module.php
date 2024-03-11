@@ -239,8 +239,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // development helpers by rockmigrations
     if ($this->wire->modules->isInstalled('RockMigrations')) {
-      $rm = rockmigrations();
-      $rm->minify(__DIR__ . "/Alfred.js");
+      try {
+        $rm = rockmigrations();
+        $rm->minify(__DIR__ . "/Alfred.js");
+      } catch (\Throwable $th) {
+        $this->warning("rockmigrations() not available - please update RockMigrations!");
+      }
     }
   }
 
