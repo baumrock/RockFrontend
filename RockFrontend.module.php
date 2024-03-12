@@ -5,6 +5,7 @@ namespace ProcessWire;
 use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
+use LogicException;
 use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
@@ -17,6 +18,7 @@ use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
+use Tracy\Dumper;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
 function rockfrontend(): RockFrontend
@@ -45,6 +47,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
   const defaultVspaceScale = 0.66;
+
+  const ajax_noaccess = "ajax-noaccess";
+  const ajax_rendererror = "ajax-render-error";
 
   const webfont_agents = [
     'woff2' => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0', // very modern browsers
@@ -135,9 +140,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function __construct()
   {
     $this->folders = $this->wire(new WireArray());
-    if (!$this->wire->config->livereload) return;
-    if ($this->wire->config->ajax) return;
+
+    // is this a livereload request having the proper get param in the url?
     if (!array_key_exists(self::getParam, $_GET)) return;
+
+    // if livereload is not enabled we show a message for better debugging
+    if (!$this->wire->config->livereload) {
+      die("LiveReload is not enabled in the config!");
+    }
+
+    // attach hook to stream file changes to the browser
     $this->addHookBefore("Session::init", function (HookEvent $event) {
 
       // disable tracy for the SSE stream
@@ -185,6 +197,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // set the remBase either from config setting or use 16 as fallback
     $this->remBase = $this->remBase ?: 16;
     $this->initPostCSS();
+    $this->js('isDDEV', array_key_exists('DDEV_VERSION', $_ENV));
 
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
@@ -208,29 +221,35 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->lessToCss($this->path . "Alfred.less");
 
     // hooks
-    $this->addHookAfter("ProcessPageEdit::buildForm", $this, "hideLayoutField");
-    $this->addHook(self::tagsUrl, $this, "layoutSuggestions");
-    $this->addHookAfter("Modules::refresh", $this, "refreshModules");
-    $this->addHookBefore('TemplateFile::render', $this, "autoPrepend");
-    $this->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
-    $this->addHookBefore("Inputfield::render", $this, "addFooterlinksNote");
-    $this->addHookAfter("Page::changed", $this, "resetCustomLess");
-    $this->addHookBefore("Page::render", $this, "createCustomLess");
-    $this->addHookMethod("Page::otherLangUrl", $this, "otherLangUrl");
+    wire()->addHookAfter("ProcessPageEdit::buildForm",   $this, "hideLayoutField");
+    wire()->addHook(self::tagsUrl,                       $this, "layoutSuggestions");
+    wire()->addHookAfter("Modules::refresh",             $this, "refreshModules");
+    wire()->addHookBefore("TemplateFile::render",        $this, "autoPrepend");
+    wire()->addHookAfter("InputfieldForm::processInput", $this, "createWebfontsFile");
+    wire()->addHookBefore("Inputfield::render",          $this, "addFooterlinksNote");
+    wire()->addHookAfter("Page::changed",                $this, "resetCustomLess");
+    wire()->addHookBefore("Page::render",                $this, "createCustomLess");
+    wire()->addHookMethod("Page::otherLangUrl",          $this, "otherLangUrl");
+    wire()->addHookAfter("Modules::refresh",             $this, "livereloadResetCache");
+    wire()->addHookAfter("Page::render",                 $this, "livereloadAddMarkup");
 
-    // health checks
+    // others
+    $this->ajaxAddEndpoints();
     $this->checkHealth();
 
     // development helpers by rockmigrations
     if ($this->wire->modules->isInstalled('RockMigrations')) {
-      $rm = rockmigrations();
-      $rm->minify(__DIR__ . "/Alfred.js");
+      try {
+        $rm = rockmigrations();
+        $rm->minify(__DIR__ . "/Alfred.js");
+      } catch (\Throwable $th) {
+        $this->warning("rockmigrations() not available - please update RockMigrations!");
+      }
     }
   }
 
   public function ready()
   {
-    $this->liveReload();
     $this->addAssets();
     $this->copyLayoutFileIfNewer();
   }
@@ -252,7 +271,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (!strpos($html, "</body>")) return;
         if (!strpos($html, "</head>")) return;
 
-        $this->addLiveReloadSecret();
         $this->addRockFrontendJS();
         $this->addAlfredMarkup($html);
         $this->addTopBar($html);
@@ -292,22 +310,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $html = str_replace("</body", "$faketag</body", $html);
   }
 
-  private function addLiveReloadSecret(): void
-  {
-    if (!$this->wire->config->livereload) return;
-    $this->js("rootUrl", $this->wire->config->urls->root);
-
-    // create secret and send it to js
-    /** @var WireRandom $rand */
-    $rand = $this->wire(new WireRandom());
-    $cache = $this->wire->cache->get(self::livereloadCacheName);
-    if (!is_array($cache)) $cache = [];
-    $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
-    $merged = array_merge($cache, [$secret]);
-    $this->wire->cache->save(self::livereloadCacheName, $merged);
-    $this->js("livereloadSecret", $secret);
-  }
-
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
@@ -336,29 +338,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($f->name != self::field_footerlinks) return;
     if ($f->notes) $f->notes .= "\n";
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
-  }
-
-  private function addLiveReloadScript()
-  {
-    // get and minify the livereload script
-    // dont worry, this will only be done for superusers ;)
-    $file = $this->minifyFile($this->path . "livereload.js");
-    $page = $this->wire->page;
-
-    // for backend requests we need more caution
-    // this is because live reload will break the module installation screen for example
-    if ($page->template == 'admin') {
-      // if livereload is disabled on backend pages we exit early
-      if (!$this->livereloadBackend) return;
-
-      // on module config screens we disable livereload if it is not explicitly
-      // forced to be enabled. this is to prevent problems when downloading
-      // and installing modules!
-      if ($page->process == "ProcessModule" && !$this->liveReloadModules) return;
-    }
-
-    // if we got that far we add livereload to our site :)
-    $this->scripts('rockfrontend')->add($file, "defer");
   }
 
   /**
@@ -438,6 +417,111 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     return '#' . implode($hexCode);
+  }
+
+  protected function ajaxAddEndpoints(): void
+  {
+    // scan for these extensions
+    // earlier listed extensions have priority
+    $extensions = ['latte', 'php'];
+
+    // attach hook for every found endpoint
+    $added = [];
+    foreach ($extensions as $ext) {
+      $endpoints = $this->wire->files->find(
+        $this->wire->config->paths->templates . "ajax",
+        ['extensions' => [$ext]]
+      );
+      foreach ($endpoints as $endpoint) {
+        $base = pathinfo($endpoint, PATHINFO_FILENAME);
+        if (in_array($base, $added)) continue;
+        $added[] = $base;
+        $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint) {
+          // make htmx endpoints only available via ajax
+          // superusers are allowed to access them directly (for debugging)
+          $sudo = $this->wire->user->isSuperuser();
+          $ajax = $this->wire->config->ajax;
+
+          if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
+          else return $this->ajaxPublic($endpoint);
+        });
+      }
+    }
+  }
+
+  private function ajaxDebug($endpoint): string
+  {
+    // dont catch errors when debugging
+    $raw = $this->ajaxResponse($endpoint);
+    $response = Dumper::toHtml($raw);
+
+    // render html
+    $markup = $this->render(__DIR__ . "/stubs/ajax-debug.latte", [
+      'endpoint' => $endpoint,
+      'response' => $response,
+      'formatted' => $this->ajaxFormatted($raw, $endpoint),
+    ]);
+
+    return $markup;
+  }
+
+  private function ajaxFormatted($raw, $endpoint): string
+  {
+    $extension = pathinfo($endpoint, PATHINFO_EXTENSION);
+    if ($extension === "latte") {
+      $response = $this->render($endpoint);
+    } else $response = $raw;
+
+    // is response already a string?
+    if (is_string($response)) {
+      $exceptions = [
+        self::ajax_noaccess => "No access",
+        self::ajax_rendererror => "Error rendering endpoint - see logs for details.",
+      ];
+      if (array_key_exists($response, $exceptions)) {
+        throw new WireException($exceptions[$response]);
+      }
+
+      // no exception - return string
+      return $response;
+    }
+
+    // array --> json
+    if (is_array($response)) return json_encode($response, JSON_PRETTY_PRINT);
+
+    // still no string, try to cast it to string
+    try {
+      $response = (string)$response;
+    } catch (\Throwable $th) {
+      throw new WireException("Invalid return type");
+    }
+
+    return $response;
+  }
+
+  private function ajaxPublic($endpoint): string
+  {
+    try {
+      $raw = $this->ajaxResponse($endpoint);
+      $response = $this->ajaxFormatted($raw, $endpoint);
+      return $response;
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+      return "Error in AJAX endpoint - error has been logged";
+    }
+  }
+
+  private function ajaxResponse($endpoint)
+  {
+    if ($this->wire->user->isSuperuser()) {
+      return $this->wire->files->render($endpoint);
+    }
+    try {
+      return $this->wire->files->render($endpoint);
+    } catch (\Throwable $th) {
+      $this->log($th->getMessage());
+      return self::ajax_rendererror;
+    }
   }
 
   /**
@@ -814,14 +898,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function editorLink($path)
   {
-    $tracy = $this->wire->config->tracy;
-    if (is_array($tracy) and array_key_exists('localRootPath', $tracy))
-      $root = $tracy['localRootPath'];
-    else $root = $this->wire->config->paths->root;
-    $link = str_replace($this->wire->config->paths->root, $root, $path);
+    $rootPath = $this->wire->config->paths->root;
+    $editor = "vscode://file/%file";
+
+    if ($this->wire->modules->isInstalled("TracyDebugger")) {
+      $tracy = $this->wire->modules->get("TracyDebugger");
+      $rootPath = $tracy->localRootPath;
+      $editor = $tracy->editor;
+    }
+
+    $rootPath = getenv("TRACY_LOCALROOTPATH") ?: $rootPath;
+    $editor = getenv("TRACY_EDITOR") ?: $editor;
+
+    $rootPath = rtrim($rootPath, "/") . "/";
+    $link = str_replace($this->wire->config->paths->root, $rootPath, $path);
     $link = Paths::normalizeSeparators($link);
 
-    $handler = $this->ideLinkHandler ?: "vscode://file/%file";
+    $handler = str_replace(":%line", "", $editor);
     $link = str_replace("%file", ltrim($link, "/"), $handler);
     return $link;
   }
@@ -1412,43 +1505,68 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->adjustBrightness($hex, $percent / 100);
   }
 
-  /**
-   * Setup live reloading
-   */
-  public function livereload()
+  protected function livereloadAddMarkup(HookEvent $event)
   {
-    // early exit if live reload is disabled
-    if (!$this->wire->config->livereload) return;
-
-    if ($this->wire->page->template == 'admin') {
-      $file = $this->wire->config->paths->root . "livereload.php";
-      if ($this->wire->user->isSuperuser() and is_file($file)) {
-        $this->warning("Found file $file which is not used any more - you can delete it");
-      }
-    }
+    $config = $this->wire->config;
+    if (!$config->livereload) return;
+    if ($config->ajax) return;
+    if ($config->external) return;
+    if ($this->livereloadAdded) return;
 
     // early exit when page is opened in modal window
     // this is to prevent enless reloads when the parent frame is reloading
     if ($this->wire->input->get('modal')) return;
-    // reset the livereload secret on every modules refresh
-    $cachefile = $this->wire->config->paths->cache . self::livereloadCacheName . ".txt";
-    $this->addHookAfter("Modules::refresh", function () use ($cachefile) {
-      if (is_file($cachefile)) $this->wire->files->unlink($cachefile);
-      $this->wire->cache->save(self::livereloadCacheName, null);
-    });
 
-    // add script that triggers stream on frontend
-    $this->addLiveReloadScript();
+    $page = $this->wire->page;
+
+    // for backend requests we need more caution
+    // this is because live reload will break the module installation screen for example
+    if ($page->template == 'admin') {
+      // if livereload is disabled on backend pages we exit early
+      $livereloadBackend = $this->livereloadBackend ?: $config->livereloadBackend;
+      if (!$livereloadBackend) return;
+
+      // on module config screens we disable livereload if it is not explicitly
+      // forced to be enabled. this is to prevent problems when downloading
+      // and installing modules!
+      if ($page->process == "ProcessModule" && !$this->liveReloadModules) return;
+    }
+
+    $this->livereloadAdded = true;
+    $event->return .= $this->liveReloadMarkup();
   }
 
-  /**
-   * Get the script tag that is necessary for livereload to be present
-   */
-  public function livereloadScriptTag(): string
+  public function liveReloadMarkup(): string
   {
+    // create secret and send it to js
+    /** @var WireRandom $rand */
+    $rand = $this->wire(new WireRandom());
+    $cache = $this->wire->cache->get(self::livereloadCacheName);
+    if (!is_array($cache)) $cache = [];
+    $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
+    $merged = array_merge($cache, [$secret]);
+    $this->wire->cache->save(self::livereloadCacheName, $merged);
+
+    // get and minify the livereload script
+    // dont worry, this will only be done for superusers ;)
     $file = $this->minifyFile($this->path . "livereload.js");
-    $url = $this->url($file, true);
-    return "<script>var RockFrontend;</script><script src=$url defer></script>";
+    $src = $this->url($file, true);
+
+    return "
+      <script>
+      var LiveReloadUrl = '{$this->wire->config->urls->root}';
+      var LiveReloadSecret = '$secret';
+      console.log('Loading LiveReload');
+      </script>
+      <script src='$src'></script>
+    ";
+  }
+
+  protected function livereloadResetCache(): void
+  {
+    $cachefile = $this->wire->config->paths->cache . self::livereloadCacheName . ".txt";
+    if (is_file($cachefile)) $this->wire->files->unlink($cachefile);
+    $this->wire->cache->save(self::livereloadCacheName, null);
   }
 
   /**
@@ -1479,6 +1597,30 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
       if ($this->wire->modules->isInstalled("TracyDebugger")) {
         $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
+      }
+
+      // add custom filters
+      // you can set $config->noLatteFilters = true to prevent loading of
+      // custom filters.
+      if (!$this->wire->config->noLatteFilters) {
+
+        // add vurl to add a cache busting suffix to image or file urls
+        // this ensures that new focus points or resized images are not loaded
+        // from the browsers cache
+        // Usage: {$img->maxSize(1920,1920)->webp->url|vurl}
+        $latte->addFilter('vurl', function ($url) {
+          return $this->wire->config->versionUrl($url, true);
+        });
+
+        // euro rendering: € 1.499,99
+        $latte->addFilter('euro', function ($price) {
+          return "€ " . number_format($price, 2, ",", ".");
+        });
+        // euro rendering: 1.499,99 €
+        // see https://de.wikipedia.org/wiki/Schreibweise_von_Zahlen#Deutschland_und_%C3%96sterreich
+        $latte->addFilter('euroAT', function ($price) {
+          return number_format($price, 2, ",", ".") . " €";
+        });
       }
 
       // latte with layout was requested
@@ -2221,6 +2363,27 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $svg = str_replace("{{$k}}", $v, $svg);
     }
     return $this->html($svg);
+  }
+
+  /**
+   * Load svg as DOM element
+   *
+   * Usage:
+   * echo $rf->svgDom("/path/to/file.svg")->addClass("foo");
+   *
+   * @param mixed $data
+   * @return HtmlPageCrawler
+   * @throws LogicException
+   */
+  public function svgDom($data): HtmlPageCrawler
+  {
+    $str = $data;
+    if ($data instanceof Pagefiles) $data = $data->first();
+    if ($data instanceof Pagefile) {
+      $str = file_get_contents($data->filename);
+    }
+    $dom = $this->dom($str)->filter("svg")->first();
+    return $dom;
   }
 
   /**

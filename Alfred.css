@@ -8,10 +8,10 @@ body:not(.uk-offcanvas-container) .alfred:hover {
   outline: 4px groove #ececec;
   z-index: 10;
 }
-body.no-alfred .alfred:hover {
+.no-alfred .alfred:hover {
   outline: none !important;
 }
-body.no-alfred .alfredelements {
+.no-alfred .alfredelements {
   display: none !important;
 }
 .alfred-icon {
@@ -98,7 +98,7 @@ body.no-alfred .alfredelements {
   top: -1px;
   right: 0;
   text-align: right;
-  z-index: 10;
+  z-index: 90;
 }
 .alfred.rpb-widget:hover {
   outline: 4px groove orange !important;

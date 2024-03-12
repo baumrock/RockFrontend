@@ -206,7 +206,6 @@ class LiveReload extends Wire
 
       // sleep until next try
       $sleepSeconds = (float)$this->wire->config->livereload ?: 1.0;
-      $sleepSeconds = 0.2;
       usleep($sleepSeconds * 1000000);
     }
   }
