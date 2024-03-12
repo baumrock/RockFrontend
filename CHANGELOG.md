@@ -1,3 +1,23 @@
+## [3.12.0](https://github.com/baumrock/RockFrontend/compare/v3.11.0...v3.12.0) (2024-03-12)
+
+
+### Features
+
+* add experimental support for ajax endpoints ([7db7970](https://github.com/baumrock/RockFrontend/commit/7db7970337462376d13f2e6b13f89af05740ee4b))
+* add latte filters vurl + euro + euroAT ([2550732](https://github.com/baumrock/RockFrontend/commit/25507328413316af7d8799e3302f1ab7d6fc619c))
+* add svgDom() method ([afdef7e](https://github.com/baumrock/RockFrontend/commit/afdef7e933f740bab827ed9554b421b75551da83))
+* allow .no-alfred class on non-body elements ([df436e4](https://github.com/baumrock/RockFrontend/commit/df436e4f8d103c8bd6a0b154cb643789e2000688))
+* improve livereload ([fa67da2](https://github.com/baumrock/RockFrontend/commit/fa67da2d225db12e9d7c4ecd9798e8f1e8cffcb6))
+* increase z-index for alfred icons ([7ead197](https://github.com/baumrock/RockFrontend/commit/7ead1971b6c4f48a996bf4ce6b6fc0f2ae28162f))
+* support env vars for editorLink() ([43ed1de](https://github.com/baumrock/RockFrontend/commit/43ed1de1b8267228385eae4252d1c669133e1242))
+
+
+### Bug Fixes
+
+* livereload tag added when livereload was disabled ([1818083](https://github.com/baumrock/RockFrontend/commit/181808339351bc1b027c1ef37b6f02678f5a1686))
+* remove unused old script ([8c499d2](https://github.com/baumrock/RockFrontend/commit/8c499d2fd4a00379767c2516c7cfdc4f5b498230))
+* show rockmigrations outdated warning ([a269e26](https://github.com/baumrock/RockFrontend/commit/a269e2677ef60ff5d9c8c84b08ebc6696dcf47de))
+
 ## [3.11.0](https://github.com/baumrock/RockFrontend/compare/v3.10.0...v3.11.0) (2024-02-02)
 
 
@@ -59,11 +79,4 @@
 ### Bug Fixes
 
 * don't load layout file on RockPdf rendering ([fd6eaa3](https://github.com/baumrock/RockFrontend/commit/fd6eaa33600d8435354e2c1055685349d4b5132a))
-
-## [3.8.1](https://github.com/baumrock/RockFrontend/compare/v3.8.0...v3.8.1) (2023-12-04)
-
-
-### Bug Fixes
-
-* normalize windows file path ([7895e06](https://github.com/baumrock/RockFrontend/commit/7895e06254329b333d5ac4a38110cbb1b3804209))
 
