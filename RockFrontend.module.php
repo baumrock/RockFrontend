@@ -440,7 +440,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // make htmx endpoints only available via ajax
           // superusers are allowed to access them directly (for debugging)
           $sudo = $this->wire->user->isSuperuser();
-          $ajax = $this->wire->config->ajax;
+          $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
+          $ajax = $this->wire->config->ajax || $isHtmx;
 
           if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
           else return $this->ajaxPublic($endpoint);
