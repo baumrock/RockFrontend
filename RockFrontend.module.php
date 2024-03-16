@@ -183,8 +183,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->home = $this->wire->pages->get(1);
 
     if (!is_array($this->features)) $this->features = [];
-    if (!is_array($this->migrations)) $this->migrations = [];
-
 
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
@@ -378,9 +376,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     /** @var RockMigrations $rm */
     $less = __DIR__ . "/topbar/topbar.less";
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    if ($rm) $rm->saveCSS($less, minify: true);
+
+    if ($this->wire->modules->isInstalled("RockMigrations")) {
+      /** @var RockMigrations $rm */
+      $rm = $this->wire->modules->get('RockMigrations');
+      $rm->saveCSS($less, minify: true);
+    }
     $css = $this->toUrl(__DIR__ . "/topbar/topbar.min.css", true);
     $style = "<link rel='stylesheet' href='$css'>";
     $html = str_replace("</head", "$style</head", $html);
@@ -1411,9 +1412,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // less module is not installed
     // if rockmigrations is installed we use it to install the less module
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    if ($rm) {
+    if ($this->wire->modules->isInstalled("RockMigrations")) {
+      /** @var RockMigrations $rm */
+      $rm = $this->wire->modules->get('RockMigrations');
       $rm->installModule("Less", "https://github.com/ryancramerdesign/Less/archive/refs/heads/main.zip");
       return $this->renderLayout($page);
     }
@@ -1660,42 +1661,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $manifest->createOnSave('id=1');
 
     return $this->manifest = $manifest;
-  }
-
-  public function migrate()
-  {
-    $this->migrateLess();
-    $this->migrateLatteTranslations();
-    // $this->migrateLayoutField();
-  }
-
-  private function migrateLatteTranslations()
-  {
-    if (!in_array("lattetranslations", $this->migrations)) return;
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $ext = $rm->getModuleConfig('ProcessLanguageTranslator', 'extensions');
-    if (strpos((string)$ext, "latte") !== false) return;
-    $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
-  }
-
-  private function migrateLess()
-  {
-    if (!in_array("less", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_less => [
-          'type' => 'textarea',
-          'label' => 'LESS',
-          'rows' => 15,
-          'icon' => 'css3',
-          'collapsed' => Inputfield::collapsedYes,
-          'notes' => 'This feature is experimental',
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_less, 'home');
   }
 
   /**
@@ -2265,10 +2230,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * @return RockMigrations
+   * @return RockMigrations|false
    */
   public function rm()
   {
+    if (!$this->wire->modules->isInstalled('RockMigrations')) return false;
     return $this->wire->modules->get('RockMigrations');
   }
 
@@ -2553,15 +2519,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->getTranslation($translations);
   }
 
-  public function ___install()
-  {
-    $this->init();
-    if ($this->rm()) $this->migrate();
-    // install FrontendEditing
-    $this->wire->modules->get('PageFrontEdit');
-    $this->message('Installed Module PageFrontEdit');
-  }
-
   /** ##### module config ##### */
 
   /**
@@ -2570,8 +2527,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function getModuleConfigInputfields($inputfields)
   {
-    $this->migrate();
-
     $name = strtolower($this);
     $inputfields->add([
       'type' => 'markup',
@@ -2732,25 +2687,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->value = $this->topbarz;
     $f->showIf = 'features=topbar';
     $f->notes = 'Default is 999';
-    $fs->add($f);
-
-    $f = $this->wire->modules->get('InputfieldCheckboxes');
-    $f->name = 'migrations';
-    $f->label = "Migrations";
-    $f->icon = "rocket";
-    $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
-    $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
-    $f->addOption('images', 'images - Create an image field for general image uploads and add it to the home template');
-    $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
-    $url = $this->wire->pages->get(2)->url . "module/edit?name=ProcessLanguageTranslator";
-    $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
-    $f->addOption('less', "less - Add textarea to inject custom LESS/CSS");
-    $f->value = (array)$this->migrations;
-    $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
-    if (!$this->wire->modules->isInstalled("RockMigrations")) {
-      $f->prependMarkup = "<div class='uk-alert uk-alert-warning uk-margin-remove'>These features will only work if RockMigrations is installed!</div>";
-      $f->collapsed = Inputfield::collapsedYes;
-    }
     $fs->add($f);
   }
 
