@@ -2543,6 +2543,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $config = $this->wire->config;
     $config->styles->add($config->urls($this) . "RockFrontend.module.css");
 
+    $this->configSEO($inputfields);
     $this->configLivereload($inputfields);
     $this->configLatte($inputfields);
     $this->configSettings($inputfields);
@@ -2635,6 +2636,56 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         . 'for example module installations might not work. Enable this only '
         . 'when needed!',
     ]);
+  }
+
+  private function configSEO($inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "SEO";
+    $fs->icon = "search";
+    $inputfields->add($fs);
+    $root = $this->wire->config->paths->root;
+    $warn = '<svg style="color:#F9A825" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m9-3v4m0 3v.01"/></svg>';
+    $check = '<svg style="color:#388E3C" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="m9 12l2 2l4-4"/></g></svg>';
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'robots.txt',
+      'value' => is_file($root . "robots.txt")
+        ? "$check robots.txt is present"
+        : "$warn no robots.txt in site root",
+    ]);
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'sitemap.xml',
+      'value' => is_file($root . "sitemap.xml")
+        ? "$check sitemap.xml was found"
+        : "$warn no sitemap.xml in site root",
+      'notes' => is_file($root . "sitemap.xml")
+        ? ''
+        : 'See [docs](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/seo/).',
+    ]);
+
+    $http = new WireHttp();
+    try {
+      $markup = $http->get($this->wire->pages->get(1)->httpUrl());
+      $url = $http->getResponseHeaders('location') ?: '/';
+      $dom = rockfrontend()->dom($markup);
+      $ogimg = $dom->filter("meta[property='og:image']")->count() > 0;
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'og:image',
+        'value' => $ogimg
+          ? "$check og:image tag found on page $url"
+          : "$warn no og:image tag on page $url",
+      ]);
+    } catch (\Throwable $th) {
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'og:image',
+        'value' => $warn . " " . $th->getMessage(),
+      ]);
+    }
   }
 
   private function configSettings($inputfields)

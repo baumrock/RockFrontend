@@ -2,6 +2,8 @@
 
 RockFrontend comes with tools that help you build SEO optimized websites in no time.
 
+## sitemap.xml
+
 ## Concept
 
 The Concept of RockFrontend's SEO tools differ from many other solutions where you add many fields to every template and then have the user fill all these fields.
