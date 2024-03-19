@@ -66,7 +66,9 @@ rockfrontend()->sitemap(function (Page $page) {
 });
 ```
 
-## Concept
+---
+
+## SEO Markup Tags
 
 The Concept of RockFrontend's SEO tools differ from many other solutions where you add many fields to every template and then have the user fill all these fields.
 
