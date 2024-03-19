@@ -18,7 +18,7 @@ This will do the following:
 
 * It will create the file /sitemap.xml on demand when it is requested
 * It will automatically delete this file on `Pages::saved` and on `Modules::refresh`
-* It will create the following markup for every viewable page in your tree:
+* It will create the following markup for every viewable page in your tree (including hidden ones!):
 
 ```xml
 <url>
