@@ -66,6 +66,18 @@ rockfrontend()->sitemap(function (Page $page) {
 });
 ```
 
+### How does it work?
+
+RockFrontend adds an url hook to `/sitemap.xml` that creates the sitemap on demand. The great thing is that if the sitemap has been already created the url hook will not trigger and your server will render the static file instead! RockFrontend will simply delete that file whenever a page is saved or modules are refreshed.
+
+That means that on large sites the first request of /sitemap.xml after a page save could potentially take some time. The method is built in a way that it is as efficiently as possible, meaning that if you `return false` for a page in the tree the whole branch will neither be processed nor loaded into memory. Though all other pages will be processed and loaded into memory, so on very large websites you'd have to take care of that issue yourself.
+
+Just check the logs for RockFrontend - there you will see something like this and you'll get an idea if you have to do something or its fast enough for your use case:
+
+```
+Sitemap showing 958 pages generated in 272 ms
+```
+
 ---
 
 ## SEO Markup Tags

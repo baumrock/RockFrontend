@@ -125,10 +125,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public $remBase;
 
+  private $scripts;
+
   /** @var Seo */
   public $seo;
 
-  private $scripts;
+  private $sitemapCallback;
+
   private $styles;
 
   /** @var array */
@@ -2303,13 +2306,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     // make sure to render the sitemap as seen by the guest user
     $this->wire->user = $this->wire->users->get('guest');
+    $time = Debug::startTimer();
+    $count = 0;
 
     // create markup
     $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
     $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
 
     // recursive function to traverse the page tree
-    $f = function ($items = null) use (&$f, &$out) {
+    $f = function ($items = null) use (&$f, &$out, &$count) {
       if (!$items) $items = wire()->pages->get(1);
       if ($items instanceof Page) $items = [$items];
       foreach ($items as $p) {
@@ -2331,6 +2336,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // custom markup returned - add it to output
           $out .= "$result\n";
         }
+        $count++;
         $f($p->children("include=hidden"));
       }
     };
@@ -2340,6 +2346,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // create sitemap.xml file
     $file = $this->wire->config->paths->root . "sitemap.xml";
     $this->wire->files->filePutContents($file, $out);
+
+    $seconds = Debug::stopTimer($time);
+    $this->log("Sitemap showing $count pages generated in " . round($seconds * 1000) . " ms", [
+      'url' => '/sitemap.xml',
+    ]);
 
     header('Content-Type: application/xml');
     return $out;
