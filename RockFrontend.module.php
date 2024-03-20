@@ -2731,6 +2731,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         'value' => is_file($root . "robots.txt")
           ? "$check robots.txt is present"
           : "$warn no robots.txt in site root",
+        'columnWidth' => 50,
       ]);
 
       $hasSitemap = $http->status(
@@ -2745,27 +2746,36 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         'notes' => is_file($root . "sitemap.xml")
           ? ''
           : 'See [docs](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/seo/).',
+        'columnWidth' => 50,
       ]);
 
-      try {
-        $markup = $http->get($this->wire->pages->get(1)->httpUrl());
-        $url = $http->getResponseHeaders('location') ?: '/';
-        $dom = rockfrontend()->dom($markup);
-        $ogimg = $dom->filter("meta[property='og:image']")->count() > 0;
-        $fs->add([
-          'type' => 'markup',
-          'label' => 'og:image',
-          'value' => $ogimg
-            ? "$check og:image tag found on page $url"
-            : "$warn no og:image tag on page $url",
-        ]);
-      } catch (\Throwable $th) {
-        $fs->add([
-          'type' => 'markup',
-          'label' => 'og:image',
-          'value' => $warn . " " . $th->getMessage(),
-        ]);
-      }
+      $markup = $http->get($this->wire->pages->get(1)->httpUrl());
+      $url = $http->getResponseHeaders('location') ?: '/';
+      $dom = rockfrontend()->dom($markup);
+      $ogimg = $dom->filter("meta[property='og:image']")->count() > 0;
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'og:image',
+        'value' => $ogimg
+          ? "$check og:image tag found on page $url"
+          : "$warn no og:image tag on page $url",
+        'columnWidth' => 50,
+      ]);
+
+      $hasFavicon = $http->status(
+        $this->wire->pages->get(1)->httpUrl() . "favicon.ico"
+      );
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'favicon.ico',
+        'value' => $hasFavicon
+          ? "$check favicon.ico was found"
+          : "$warn no favicon.ico in site root",
+        'notes' => $hasFavicon
+          ? ''
+          : 'Use [realfavicongenerator](https://realfavicongenerator.net/) to add a favicon to your site.',
+        'columnWidth' => 50,
+      ]);
     }
   }
 
