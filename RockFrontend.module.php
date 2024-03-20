@@ -2753,6 +2753,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $url = $http->getResponseHeaders('location') ?: '/';
       $dom = rockfrontend()->dom($markup);
       $ogimg = $dom->filter("meta[property='og:image']")->count() > 0;
+      $minifyWarning = strpos($markup, "property=og:image") === false
+        ? "" : "It looks like you are using ProCache's remove quotes from tag attributes feature - this feature will break WhatsApp preview images on Android! See [this forum post](https://processwire.com/talk/topic/29831-why-does-whatsapp-not-show-a-preview-image-for-my-site/?do=findComment&comment=240133)";
       $fs->add([
         'type' => 'markup',
         'label' => 'og:image',
@@ -2760,6 +2762,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           ? "$check og:image tag found on page $url"
           : "$warn no og:image tag on page $url",
         'columnWidth' => 50,
+        'notes' => $minifyWarning,
       ]);
 
       $hasFavicon = $http->status(
