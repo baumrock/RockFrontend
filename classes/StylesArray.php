@@ -34,6 +34,9 @@ class StylesArray extends AssetsArray
   {
     if ($this->wire->page->template == 'admin') return $this;
 
+    // add the global layout file
+    $this->add('/site/templates/layout.less', quiet: true);
+
     // add all style files in the following folders
     $this->addAll('/site/templates/layouts');
     $this->addAll('/site/templates/less');
