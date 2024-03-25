@@ -2624,6 +2624,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->configSEO($inputfields);
     $this->configLivereload($inputfields);
     $this->configLatte($inputfields);
+    $this->configTailwind($inputfields);
     $this->configSettings($inputfields);
     $this->configTools($inputfields);
 
@@ -2834,6 +2835,69 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->showIf = 'features=topbar';
     $f->notes = 'Default is 999';
     $fs->add($f);
+  }
+
+  private function configTailwind(&$inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "Tailwind CSS";
+    $fs->icon = "css3";
+    $fs->name = "config-tailwind";
+    $fs->collapsed = Inputfield::collapsedYesAjax;
+    $inputfields->add($fs);
+    if ($this->wire->input->post->installTailwind) {
+      $this->wire->files->copy(
+        $this->wire->config->paths->root . "site/modules/RockFrontend/tailwind",
+        $this->wire->config->paths->root,
+      );
+    }
+
+    // all below only when ajax loading
+    if (!$this->wire->config->ajax) return;
+
+    $conf = $this->wire->config->paths->root . "tailwind.config.js";
+    $pack = $this->wire->config->paths->root . "package.json";
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'NOTE',
+      'value' => 'This section is intended to be used with the <a href=https://github.com/baumrock/site-rockfrontend>RockFrontend site profile</a>.',
+    ]);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'package.json',
+      'value' => is_file($pack)
+        ? "✅ file found"
+        : "file not found - please check the checkbox and submit the form",
+      'columnWidth' => 50,
+    ]);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'tailwind.config.js',
+      'value' => is_file($conf)
+        ? "✅ file found"
+        : "file not found - please check the checkbox and submit the form",
+      'columnWidth' => 50,
+    ]);
+
+    $fs->add([
+      'type' => 'checkbox',
+      'label' => 'Install Tailwind CSS',
+      'name' => 'installTailwind',
+      'notes' => 'WARNING: This will copy package.json and tailwind.config.js to the root directory of your project. Existing files will be overwritten!',
+    ]);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'Finish Installation',
+      'value' => 'After installation you have to run the following command in your ProcessWire root directory from the command line:
+        <pre style="margin-top:10px;margin-bottom:10px;">npm install -D</pre>
+        Then execute "npm run build" to see if it works. It should show something like this:
+        <pre style="margin-top:10px;margin-bottom:10px;">Rebuilding...' . "\n"
+        . 'Done in 123ms</pre>',
+    ]);
   }
 
   private function configTools(&$inputfields)
