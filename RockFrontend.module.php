@@ -2896,7 +2896,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         <pre style="margin-top:10px;margin-bottom:10px;">npm install -D</pre>
         Then execute "npm run build" to see if it works. It should show something like this:
         <pre style="margin-top:10px;margin-bottom:10px;">Rebuilding...' . "\n"
-        . 'Done in 123ms</pre>',
+        . 'Done in 123ms</pre>
+        Running that on every change is no option, of course, so you can tell RockFrontend to build the CSS for you on every change:
+        <pre style="margin-top:10px;margin-bottom:10px;">$config->livereloadBuild = true;</pre>
+        This will run "npm run build" via PHP exec(). You can customise that from your package.json file; Make sure that you set this only for development!',
     ]);
   }
 
