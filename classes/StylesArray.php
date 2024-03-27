@@ -22,8 +22,13 @@ class StylesArray extends AssetsArray
    *
    * @return self
    */
-  public function addAll($path, $suffix = '', $levels = 2, $ext = ['css', 'less'])
-  {
+  public function addAll(
+    $path,
+    $suffix = '',
+    $levels = 2,
+    $ext = ['css', 'less'],
+    $endsWith = null,
+  ) {
     return parent::addAll($path, $suffix, $levels, $ext);
   }
 

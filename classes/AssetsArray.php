@@ -104,8 +104,13 @@ class AssetsArray extends \ProcessWire\WireArray
    *
    * @return self
    */
-  public function addAll($path, $suffix = '', $levels = 2, $ext = ['js'])
-  {
+  public function addAll(
+    $path,
+    $suffix = '',
+    $levels = 2,
+    $ext = ['js'],
+    $endsWith = null,
+  ) {
     /** @var RockFrontend $rf */
     $rf = $this->wire('modules')->get('RockFrontend');
     $path = $rf->getPath($path);
@@ -114,7 +119,10 @@ class AssetsArray extends \ProcessWire\WireArray
       'recursive' => $levels,
       'extensions' => $ext,
     ]);
-    foreach ($files as $f) $this->add($f, $suffix);
+    foreach ($files as $f) {
+      if ($endsWith && !str_ends_with($f, $endsWith)) continue;
+      $this->add($f, $suffix);
+    }
     return $this;
   }
 

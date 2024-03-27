@@ -6,6 +6,7 @@ use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use LogicException;
+use MatthiasMullie\Minify\Exceptions\IOException;
 use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
@@ -310,18 +311,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
   }
-
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
-    $file = __DIR__ . "/RockFrontend.js";
-    if ($this->wire->config->debug) {
-      // load the non-minified script
-      $this->scripts('rockfrontend')->add($file, "defer");
-      // when logged in as superuser we make sure to create the minified
-      // file even if the non-minified version is used.
-      if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-    } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+    $file = $min = __DIR__ . "/RockFrontend.js";
+
+    // while developing we create a minified js file
+    if ($this->isDev()) $min = $this->minifyFile($file);
+
+    // add file to scripts array
+    $this->scripts('rockfrontend')->add($min, "defer");
   }
 
   public function ___addAlfredStyles()
@@ -1449,6 +1448,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Check wether the environment is DDEV or not
+   */
+  public function isDDEV(): bool
+  {
+    return !!getenv('DDEV_HOSTNAME');
+  }
+
+  /**
+   * Internal flag for development
+   * @return bool
+   */
+  public function isDev(): bool
+  {
+    if (!$this->wire->config->debug) return false;
+    if (!$this->wire->user->isSuperuser()) return false;
+    if (!$this->isDDEV()) return false;
+    return true;
+  }
+
+  /**
    * Is given file newer than the comparison file?
    * Returns true if comparison file does not exist
    * Returns false if file does not exist
@@ -1681,6 +1700,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $minify->minify($minFile->path);
     }
     return $minFile->path;
+  }
+
+  /**
+   * Minify all files in given directory
+   * @param string $directory
+   * @param array $options
+   * @return void
+   * @throws IOException
+   */
+  public function minifyFiles(string $directory, array $options = []): void
+  {
+    $dir = $this->toPath($directory);
+    $files = $this->wire->files->find($dir, $options);
+    foreach ($files as $file) {
+      if (str_ends_with($file, ".min.js")) continue;
+      if (str_ends_with($file, ".min.css")) continue;
+      $this->minifyFile($file);
+    }
   }
 
   /**
