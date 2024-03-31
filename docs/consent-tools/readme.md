@@ -1,8 +1,57 @@
 # Consent Tools
 
-<div class="uk-alert uk-alert-warning">You need to include RockFrontend's JavaScript tools in your main markup file! See <a href="../javascript/">JavaScript</a></div>
+<div class="uk-alert uk-alert-warning">Disclaimer: These docs are only a technical guide and no legal advice in any means. It's your responsibility to comply with your local laws.</div>
 
-<div class="uk-alert">Disclaimer: These docs are only a technical guide and no legal advice in any means. It's your responsibility to comply with your local laws.</div>
+## Setup
+
+To make the consent tools available you need to include RockFrontend's JavaScript file in your main markup file! See <a href="../javascript/">JavaScript</a>.
+
+## Idea
+
+The idea of RockFrontend's consent tools is to take care of the tedious parts and let the markup be 100% up to you.
+
+The tedious part that RockFrontend will do for you:
+
+- It will remember the users decision in `localStorage`
+- It will make that accessible via `rf-consent` attributes in your markup without the need to write custom JS
+- It will provide a Textformatter that renders checkboxes on your privacy page to toggle the decision any time
+- It provide an easy way to make sure scripts are only loaded if consent is given
+- It will make sure that scripts are loaded as soon as consent is given (not only on the next page load)
+
+## Hello World Example
+
+This simple example will demonstrate how it works:
+
+```html
+<button rfc-allow="hello-world">Allow Hello World Script</button>
+<template rf-consent="hello-world">
+  <script>alert('hello world')</script>
+</template>
+```
+
+<button rfc-allow="hello-world">Allow Hello World Script</button>
+<template rf-consent="hello-world">
+  <script>alert('hello world')</script>
+</template>
+
+
+
+
+The tedious part is to remember the user's choice (eg. did he/she allow embedding of youtube?) and to render different markup based on the user's decision (and making sure script tags are loaded only if we are allowed and also make). RockFrontend does that by storing the decision in the `localStorage` of the browser and you can access this state easily via `rf-consent` attributes in your markup.
+
+##
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Alternate Consent Markup
 
@@ -154,3 +203,7 @@ This would render like this when showing that page:
 And it would render like this when frontend editing that page:
 
 <img src=checkbox2.png class=blur>
+
+---
+
+Looking for the docs of an older version? See <a href=https://github.com/baumrock/RockFrontend/blob/25349daa183546f86e19bbfbd01d189ec33ac152/docs/consent-tools/readme.md>here.</a>

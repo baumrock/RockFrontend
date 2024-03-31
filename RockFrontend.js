@@ -7,11 +7,16 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
   /**
    * Debounce
    * Usage:
-   * window.addEventListener("resize", () => {
+   * window.addEventListener("mousemove", () => {
    *   RockFrontend.debounce(() => {
-   *     console.log("resized");
-   *   }, 1000);
+   *     console.log("mouse moved");
+   *   }, 500);
    * });
+   * Note: If you move the mouse continuously the callback will not
+   * fire! It will fire 500ms after you stopped moving the mouse, which is
+   * what you might want or not. It's good for sending search requests on
+   * <input> elements after the user stopped typing, but it might not be what
+   * you want if you need to react continuously on some events.
    */
   let timer;
   RockFrontend.debounce = function (func, timeout = 300) {
