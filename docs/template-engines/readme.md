@@ -32,9 +32,9 @@ You created a useful filter? Share it with us in the forum!
 
 Since version 2.24.0 RockFrontend supports translatable strings in latte files!! 😎🥳
 
-You just need to make sure that latte files are enabled in PW's translation system. RockFrontend can do that for you if you have RockMigrations installed and check the checkbox:
+You just need to make sure that latte files are enabled in PW's translation system. In your PW backend search for "translator" and go to the module settings of the "Language Translator" module:
 
-<img src=translations.png class=blur>
+<img src=translator.png class=blur>
 
 These are the three versions that you can use to translate strings in your LATTE files - choose whatever you prefer.
 

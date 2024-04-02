@@ -6,6 +6,7 @@ use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
 use LogicException;
+use MatthiasMullie\Minify\Exceptions\IOException;
 use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
@@ -125,10 +126,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public $remBase;
 
+  private $scripts;
+
   /** @var Seo */
   public $seo;
 
-  private $scripts;
+  private $sitemapCallback;
+
   private $styles;
 
   /** @var array */
@@ -183,8 +187,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->home = $this->wire->pages->get(1);
 
     if (!is_array($this->features)) $this->features = [];
-    if (!is_array($this->migrations)) $this->migrations = [];
-
 
     // make $rockfrontend and $home variable available in template files
     $this->wire('rockfrontend', $this);
@@ -309,18 +311,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
   }
-
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
-    $file = __DIR__ . "/RockFrontend.js";
-    if ($this->wire->config->debug) {
-      // load the non-minified script
-      $this->scripts('rockfrontend')->add($file, "defer");
-      // when logged in as superuser we make sure to create the minified
-      // file even if the non-minified version is used.
-      if ($this->wire->user->isSuperuser()) $this->minifyFile($file);
-    } else $this->scripts('rockfrontend')->add($this->minifyFile($file), "defer");
+    $file = $min = __DIR__ . "/RockFrontend.js";
+
+    // while developing we create a minified js file
+    if ($this->isDev()) $min = $this->minifyFile($file);
+
+    // add file to scripts array
+    $this->scripts('rockfrontend')->add($min, "defer");
   }
 
   public function ___addAlfredStyles()
@@ -378,9 +378,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     /** @var RockMigrations $rm */
     $less = __DIR__ . "/topbar/topbar.less";
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    if ($rm) $rm->saveCSS($less, minify: true);
+
+    if ($this->wire->modules->isInstalled("RockMigrations")) {
+      /** @var RockMigrations $rm */
+      $rm = $this->wire->modules->get('RockMigrations');
+      $rm->saveCSS($less, minify: true);
+    }
     $css = $this->toUrl(__DIR__ . "/topbar/topbar.min.css", true);
     $style = "<link rel='stylesheet' href='$css'>";
     $html = str_replace("</head", "$style</head", $html);
@@ -440,7 +443,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // make htmx endpoints only available via ajax
           // superusers are allowed to access them directly (for debugging)
           $sudo = $this->wire->user->isSuperuser();
-          $ajax = $this->wire->config->ajax;
+          $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
+          $ajax = $this->wire->config->ajax || $isHtmx;
 
           if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
           else return $this->ajaxPublic($endpoint);
@@ -1410,9 +1414,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // less module is not installed
     // if rockmigrations is installed we use it to install the less module
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    if ($rm) {
+    if ($this->wire->modules->isInstalled("RockMigrations")) {
+      /** @var RockMigrations $rm */
+      $rm = $this->wire->modules->get('RockMigrations');
       $rm->installModule("Less", "https://github.com/ryancramerdesign/Less/archive/refs/heads/main.zip");
       return $this->renderLayout($page);
     }
@@ -1441,6 +1445,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // either on that page or on one of its descendants
     $active = $page->parents()->add($page);
     return $active->has($menuItem);
+  }
+
+  /**
+   * Check wether the environment is DDEV or not
+   */
+  public function isDDEV(): bool
+  {
+    return !!getenv('DDEV_HOSTNAME');
+  }
+
+  /**
+   * Internal flag for development
+   * @return bool
+   */
+  public function isDev(): bool
+  {
+    if (!$this->wire->config->debug) return false;
+    if (!$this->wire->user->isSuperuser()) return false;
+    if (!$this->isDDEV()) return false;
+    return true;
   }
 
   /**
@@ -1661,42 +1685,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->manifest = $manifest;
   }
 
-  public function migrate()
-  {
-    $this->migrateLess();
-    $this->migrateLatteTranslations();
-    // $this->migrateLayoutField();
-  }
-
-  private function migrateLatteTranslations()
-  {
-    if (!in_array("lattetranslations", $this->migrations)) return;
-    /** @var RockMigrations $rm */
-    $rm = $this->wire->modules->get('RockMigrations');
-    $ext = $rm->getModuleConfig('ProcessLanguageTranslator', 'extensions');
-    if (strpos((string)$ext, "latte") !== false) return;
-    $rm->setModuleConfig("ProcessLanguageTranslator", ['extensions' => "$ext latte"]);
-  }
-
-  private function migrateLess()
-  {
-    if (!in_array("less", $this->migrations)) return;
-    $rm = $this->rm();
-    $rm->migrate([
-      'fields' => [
-        self::field_less => [
-          'type' => 'textarea',
-          'label' => 'LESS',
-          'rows' => 15,
-          'icon' => 'css3',
-          'collapsed' => Inputfield::collapsedYes,
-          'notes' => 'This feature is experimental',
-        ],
-      ],
-    ]);
-    $rm->addFieldToTemplate(self::field_less, 'home');
-  }
-
   /**
    * Minify file and return path of minified file
    */
@@ -1712,6 +1700,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $minify->minify($minFile->path);
     }
     return $minFile->path;
+  }
+
+  /**
+   * Minify all files in given directory
+   * @param string $directory
+   * @param array $options
+   * @return void
+   * @throws IOException
+   */
+  public function minifyFiles(string $directory, array $options = []): void
+  {
+    $dir = $this->toPath($directory);
+    $files = $this->wire->files->find($dir, $options);
+    foreach ($files as $file) {
+      if (str_ends_with($file, ".min.js")) continue;
+      if (str_ends_with($file, ".min.css")) continue;
+      $this->minifyFile($file);
+    }
   }
 
   /**
@@ -2264,10 +2270,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * @return RockMigrations
+   * @return RockMigrations|false
    */
   public function rm()
   {
+    if (!$this->wire->modules->isInstalled('RockMigrations')) return false;
     return $this->wire->modules->get('RockMigrations');
   }
 
@@ -2315,6 +2322,81 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function setViewFolders(array $folders): void
   {
     $this->viewfolders = $folders;
+  }
+
+  /**
+   * Create a sitemap.xml file with a simple callback
+   * @return void
+   */
+  public function sitemap($callback = null, $options = []): void
+  {
+    if (!$callback) $callback = function (Page $page) {
+      return $page;
+    };
+    $this->sitemapCallback = $callback;
+    wire()->addHookAfter("/sitemap.xml", $this, "sitemapRender");
+    wire()->addHookAfter("Modules::refresh", $this, "sitemapReset");
+    wire()->addHookAfter("Pages::saved", $this, "sitemapReset");
+  }
+
+  protected function sitemapRender()
+  {
+    // make sure to render the sitemap as seen by the guest user
+    $this->wire->user = $this->wire->users->get('guest');
+    $time = Debug::startTimer();
+    $count = 0;
+
+    // create markup
+    $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
+    $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
+
+    // recursive function to traverse the page tree
+    $f = function ($items = null) use (&$f, &$out, &$count) {
+      if (!$items) $items = wire()->pages->get(1);
+      if ($items instanceof Page) $items = [$items];
+      foreach ($items as $p) {
+        /** @var Page $p */
+        if (!$p->viewable()) continue;
+        $callback = $this->sitemapCallback;
+        $result = $callback($p);
+        if ($result === false) {
+          // don't traverse further down the tree
+          return;
+        } elseif ($result instanceof Page) {
+          // if a page is returned we create a basic default markup
+          $modified = date("Y-m-d", $result->modified);
+          $out .= "<url>\n"
+            . "<loc>{$result->httpUrl()}</loc>\n"
+            . "<lastmod>$modified</lastmod>\n"
+            . "</url>\n";
+        } elseif ($result) {
+          // custom markup returned - add it to output
+          $out .= "$result\n";
+        }
+        $count++;
+        $f($p->children("include=hidden"));
+      }
+    };
+    $f();
+    $out .= '</urlset>';
+
+    // create sitemap.xml file
+    $file = $this->wire->config->paths->root . "sitemap.xml";
+    $this->wire->files->filePutContents($file, $out);
+
+    $seconds = Debug::stopTimer($time);
+    $this->log("Sitemap showing $count pages generated in " . round($seconds * 1000) . " ms", [
+      'url' => '/sitemap.xml',
+    ]);
+
+    header('Content-Type: application/xml');
+    return $out;
+  }
+
+  protected function sitemapReset(HookEvent $event): void
+  {
+    $file = $this->wire->config->paths->root . "sitemap.xml";
+    if (is_file($file)) wire()->files->unlink($file);
   }
 
   /**
@@ -2552,15 +2634,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->getTranslation($translations);
   }
 
-  public function ___install()
-  {
-    $this->init();
-    if ($this->rm()) $this->migrate();
-    // install FrontendEditing
-    $this->wire->modules->get('PageFrontEdit');
-    $this->message('Installed Module PageFrontEdit');
-  }
-
   /** ##### module config ##### */
 
   /**
@@ -2569,8 +2642,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function getModuleConfigInputfields($inputfields)
   {
-    $this->migrate();
-
     $name = strtolower($this);
     $inputfields->add([
       'type' => 'markup',
@@ -2587,8 +2658,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $config = $this->wire->config;
     $config->styles->add($config->urls($this) . "RockFrontend.module.css");
 
+    $this->configSEO($inputfields);
     $this->configLivereload($inputfields);
     $this->configLatte($inputfields);
+    $this->configTailwind($inputfields);
     $this->configSettings($inputfields);
     $this->configTools($inputfields);
 
@@ -2597,16 +2670,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function configLatte(InputfieldWrapper $inputfields): void
   {
-    $hasLatteFiles = $this->wire->files->find(
-      $this->wire->config->paths->templates,
-      ['extensions' => ['latte']]
-    );
     $fs = new InputfieldFieldset();
     $fs->label = "Latte";
     $fs->icon = "code";
-    $fs->collapsed = $hasLatteFiles
-      ? Inputfield::collapsedNo
-      : Inputfield::collapsedYes;
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $f = new InputfieldCheckbox();
@@ -2643,6 +2710,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = "LiveReload";
     $fs->icon = "refresh";
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $f = new InputfieldMarkup();
@@ -2681,11 +2749,83 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     ]);
   }
 
+  private function configSEO($inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "SEO";
+    $fs->icon = "search";
+    $fs->collapsed = Inputfield::collapsedYesAjax;
+    $inputfields->add($fs);
+    $root = $this->wire->config->paths->root;
+    $warn = '<svg style="color:#F9A825" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m9-3v4m0 3v.01"/></svg>';
+    $check = '<svg style="color:#388E3C" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="m9 12l2 2l4-4"/></g></svg>';
+
+    if ($this->wire->config->ajax) {
+      $http = new WireHttp();
+
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'robots.txt',
+        'value' => is_file($root . "robots.txt")
+          ? "$check robots.txt is present"
+          : "$warn no robots.txt in site root",
+        'columnWidth' => 50,
+      ]);
+
+      $hasSitemap = $http->status(
+        $this->wire->pages->get(1)->httpUrl() . "sitemap.xml"
+      );
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'sitemap.xml',
+        'value' => $hasSitemap
+          ? "$check sitemap.xml was found"
+          : "$warn no sitemap.xml in site root",
+        'notes' => is_file($root . "sitemap.xml")
+          ? ''
+          : 'See [docs](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/seo/).',
+        'columnWidth' => 50,
+      ]);
+
+      $markup = $http->get($this->wire->pages->get(1)->httpUrl());
+      $url = $http->getResponseHeaders('location') ?: '/';
+      $dom = rockfrontend()->dom($markup);
+      $ogimg = $dom->filter("meta[property='og:image']")->count() > 0;
+      $minifyWarning = strpos($markup, "property=og:image") === false
+        ? "" : "It looks like you are using ProCache's remove quotes from tag attributes feature - this feature will break WhatsApp preview images on Android! See [this forum post](https://processwire.com/talk/topic/29831-why-does-whatsapp-not-show-a-preview-image-for-my-site/?do=findComment&comment=240133)";
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'og:image',
+        'value' => $ogimg
+          ? "$check og:image tag found on page $url"
+          : "$warn no og:image tag on page $url",
+        'columnWidth' => 50,
+        'notes' => $minifyWarning,
+      ]);
+
+      $hasFavicon = $http->status(
+        $this->wire->pages->get(1)->httpUrl() . "favicon.ico"
+      );
+      $fs->add([
+        'type' => 'markup',
+        'label' => 'favicon.ico',
+        'value' => $hasFavicon
+          ? "$check favicon.ico was found"
+          : "$warn no favicon.ico in site root",
+        'notes' => $hasFavicon
+          ? ''
+          : 'Use [realfavicongenerator](https://realfavicongenerator.net/) to add a favicon to your site.',
+        'columnWidth' => 50,
+      ]);
+    }
+  }
+
   private function configSettings($inputfields)
   {
     $fs = new InputfieldFieldset();
     $fs->label = "Settings";
     $fs->icon = "cogs";
+    $fs->collapsed = Inputfield::collapsedYes;
     $inputfields->add($fs);
 
     $fs->add([
@@ -2732,25 +2872,72 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->showIf = 'features=topbar';
     $f->notes = 'Default is 999';
     $fs->add($f);
+  }
 
-    $f = $this->wire->modules->get('InputfieldCheckboxes');
-    $f->name = 'migrations';
-    $f->label = "Migrations";
-    $f->icon = "rocket";
-    $f->addOption('favicon', 'favicon - Create an image field for a favicon and add it to the home template');
-    $f->addOption('ogimage', 'ogimage - Create an image field for an og:image and add it to the home template');
-    $f->addOption('images', 'images - Create an image field for general image uploads and add it to the home template');
-    $f->addOption('footerlinks', 'footerlinks - Create a page field for selecting pages for the footer menu and add it to the home template');
-    $url = $this->wire->pages->get(2)->url . "module/edit?name=ProcessLanguageTranslator";
-    $f->addOption('lattetranslations', "lattetranslations - Add latte extension to translatable files in [ProcessLanguageTranslator]($url)");
-    $f->addOption('less', "less - Add textarea to inject custom LESS/CSS");
-    $f->value = (array)$this->migrations;
-    $f->notes = "Note that removing a checkbox does not undo an already executed migration!";
-    if (!$this->wire->modules->isInstalled("RockMigrations")) {
-      $f->prependMarkup = "<div class='uk-alert uk-alert-warning uk-margin-remove'>These features will only work if RockMigrations is installed!</div>";
-      $f->collapsed = Inputfield::collapsedYes;
+  private function configTailwind(&$inputfields)
+  {
+    $fs = new InputfieldFieldset();
+    $fs->label = "Tailwind CSS";
+    $fs->icon = "css3";
+    $fs->name = "config-tailwind";
+    $fs->collapsed = Inputfield::collapsedYesAjax;
+    $inputfields->add($fs);
+    if ($this->wire->input->post->installTailwind) {
+      $this->wire->files->copy(
+        $this->wire->config->paths->root . "site/modules/RockFrontend/tailwind",
+        $this->wire->config->paths->root,
+      );
     }
-    $fs->add($f);
+
+    // all below only when ajax loading
+    if (!$this->wire->config->ajax) return;
+
+    $conf = $this->wire->config->paths->root . "tailwind.config.js";
+    $pack = $this->wire->config->paths->root . "package.json";
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'NOTE',
+      'value' => 'This section is intended to be used with the <a href=https://github.com/baumrock/site-rockfrontend>RockFrontend site profile</a>.',
+    ]);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'package.json',
+      'value' => is_file($pack)
+        ? "✅ file found"
+        : "file not found - please check the checkbox and submit the form",
+      'columnWidth' => 50,
+    ]);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'tailwind.config.js',
+      'value' => is_file($conf)
+        ? "✅ file found"
+        : "file not found - please check the checkbox and submit the form",
+      'columnWidth' => 50,
+    ]);
+
+    $fs->add([
+      'type' => 'checkbox',
+      'label' => 'Install Tailwind CSS',
+      'name' => 'installTailwind',
+      'notes' => 'WARNING: This will copy package.json and tailwind.config.js to the root directory of your project. Existing files will be overwritten!',
+    ]);
+
+    $fs->add([
+      'type' => 'markup',
+      'label' => 'Finish Installation',
+      'value' => 'After installation you have to run the following command in your ProcessWire root directory from the command line:
+        <pre style="margin-top:10px;margin-bottom:10px;">npm install -D</pre>
+        Then execute "npm run build" to see if it works. It should show something like this:
+        <pre style="margin-top:10px;margin-bottom:10px;">Rebuilding...' . "\n"
+        . 'Done in 123ms</pre>
+        Running that on every change is no option, of course, so you can tell RockFrontend to build the CSS for you on every change:
+        <pre style="margin-top:10px;margin-bottom:10px;">$config->livereloadBuild = true;</pre>
+        This will run "npm run build" via PHP exec(). You can customise that from your package.json file; Make sure that you set this only for development!',
+    ]);
   }
 
   private function configTools(&$inputfields)
@@ -2758,6 +2945,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $fs = new InputfieldFieldset();
     $fs->label = "Tools";
     $fs->icon = "wrench";
+    $fs->collapsed = Inputfield::collapsedYes;
 
     $this->manifestConfig($fs);
 

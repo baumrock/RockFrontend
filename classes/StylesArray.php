@@ -22,8 +22,13 @@ class StylesArray extends AssetsArray
    *
    * @return self
    */
-  public function addAll($path, $suffix = '', $levels = 2, $ext = ['css', 'less'])
-  {
+  public function addAll(
+    $path,
+    $suffix = '',
+    $levels = 2,
+    $ext = ['css', 'less'],
+    $endsWith = null,
+  ) {
     return parent::addAll($path, $suffix, $levels, $ext);
   }
 
@@ -36,6 +41,7 @@ class StylesArray extends AssetsArray
 
     // add all style files in the following folders
     $this->addAll('/site/templates/layouts');
+    $this->addAll('/site/templates/styles');
     $this->addAll('/site/templates/less');
     $this->addAll('/site/templates/sections');
     $this->addAll('/site/templates/partials');
