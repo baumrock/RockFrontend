@@ -3,6 +3,7 @@
     "tailwindcss": "^3.4.1"
   },
   "scripts": {
-    "build": "npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.css"
+    "watch": "npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.css --watch",
+    "build": "npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.css --minify"
   }
 }
