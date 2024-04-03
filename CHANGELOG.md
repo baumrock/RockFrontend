@@ -1,3 +1,10 @@
+## [3.13.1](https://github.com/baumrock/RockFrontend/compare/v3.13.0...v3.13.1) (2024-04-03)
+
+
+### Bug Fixes
+
+* hide topbar on formbuilder iframes ([168c223](https://github.com/baumrock/RockFrontend/commit/168c223bb7fbe49a90c7a2faf78fbf1e7df56738))
+
 ## [3.13.0](https://github.com/baumrock/RockFrontend/compare/v3.12.0...v3.13.0) (2024-04-02)
 
 
@@ -72,24 +79,4 @@
 * don't create manifest by default ([1b17b86](https://github.com/baumrock/RockFrontend/commit/1b17b862c34133fb67a29373ccf1e82198a917d3))
 * fix debugInfo throwing error if folders are null ([c69a79e](https://github.com/baumrock/RockFrontend/commit/c69a79e382d51b2bdc3697886a6a35fc6567aabb))
 * prevent loading AutoPrepend on non-templatefile render() calls ([0eeb184](https://github.com/baumrock/RockFrontend/commit/0eeb1840e2eade6f27e9ebbfb4a378b7374324e4))
-
-## [3.9.0](https://github.com/baumrock/RockFrontend/compare/v3.8.2...v3.9.0) (2024-01-03)
-
-
-### Features
-
-* add humandates via composer ([eabbe8b](https://github.com/baumrock/RockFrontend/commit/eabbe8b2b4d9ece590ec5a30ae6b26f9afe1986c))
-* add ogImage shortcut ([2131298](https://github.com/baumrock/RockFrontend/commit/2131298635b09fcefed49fbbbdc1ba4def265a28))
-* add rockfrontend() functions api ([4991da5](https://github.com/baumrock/RockFrontend/commit/4991da52481f11d79df9e90a7635b03f7ad64e87))
-* add setViewFolders to support RockCommerce HTMX ([dc33123](https://github.com/baumrock/RockFrontend/commit/dc3312329ba620a3008e77fd2117b726c9efbe2a))
-* add variables array to view() method ([c98ee66](https://github.com/baumrock/RockFrontend/commit/c98ee667712de44bd697fade8a93dc0a40042a81))
-* improve view() method for rockcommerce ([c05576a](https://github.com/baumrock/RockFrontend/commit/c05576a3393c277d4d143938e0ac519e6df4ec6a))
-* update dependencies (requires PHP8.1) ([488e689](https://github.com/baumrock/RockFrontend/commit/488e68937c5356504b39adbebe461466c077b306))
-* update required php version in info ([529c113](https://github.com/baumrock/RockFrontend/commit/529c113eb36a2c3a47e955d5f68c1264f751811c))
-* update to support new rockpagebuilder sortable handles ([80099f5](https://github.com/baumrock/RockFrontend/commit/80099f5770803bff1ff5eee82adba769670a6f83))
-
-
-### Bug Fixes
-
-* fix livereload issue on PHP8.2 ([7660ea4](https://github.com/baumrock/RockFrontend/commit/7660ea423a6a7ac9d315f61d2c4d682f65f136c5))
 
