@@ -9,6 +9,8 @@ It has two main goals:
 
 See the video here: https://www.youtube.com/watch?v=7CoIj--u4ps&t=1714s
 
+<div class='uk-alert uk-alert-warning'>Note: To use ALFRED you need to install the PageFrontEdit module and make sure all users have the page-edit-front permission.</div>
+
 ## Easier Frontend Editing for Your Clients
 
 A typical example that almost every website has are footer links - that's why RockFrontend comes with a migration that creates a footerlinks field for you. It creates that field on the `home` page and the client can manage the footerlinks by editing the `home` page in the PW backend.

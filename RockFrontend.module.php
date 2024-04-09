@@ -73,6 +73,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const field_images = self::prefix . "images";
   const field_less = self::prefix . "less";
 
+  private $addMarkup;
+
   /** @var WireData */
   public $alfredCache;
 
@@ -234,6 +236,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     wire()->addHookMethod("Page::otherLangUrl",          $this, "otherLangUrl");
     wire()->addHookAfter("Modules::refresh",             $this, "livereloadResetCache");
     wire()->addHookAfter("Page::render",                 $this, "livereloadAddMarkup");
+    wire()->addHookAfter("Page::render",                 $this, "hookAddMarkup");
 
     // others
     $this->ajaxAddEndpoints();
@@ -558,6 +561,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function alfred($page = null, $options = [])
   {
     if (!$this->alfredAllowed()) return;
+
+    // check if frontend editing is installed
+    if (!$this->wire->modules->isInstalled("PageFrontEdit")) {
+      $this->addMarkup .= "<script>alert('Please install PageFrontEdit to use ALFRED')</script>";
+    }
 
     // support short syntax
     if ($options === false) {
@@ -1269,6 +1277,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->wire->user->isSuperuser()) return;
     $form = $event->return;
     $form->remove(self::field_layout);
+  }
+
+  /**
+   * Inject markup to the page body
+   * @param HookEvent $event
+   * @return void
+   */
+  protected function hookAddMarkup(HookEvent $event)
+  {
+    if (!$this->addMarkup) return;
+    $event->return = str_replace(
+      "</body>",
+      $this->addMarkup . "</body>",
+      $event->return
+    );
   }
 
   /**
