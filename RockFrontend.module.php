@@ -238,6 +238,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     wire()->addHookAfter("Page::render",                 $this, "livereloadAddMarkup");
     wire()->addHookAfter("Page::render",                 $this, "hookAddMarkup");
 
+    // LiveReload on Tracy Error Page
+    // See https://processwire.com/talk/topic/29910-how-to-inject-custom-markup-into-tracys-error-pages/#comment-240601
+    if ($this->wire->modules->isInstalled('TracyDebugger')) {
+      if ($this->addLiveReload()) {
+        $blueScreen = \Tracy\Debugger::getBlueScreen();
+        $blueScreen->addPanel(function () {
+          return ['tab' => 'RFE Panel', 'panel' => $this->liveReloadMarkup()];
+        });
+      }
+    }
+
+
     // others
     $this->ajaxAddEndpoints();
     $this->checkHealth();
@@ -341,6 +353,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($f->name != self::field_footerlinks) return;
     if ($f->notes) $f->notes .= "\n";
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
+  }
+
+  private function addLiveReload(): bool
+  {
+    $config = $this->wire->config;
+    if (!$config->livereload) return false;
+    if ($config->ajax) return false;
+    if ($config->external) return false;
+    return true;
   }
 
   /**
@@ -1555,10 +1576,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   protected function livereloadAddMarkup(HookEvent $event)
   {
-    $config = $this->wire->config;
-    if (!$config->livereload) return;
-    if ($config->ajax) return;
-    if ($config->external) return;
+    if (!$this->addLiveReload()) return;
     if ($this->livereloadAdded) return;
 
     // early exit when page is opened in modal window
@@ -1571,6 +1589,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this is because live reload will break the module installation screen for example
     if ($page->template == 'admin') {
       // if livereload is disabled on backend pages we exit early
+      $config = $this->wire->config;
       $livereloadBackend = $this->livereloadBackend ?: $config->livereloadBackend;
       if (!$livereloadBackend) return;
 
