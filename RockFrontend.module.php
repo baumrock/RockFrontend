@@ -465,14 +465,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (in_array($base, $added)) continue;
         $added[] = $base;
         $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint) {
-          // make htmx endpoints only available via ajax
-          // superusers are allowed to access them directly (for debugging)
-          $sudo = $this->wire->user->isSuperuser();
           $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
           $ajax = $this->wire->config->ajax || $isHtmx;
 
-          if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
-          else return $this->ajaxPublic($endpoint);
+          // ajax or no ajax?
+          if (!$ajax) {
+            // show debug screen for pw superusers
+            if ($this->wire->user->isSuperuser()) {
+              return $this->ajaxDebug($endpoint);
+            } else {
+              // guest and no ajax: no access!
+              http_response_code(403);
+              return "Access Denied";
+            }
+          } else {
+            // render public endpoint (ajax response)
+            return $this->ajaxPublic($endpoint);
+          }
         });
       }
     }
