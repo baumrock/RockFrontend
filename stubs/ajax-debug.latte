@@ -7,6 +7,7 @@
   <title>RockFrontend AJAX Debugger</title>
   <link rel="stylesheet" type="text/css" href="{$config->versionUrl('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/css/uikit.min.css')}" />
   <script type="text/javascript" src="{$config->versionUrl('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/js/uikit.min.js')}"></script>
+  {$rockfrontend->liveReloadMarkup()|noescape}
 </head>
 
 <body>
@@ -23,6 +24,11 @@
       <div class="uk-margin-small uk-background-default">
         <pre class="tracy-dump" style="max-height:500px;">{$formatted}</pre>
       </div>
+    </div>
+
+    <div class="uk-text-small uk-text-muted">
+      Using VSCode? I recommend this extension for further debugging:
+      <a href="https://www.youtube.com/watch?v=qJlTGaTIkHA">https://www.youtube.com/watch?v=qJlTGaTIkHA</a>
     </div>
   </section>
 </body>
