@@ -19,6 +19,7 @@ use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
+use Tracy\Debugger;
 use Tracy\Dumper;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
@@ -80,6 +81,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public $autoloadScripts;
   public $autoloadStyles;
+
+  private $contenttype = "text/html";
 
   public $createManifest = false;
 
@@ -475,6 +478,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
               return $this->ajaxDebug($endpoint);
             } else {
               // guest and no ajax: no access!
+              if ($this->wire->modules->isInstalled('TracyDebugger')) {
+                Debugger::$showBar = false;
+              }
               http_response_code(403);
               return "Access Denied";
             }
@@ -498,6 +504,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'endpoint' => $endpoint,
       'response' => $response,
       'formatted' => $this->ajaxFormatted($raw, $endpoint),
+      'contenttype' => $this->contenttype, // must be after formatted!
     ]);
 
     return $markup;
@@ -525,7 +532,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     // array --> json
-    if (is_array($response)) return json_encode($response, JSON_PRETTY_PRINT);
+    if (is_array($response)) {
+      $this->contenttype = "application/json";
+      return json_encode($response, JSON_PRETTY_PRINT);
+    }
 
     // still no string, try to cast it to string
     try {
@@ -542,6 +552,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     try {
       $raw = $this->ajaxResponse($endpoint);
       $response = $this->ajaxFormatted($raw, $endpoint);
+      header('Content-Type: ' . $this->contenttype);
       return $response;
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
