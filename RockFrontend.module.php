@@ -2516,6 +2516,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Usage:
    * echo $rf->svgDom("/path/to/file.svg")->addClass("foo");
    *
+   * You can also provide an url instead of the absolute path:
+   * echo $rf->svgDom("/site/templates/img/icon.svg")->addClass("foo");
+   *
    * @param mixed $data
    * @return HtmlPageCrawler
    * @throws LogicException
@@ -2523,10 +2526,31 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function svgDom($data): HtmlPageCrawler
   {
     $str = $data;
+
+    // if data is a pagefiles array we use the first pagefile
     if ($data instanceof Pagefiles) $data = $data->first();
+
+    // if it is a pagefile get markup
     if ($data instanceof Pagefile) {
       $str = file_get_contents($data->filename);
     }
+
+    // if data is a string that means it is a filepath or url
+    elseif (is_string($data)) {
+      $data = Paths::normalizeSeparators($data);
+
+      // if the file does not exist we try to add the root path
+      if (!is_file($data)) $data = $this->toPath($data);
+
+      // if it is still no file we throw an exception
+      if (!is_file($data)) {
+        throw new WireException("File $data not found");
+      }
+
+      // $data is now the filepath, so we get the content
+      $str = file_get_contents($data);
+    }
+
     $dom = $this->dom($str)->filter("svg")->first();
     return $dom;
   }

@@ -11,6 +11,9 @@ $logo = $pages->get(123)->logo;
 // Alternatively, it can directly reference a file path:
 $logo = "/path/to/file.svg";
 
+// You can also provide a relative url instead of a file path:
+$logo = "/site/templates/img/icon.svg";
+
 // Displaying the SVG logo with an added CSS class for styling:
 echo rockfrontend()
   ->svgDom($logo)
