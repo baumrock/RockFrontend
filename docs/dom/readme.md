@@ -26,6 +26,10 @@ Incorporating SVGs within the Latte template engine:
 {rockfrontend()->svgDom($logo)->addClass("max-h-5")|noescape}
 ```
 
+<div class="uk-alert uk-alert-warning">
+  Please note that this method returns only the first &lt;svg> element that it finds and strips out all the markup that might be before or after that element! If you don't want that behaviour use `file_get_contents()` or `include` or place your markup manually.
+</div>
+
 ## HTML
 
 You can throw any HTML markp to the `dom` method of RockFrontend and then do whatever you want with the result.
