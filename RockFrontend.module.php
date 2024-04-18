@@ -2404,18 +2404,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     wire()->addHookAfter("Pages::saved", $this, "sitemapReset");
   }
 
-  protected function sitemapRender()
+  public function sitemapMarkup(): string
   {
-    // make sure to render the sitemap as seen by the guest user
-    $this->wire->user = $this->wire->users->get('guest');
+    // start timer
     $time = Debug::startTimer();
-    $count = 0;
+
+    // make sure to render the sitemap as seen by the guest user
+    // save current user for later
+    $user = $this->wire->user;
+    $this->wire->user = $this->wire->users->get('guest');
 
     // create markup
     $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
     $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
 
     // recursive function to traverse the page tree
+    $count = 0;
     $f = function ($items = null) use (&$f, &$out, &$count) {
       if (!$items) $items = wire()->pages->get(1);
       if ($items instanceof Page) $items = [$items];
@@ -2433,7 +2437,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           $out .= "<url>\n"
             . "<loc>{$result->httpUrl()}</loc>\n"
             . "<lastmod>$modified</lastmod>\n"
-            . "</url>\n";
+            . "</url>\n"
+            . $result->sitemapAppendMarkup;
         } elseif ($result) {
           // custom markup returned - add it to output
           $out .= "$result\n";
@@ -2445,14 +2450,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f();
     $out .= '</urlset>';
 
-    // create sitemap.xml file
-    $file = $this->wire->config->paths->root . "sitemap.xml";
-    $this->wire->files->filePutContents($file, $out);
-
     $seconds = Debug::stopTimer($time);
     $this->log("Sitemap showing $count pages generated in " . round($seconds * 1000) . " ms", [
       'url' => '/sitemap.xml',
     ]);
+
+    $this->wire->user = $user;
+    return $out;
+  }
+
+  protected function sitemapRender()
+  {
+    // create sitemap.xml file
+    $out = $this->sitemapMarkup();
+    $file = $this->wire->config->paths->root . "sitemap.xml";
+    $this->wire->files->filePutContents($file, $out);
 
     header('Content-Type: application/xml');
     return $out;
@@ -2863,9 +2875,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         'columnWidth' => 50,
       ]);
 
-      $hasSitemap = $http->status(
-        $this->wire->pages->get(1)->httpUrl() . "sitemap.xml"
-      );
+      $httpUrl = $this->wire->pages->get(1)->httpUrl() . "sitemap.xml";
+      $hasSitemap = $http->status($httpUrl) === 200;
       $fs->add([
         'type' => 'markup',
         'label' => 'sitemap.xml',
