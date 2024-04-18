@@ -2759,6 +2759,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function configLatte(InputfieldWrapper $inputfields): void
   {
+    $this->copyLayoutFileIfNewer();
+
     $fs = new InputfieldFieldset();
     $fs->label = "Latte";
     $fs->icon = "code";
