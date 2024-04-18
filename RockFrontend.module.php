@@ -271,7 +271,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ready()
   {
     $this->addAssets();
-    $this->copyLayoutFileIfNewer();
   }
 
   /**
@@ -1873,6 +1872,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
+    // update the _rockfrontend.php file if necessary
+    $this->copyLayoutFileIfNewer();
+
     // refresh uikit cache
     $this->wire->cache->save(self::cache, "");
 
