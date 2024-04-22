@@ -24,9 +24,6 @@ class Filters
 	/** @deprecated */
 	public static string $dateFormat = "j.\u{a0}n.\u{a0}Y";
 
-	/** @internal use XML syntax? */
-	public static bool $xml = false;
-
 
 	/**
 	 * Escapes string for use everywhere inside HTML (except for comments).
@@ -259,7 +256,7 @@ class Filters
 	/**
 	 * Sanitizes string for use inside href attribute.
 	 */
-	public static function safeUrl(string|\Stringable $s): string
+	public static function safeUrl($s): string
 	{
 		$s = $s instanceof HtmlStringable
 			? self::convertHtmlToText((string) $s)

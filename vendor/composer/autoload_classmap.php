@@ -169,6 +169,7 @@ return array(
     'Latte\\Runtime\\FilterExecutor' => $vendorDir . '/latte/latte/src/Latte/Runtime/FilterExecutor.php',
     'Latte\\Runtime\\FilterInfo' => $vendorDir . '/latte/latte/src/Latte/Runtime/FilterInfo.php',
     'Latte\\Runtime\\Filters' => $vendorDir . '/latte/latte/src/Latte/Runtime/Filters.php',
+    'Latte\\Runtime\\FunctionExecutor' => $vendorDir . '/latte/latte/src/Latte/Runtime/FunctionExecutor.php',
     'Latte\\Runtime\\Html' => $vendorDir . '/latte/latte/src/Latte/Runtime/Html.php',
     'Latte\\Runtime\\HtmlStringable' => $vendorDir . '/latte/latte/src/Latte/Runtime/HtmlStringable.php',
     'Latte\\Runtime\\Template' => $vendorDir . '/latte/latte/src/Latte/Runtime/Template.php',
