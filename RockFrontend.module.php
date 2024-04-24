@@ -207,7 +207,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // set the remBase either from config setting or use 16 as fallback
     $this->remBase = $this->remBase ?: 16;
     $this->initPostCSS();
-    $this->js('isDDEV', array_key_exists('DDEV_VERSION', $_ENV));
+
+    // if in DDEV we set a js property accordingly
+    // if not we set nothing, so no markup will be on the frontend
+    // see https://processwire.com/talk/topic/27417-rockfrontend-%F0%9F%9A%80%F0%9F%9A%80-the-powerful-toolbox-for-processwire-frontend-development/?do=findComment&comment=240837
+    if ($this->isDDEV()) $this->js('isDDEV', true);
 
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
