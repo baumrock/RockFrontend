@@ -74,6 +74,17 @@ rockfrontend()->sitemap(function (Page $page) {
 });
 ```
 
+If you are a module developer and want to make sure that your data pages do not appear in RockFrontend's sitemap you can set the `noSitemap` property of your page and RockFrontend will automatically exclude it.
+
+Example of RockCommerce RootPage:
+
+```php
+class RootPage extends Page
+{
+  public $noSitemap = true;
+}
+```
+
 ### Adding pages to the sitemap
 
 Sometimes you have endpoints that are not represented by pages in the pagetree (these docs are an example as they are rendered from markdown files rather than from ProcessWire pages).
