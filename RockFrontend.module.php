@@ -1462,8 +1462,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function injectAssets(string &$html): void
   {
     $assets = '';
-    foreach ($this->autoloadScripts as $script) $assets .= $script->render();
     foreach ($this->autoloadStyles as $style) $assets .= $style->render();
+    foreach ($this->autoloadScripts as $script) $assets .= $script->render();
     $html = str_replace("</head>", "$assets</head>", $html);
   }
 
