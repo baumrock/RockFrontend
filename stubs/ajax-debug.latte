@@ -7,6 +7,8 @@
   <title>RockFrontend AJAX Debugger</title>
   <link rel="stylesheet" type="text/css" href="{$config->versionUrl('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/css/uikit.min.css')}" />
   <script type="text/javascript" src="{$config->versionUrl('/wire/modules/AdminTheme/AdminThemeUikit/uikit/dist/js/uikit.min.js')}"></script>
+  {$rockfrontend->liveReloadMarkup()|noescape}
+  <script src="https://unpkg.com/htmx.org@1.9.11"></script>
 </head>
 
 <body>
@@ -19,12 +21,49 @@
       <div class="uk-margin-small uk-background-default">{$response|noescape}</div>
     </div>
     <div class="uk-alert">
-      <div class="uk-text-bold">Formatted response:</div>
+      <div>
+        <strong>Formatted response</strong>
+        <small>(Content-Type: {$contenttype})</small>
+      </div>
       <div class="uk-margin-small uk-background-default">
         <pre class="tracy-dump" style="max-height:500px;">{$formatted}</pre>
       </div>
     </div>
+
+    <div class="uk-alert">
+      <div class="uk-text-bold">Send AJAX Request</div>
+      <div class="uk-margin-small uk-background-default uk-padding-small">
+        <button hx-get="{$input->url}" hx-target="#hx-response" class="uk-button">
+          GET
+        </button>
+        <button hx-post="{$input->url}" hx-target="#hx-response" class="uk-button">
+          POST
+        </button>
+        <div class="uk-margin-small-top">
+          <strong>Response:</strong>
+          <pre class="tracy-dump" id="hx-response">
+          </pre>
+        </div>
+        <div class="uk-text-small uk-text-muted">
+        The result of the request will also be logged to your console!<br>
+        For advanced debugging please use dedicated tools.
+      </div>
+      </div>
+    </div>
   </section>
+  <script>
+  document.addEventListener('htmx:beforeRequest', function(event) {
+    document.getElementById('hx-response').innerHTML = 'loading ...';
+  });
+  document.addEventListener('htmx:afterRequest', function(event) {
+    try {
+      const response = JSON.parse(event.detail.xhr.response);
+      console.log(response);
+    } catch (e) {
+      console.log(event.detail.xhr.response);
+    }
+  });
+  </script>
 </body>
 
 </html>

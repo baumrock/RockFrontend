@@ -11,6 +11,9 @@ $logo = $pages->get(123)->logo;
 // Alternatively, it can directly reference a file path:
 $logo = "/path/to/file.svg";
 
+// You can also provide a relative url instead of a file path:
+$logo = "/site/templates/img/icon.svg";
+
 // Displaying the SVG logo with an added CSS class for styling:
 echo rockfrontend()
   ->svgDom($logo)
@@ -22,6 +25,10 @@ Incorporating SVGs within the Latte template engine:
 ```latte
 {rockfrontend()->svgDom($logo)->addClass("max-h-5")|noescape}
 ```
+
+<div class="uk-alert uk-alert-warning">
+  Please note that this method returns only the first &lt;svg> element that it finds and strips out all the markup that might be before or after that element! If you don't want that behaviour use `file_get_contents()` or `include` or place your markup manually.
+</div>
 
 ## HTML
 

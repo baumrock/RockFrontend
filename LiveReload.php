@@ -180,14 +180,28 @@ class LiveReload extends Wire
   {
     header("Cache-Control: no-cache");
     header("Content-Type: text/event-stream");
-    $start = time();
     $build = $this->wire->config->livereloadBuild;
     $debug = $this->wire->config->debug;
+    $this->wire->log->prune('livereload', 1);
+    $opt = [
+      'showURL' => false,
+      'showUser' => false,
+    ];
+
+    // start loop
+    $start = time();
     while (true) {
       $file = $this->findModifiedFile($start);
 
-      // if file changed and feature enabled run build script
-      if ($file && $debug && $build) exec("npm run build");
+      // file changed
+      if ($file && $debug) {
+        $this->wire->log->save('livereload', "File changed: $file", $opt);
+        if ($build) {
+          $cmd = "npm run build";
+          $this->wire->log->save('livereload', "Rebuilding tailwind with '$cmd'", $opt);
+          exec($cmd);
+        }
+      }
 
       // send trigger to frontend
       $this->sse($file);
@@ -195,11 +209,7 @@ class LiveReload extends Wire
       // add note to log
       if ($file) {
         ob_end_flush();
-        $this->wire->log->prune('livereload', 1);
-        return $this->wire->log->save('livereload', $file, [
-          'showURL' => false,
-          'showUser' => false,
-        ]);
+        return;
       }
       while (ob_get_level() > 0) ob_end_flush();
       if (connection_aborted()) break;

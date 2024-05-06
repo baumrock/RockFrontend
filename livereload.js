@@ -31,31 +31,41 @@ setTimeout(() => {
       if (document.hidden) return;
 
       console.log(changed);
-      // check if we are in the admin and have unsaved changes
-      if (document.querySelectorAll(".InputfieldStateChanged").length) {
-        console.log("detected change - unsaved changes prevent reload");
-        // show notification
-        // delay of 200ms prevents that the notification is shown
-        // when a page is saved that creates files in the background
-        setTimeout(() => {
+      if (LiveReloadForce) {
+        document
+          .querySelectorAll(".InputfieldStateChanged")
+          .forEach((input) => {
+            input.classList.remove("InputfieldStateChanged");
+          });
+      } else {
+        // check if we are in the admin and have unsaved changes
+        if (document.querySelectorAll(".InputfieldStateChanged").length) {
+          console.log("detected change - unsaved changes prevent reload");
+          // show notification
+          // delay of 200ms prevents that the notification is shown
+          // when a page is saved that creates files in the background
+          setTimeout(() => {
+            UIkit.notification({
+              message:
+                "Unsaved changes prevent reload - use $config->liveReloadForce to force reload.",
+              status: "warning",
+              pos: "top-center",
+              timeout: 0,
+            });
+          }, 200);
+          return;
+        }
+        if (document.querySelectorAll("#pw-panel-shade").length) {
+          console.log("detected change - open panel prevents reload");
           UIkit.notification({
-            message: "Unsaved changes prevent reload",
+            message:
+              "Open panel prevents reload - use $config->liveReloadForce to force reload.",
             status: "warning",
             pos: "top-center",
             timeout: 0,
           });
-        }, 200);
-        return;
-      }
-      if (document.querySelectorAll("#pw-panel-shade").length) {
-        console.log("detected change - open panel prevents reload");
-        UIkit.notification({
-          message: "Open panel prevents reload",
-          status: "warning",
-          pos: "top-center",
-          timeout: 0,
-        });
-        return;
+          return;
+        }
       }
 
       // all fine, reload page

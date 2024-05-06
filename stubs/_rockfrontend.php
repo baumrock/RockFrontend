@@ -12,4 +12,8 @@ $file = $config->paths->templates . $page->template . ".latte";
 if (is_file($file)) $render = $page->template . ".latte";
 else $render = $config->paths->siteModules . "RockFrontend/default.latte";
 
-echo $rockfrontend->render($render);
+// Render latte file and send all defined vars to the file.
+// This is to make sure that variables can be set/overwritten from within
+// template files like home.php or basic-page.php but are still available
+// to latte files.
+echo $rockfrontend->render($render, get_defined_vars());

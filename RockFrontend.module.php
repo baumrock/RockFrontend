@@ -19,6 +19,7 @@ use Sabberworm\CSS\Parser;
 use Sabberworm\CSS\Rule\Rule;
 use Sabberworm\CSS\RuleSet\AtRuleSet;
 use Sabberworm\CSS\RuleSet\RuleSet;
+use Tracy\Debugger;
 use Tracy\Dumper;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
@@ -73,11 +74,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const field_images = self::prefix . "images";
   const field_less = self::prefix . "less";
 
+  private $addMarkup;
+
   /** @var WireData */
   public $alfredCache;
 
   public $autoloadScripts;
   public $autoloadStyles;
+
+  private $contenttype = "text/html";
 
   public $createManifest = false;
 
@@ -93,6 +98,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /** @var array */
   protected $js = [];
+
+  public $langMaps;
 
   /** @var Engine */
   private $latte;
@@ -132,6 +139,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public $seo;
 
   private $sitemapCallback;
+  private $sitemapOptions;
 
   private $styles;
 
@@ -199,7 +207,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // set the remBase either from config setting or use 16 as fallback
     $this->remBase = $this->remBase ?: 16;
     $this->initPostCSS();
-    $this->js('isDDEV', array_key_exists('DDEV_VERSION', $_ENV));
+
+    // if in DDEV we set a js property accordingly
+    // if not we set nothing, so no markup will be on the frontend
+    // see https://processwire.com/talk/topic/27417-rockfrontend-%F0%9F%9A%80%F0%9F%9A%80-the-powerful-toolbox-for-processwire-frontend-development/?do=findComment&comment=240837
+    if ($this->isDDEV()) $this->js('isDDEV', true);
 
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) $rm->watch($this, 0.01);
@@ -234,6 +246,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     wire()->addHookMethod("Page::otherLangUrl",          $this, "otherLangUrl");
     wire()->addHookAfter("Modules::refresh",             $this, "livereloadResetCache");
     wire()->addHookAfter("Page::render",                 $this, "livereloadAddMarkup");
+    wire()->addHookAfter("Page::render",                 $this, "hookAddMarkup");
+
+    // LiveReload on Tracy Error Page
+    // See https://processwire.com/talk/topic/29910-how-to-inject-custom-markup-into-tracys-error-pages/#comment-240601
+    if ($this->wire->modules->isInstalled('TracyDebugger')) {
+      if ($this->addLiveReload()) {
+        $blueScreen = \Tracy\Debugger::getBlueScreen();
+        $blueScreen->addPanel(function () {
+          return ['tab' => 'RFE Panel', 'panel' => $this->liveReloadMarkup()];
+        });
+      }
+    }
+
 
     // others
     $this->ajaxAddEndpoints();
@@ -253,7 +278,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ready()
   {
     $this->addAssets();
-    $this->copyLayoutFileIfNewer();
   }
 
   /**
@@ -338,6 +362,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($f->name != self::field_footerlinks) return;
     if ($f->notes) $f->notes .= "\n";
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
+  }
+
+  private function addLiveReload(): bool
+  {
+    $config = $this->wire->config;
+    if (!$config->livereload) return false;
+    if ($config->rockformsPreserveSuccess) return false;
+    if ($config->ajax) return false;
+    if ($config->external) return false;
+    return true;
   }
 
   /**
@@ -441,14 +475,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (in_array($base, $added)) continue;
         $added[] = $base;
         $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint) {
-          // make htmx endpoints only available via ajax
-          // superusers are allowed to access them directly (for debugging)
-          $sudo = $this->wire->user->isSuperuser();
           $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
           $ajax = $this->wire->config->ajax || $isHtmx;
 
-          if (!$ajax and $sudo) return $this->ajaxDebug($endpoint);
-          else return $this->ajaxPublic($endpoint);
+          // ajax or no ajax?
+          if (!$ajax) {
+            // show debug screen for pw superusers
+            if ($this->wire->user->isSuperuser()) {
+              return $this->ajaxDebug($endpoint);
+            } else {
+              // guest and no ajax: no access!
+              if ($this->wire->modules->isInstalled('TracyDebugger')) {
+                Debugger::$showBar = false;
+              }
+              http_response_code(403);
+              return "Access Denied";
+            }
+          } else {
+            // render public endpoint (ajax response)
+            return $this->ajaxPublic($endpoint);
+          }
         });
       }
     }
@@ -465,6 +511,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'endpoint' => $endpoint,
       'response' => $response,
       'formatted' => $this->ajaxFormatted($raw, $endpoint),
+      'contenttype' => $this->contenttype, // must be after formatted!
     ]);
 
     return $markup;
@@ -492,7 +539,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     // array --> json
-    if (is_array($response)) return json_encode($response, JSON_PRETTY_PRINT);
+    if (is_array($response)) {
+      $this->contenttype = "application/json";
+      return json_encode($response, JSON_PRETTY_PRINT);
+    }
 
     // still no string, try to cast it to string
     try {
@@ -509,6 +559,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     try {
       $raw = $this->ajaxResponse($endpoint);
       $response = $this->ajaxFormatted($raw, $endpoint);
+      header('Content-Type: ' . $this->contenttype);
       return $response;
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
@@ -558,6 +609,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function alfred($page = null, $options = [])
   {
     if (!$this->alfredAllowed()) return;
+
+    // check if frontend editing is installed
+    if (!$this->wire->modules->isInstalled("PageFrontEdit")) {
+      $this->addMarkup .= "<script>alert('Please install PageFrontEdit to use ALFRED')</script>";
+    }
 
     // support short syntax
     if ($options === false) {
@@ -1272,6 +1328,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Inject markup to the page body
+   * @param HookEvent $event
+   * @return void
+   */
+  protected function hookAddMarkup(HookEvent $event)
+  {
+    if (!$this->addMarkup) return;
+    $event->return = str_replace(
+      "</body>",
+      $this->addMarkup . "</body>",
+      $event->return
+    );
+  }
+
+  /**
    * Return a latte HTML object that doesn't need to be |noescaped
    * @return Html
    */
@@ -1392,8 +1463,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function injectAssets(string &$html): void
   {
     $assets = '';
-    foreach ($this->autoloadScripts as $script) $assets .= $script->render();
     foreach ($this->autoloadStyles as $style) $assets .= $style->render();
+    foreach ($this->autoloadScripts as $script) $assets .= $script->render();
     $html = str_replace("</head>", "$assets</head>", $html);
   }
 
@@ -1532,10 +1603,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   protected function livereloadAddMarkup(HookEvent $event)
   {
-    $config = $this->wire->config;
-    if (!$config->livereload) return;
-    if ($config->ajax) return;
-    if ($config->external) return;
+    if (!$this->addLiveReload()) return;
     if ($this->livereloadAdded) return;
 
     // early exit when page is opened in modal window
@@ -1548,6 +1616,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this is because live reload will break the module installation screen for example
     if ($page->template == 'admin') {
       // if livereload is disabled on backend pages we exit early
+      $config = $this->wire->config;
       $livereloadBackend = $this->livereloadBackend ?: $config->livereloadBackend;
       if (!$livereloadBackend) return;
 
@@ -1577,10 +1646,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $file = $this->minifyFile($this->path . "livereload.js");
     $src = $this->url($file, true);
 
+    $force = (int)$this->wire->config->liveReloadForce;
     return "
       <script>
       var LiveReloadUrl = '{$this->wire->config->urls->root}';
       var LiveReloadSecret = '$secret';
+      var LiveReloadForce = $force;
       console.log('Loading LiveReload');
       </script>
       <script src='$src'></script>
@@ -1811,6 +1882,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function refreshModules()
   {
+    // update the _rockfrontend.php file if necessary
+    $this->copyLayoutFileIfNewer();
+
     // refresh uikit cache
     $this->wire->cache->save(self::cache, "");
 
@@ -2335,23 +2409,48 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       return $page;
     };
     $this->sitemapCallback = $callback;
+    $this->sitemapOptions = $options;
     wire()->addHookAfter("/sitemap.xml", $this, "sitemapRender");
     wire()->addHookAfter("Modules::refresh", $this, "sitemapReset");
     wire()->addHookAfter("Pages::saved", $this, "sitemapReset");
   }
 
-  protected function sitemapRender()
+  public function sitemapLang(Language $lang): string
   {
-    // make sure to render the sitemap as seen by the guest user
-    $this->wire->user = $this->wire->users->get('guest');
+    $langs = $this->sitemapLangData();
+    return $langs->get($lang->name) ?: "";
+  }
+
+  private function sitemapLangData(): WireData
+  {
+    if ($this->sitemapLangData) return $this->sitemapLangData;
+    $data = new WireData();
+    $arr = array_filter(explode("\n", $this->langMaps));
+    foreach ($arr as $item) {
+      $item = trim($item);
+      $parts = explode("=", $item, 2);
+      $data->set($parts[0], $parts[1]);
+    }
+    $this->sitemapLangData = $data;
+    return $data;
+  }
+
+  public function sitemapMarkup(): string
+  {
+    // start timer
     $time = Debug::startTimer();
-    $count = 0;
+
+    // make sure to render the sitemap as seen by the guest user
+    // save current user for later
+    $user = $this->wire->user;
+    $this->wire->user = $this->wire->users->get('guest');
 
     // create markup
     $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
     $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
 
     // recursive function to traverse the page tree
+    $count = 0;
     $f = function ($items = null) use (&$f, &$out, &$count) {
       if (!$items) $items = wire()->pages->get(1);
       if ($items instanceof Page) $items = [$items];
@@ -2364,12 +2463,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // don't traverse further down the tree
           return;
         } elseif ($result instanceof Page) {
-          // if a page is returned we create a basic default markup
-          $modified = date("Y-m-d", $result->modified);
-          $out .= "<url>\n"
-            . "<loc>{$result->httpUrl()}</loc>\n"
-            . "<lastmod>$modified</lastmod>\n"
-            . "</url>\n";
+          $out .= $this->sitemapMarkupPage($result);
         } elseif ($result) {
           // custom markup returned - add it to output
           $out .= "$result\n";
@@ -2381,14 +2475,56 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f();
     $out .= '</urlset>';
 
-    // create sitemap.xml file
-    $file = $this->wire->config->paths->root . "sitemap.xml";
-    $this->wire->files->filePutContents($file, $out);
-
     $seconds = Debug::stopTimer($time);
     $this->log("Sitemap showing $count pages generated in " . round($seconds * 1000) . " ms", [
       'url' => '/sitemap.xml',
     ]);
+
+    $this->wire->user = $user;
+    return $out;
+  }
+
+  private function sitemapMarkupPage(Page $page)
+  {
+    if ($page->noSitemap) return;
+
+    $modified = date("Y-m-d", $page->modified);
+    $multilang = "";
+
+    // check for multilang system
+    if ($this->wire->languages) {
+      foreach ($this->wire->languages as $lang) {
+        if ($lang->isDefault()) continue;
+
+        // if page is not active in this language we dont add the alternate
+        if ($page->get("status$lang") !== 1) continue;
+
+        $this->wire->user->language = $lang;
+        $multilang .= "<xhtml:link "
+          . "rel='alternate' "
+          . "hreflang='{$this->sitemapLang($lang)}' "
+          . "href='{$page->httpUrl()}' />\n";
+      }
+
+      // reset language to default for final markup (default page)
+      $this->wire->user->language = $this->wire->languages->getDefault();
+    }
+
+    // return final markup
+    return "<url>\n"
+      . "<loc>{$page->httpUrl()}</loc>\n"
+      . $multilang
+      . "<lastmod>$modified</lastmod>\n"
+      . "</url>\n"
+      . $page->sitemapAppendMarkup;
+  }
+
+  protected function sitemapRender()
+  {
+    // create sitemap.xml file
+    $out = $this->sitemapMarkup();
+    $file = $this->wire->config->paths->root . "sitemap.xml";
+    $this->wire->files->filePutContents($file, $out);
 
     header('Content-Type: application/xml');
     return $out;
@@ -2454,6 +2590,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Usage:
    * echo $rf->svgDom("/path/to/file.svg")->addClass("foo");
    *
+   * You can also provide an url instead of the absolute path:
+   * echo $rf->svgDom("/site/templates/img/icon.svg")->addClass("foo");
+   *
    * @param mixed $data
    * @return HtmlPageCrawler
    * @throws LogicException
@@ -2461,10 +2600,31 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function svgDom($data): HtmlPageCrawler
   {
     $str = $data;
+
+    // if data is a pagefiles array we use the first pagefile
     if ($data instanceof Pagefiles) $data = $data->first();
+
+    // if it is a pagefile get markup
     if ($data instanceof Pagefile) {
       $str = file_get_contents($data->filename);
     }
+
+    // if data is a string that means it is a filepath or url
+    elseif (is_string($data)) {
+      $data = Paths::normalizeSeparators($data);
+
+      // if the file does not exist we try to add the root path
+      if (!is_file($data)) $data = $this->toPath($data);
+
+      // if it is still no file we throw an exception
+      if (!is_file($data)) {
+        throw new WireException("File $data not found");
+      }
+
+      // $data is now the filepath, so we get the content
+      $str = file_get_contents($data);
+    }
+
     $dom = $this->dom($str)->filter("svg")->first();
     return $dom;
   }
@@ -2671,6 +2831,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function configLatte(InputfieldWrapper $inputfields): void
   {
+    $this->copyLayoutFileIfNewer();
+
     $fs = new InputfieldFieldset();
     $fs->label = "Latte";
     $fs->icon = "code";
@@ -2761,7 +2923,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $warn = '<svg style="color:#F9A825" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m9-3v4m0 3v.01"/></svg>';
     $check = '<svg style="color:#388E3C" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="m9 12l2 2l4-4"/></g></svg>';
 
-    if ($this->wire->config->ajax) {
+    if ($this->wire->config->ajax || $this->wire->input->post->langMaps) {
       $http = new WireHttp();
 
       $fs->add([
@@ -2773,9 +2935,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         'columnWidth' => 50,
       ]);
 
-      $hasSitemap = $http->status(
-        $this->wire->pages->get(1)->httpUrl() . "sitemap.xml"
-      );
+      $httpUrl = $this->wire->pages->get(1)->httpUrl() . "sitemap.xml";
+      $hasSitemap = $http->status($httpUrl) === 200;
       $fs->add([
         'type' => 'markup',
         'label' => 'sitemap.xml',
@@ -2783,7 +2944,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           ? "$check sitemap.xml was found"
           : "$warn no sitemap.xml in site root",
         'notes' => is_file($root . "sitemap.xml")
-          ? ''
+          ? 'Open [sitemap.xml](/sitemap.xml)'
           : 'See [docs](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/seo/).',
         'columnWidth' => 50,
       ]);
@@ -2817,6 +2978,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           ? ''
           : 'Use [realfavicongenerator](https://realfavicongenerator.net/) to add a favicon to your site.',
         'columnWidth' => 50,
+      ]);
+
+      $fs->add([
+        'type' => 'textarea',
+        'label' => 'Sitemap Language Mappings',
+        'name' => 'langMaps',
+        'description' => 'Here you can define the language shortcode that ends up in the sitemaps "hreflang" attribute. Don\'t add the default language here.',
+        'notes' => 'A setting of "german=de" will lead to output hreflang=de in your sitemap, where "german" is the name of the language.',
+        'value' => $this->langMaps,
       ]);
     }
   }

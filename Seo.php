@@ -35,6 +35,11 @@ class Seo extends Wire
 
   /** ##### public API ##### */
 
+  public function canonical(callable $callback): self
+  {
+    return $this;
+  }
+
   /**
    * Shortcut to set description and og:description at once
    */
@@ -357,14 +362,14 @@ class Seo extends Wire
       $n = "\n  ";
       return
         // all browsers
-        "<link rel='icon' type='image/png' sizes='32x32' href={$png->size(32, 32,$opt)->url}>"
-        . "$n<link rel='icon' type='image/png' sizes='16x16' href={$png->size(16, 16,$opt)->url}>"
+        "<link rel='icon' type='image/png' sizes='32x32' href='{$png->size(32, 32,$opt)->url}'>"
+        . "$n<link rel='icon' type='image/png' sizes='16x16' href='{$png->size(16, 16,$opt)->url}'>"
         // google and android
-        . "$n<link rel='icon' type='image/png' sizes='48x48' href={$png->size(48, 48,$opt)->url}>"
-        . "$n<link rel='icon' type='image/png' sizes='192x192' href={$png->size(192, 192,$opt)->url}>"
+        . "$n<link rel='icon' type='image/png' sizes='48x48' href='{$png->size(48, 48,$opt)->url}'>"
+        . "$n<link rel='icon' type='image/png' sizes='192x192' href='{$png->size(192, 192,$opt)->url}'>"
         // apple iphone and ipad
-        . "$n<link rel='apple-touch-icon' type='image/png' sizes='167x167' href={$png->size(167, 167,$opt)->url}>"
-        . "$n<link rel='apple-touch-icon' type='image/png' sizes='180x180' href={$png->size(180, 180,$opt)->url}>";
+        . "$n<link rel='apple-touch-icon' type='image/png' sizes='167x167' href='{$png->size(167, 167,$opt)->url}'>"
+        . "$n<link rel='apple-touch-icon' type='image/png' sizes='180x180' href='{$png->size(180, 180,$opt)->url}'>";
     });
 
     // webmanifest
@@ -383,6 +388,11 @@ class Seo extends Wire
         return $rf->manifest()->themeColor;
       });
     }
+
+    $this->setMarkup('canonical', '<link rel="canonical" href="{value}">');
+    $this->setValue('canonical', function (Page $page) {
+      return $page->httpUrl();
+    });
   }
 
   /**
