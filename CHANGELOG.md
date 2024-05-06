@@ -1,3 +1,29 @@
+## [3.14.0](https://github.com/baumrock/RockFrontend/compare/v3.13.1...v3.14.0) (2024-05-06)
+
+
+### Features
+
+* add canonical tag to default seo markup ([5d6de01](https://github.com/baumrock/RockFrontend/commit/5d6de0129a5d02710c2051aee8f0789ed9dd957a))
+* add config setting to preserve success messages ([9270aa9](https://github.com/baumrock/RockFrontend/commit/9270aa988f4221196d0eb7793e8a563142f3ed85))
+* add isDDEV property only if true ([3b997af](https://github.com/baumrock/RockFrontend/commit/3b997af19b62b1202f33846c68f89f4433696a5e))
+* add livereload to ajax debug screen ([ec454d2](https://github.com/baumrock/RockFrontend/commit/ec454d2a78d3be720c154fbaaf1f3695dafa79ff))
+* add livereload to tracy bluescreen ([876d421](https://github.com/baumrock/RockFrontend/commit/876d421376dfbc3e026610d7dc06cc3362937602))
+* add liveReloadForce setting ([e4fda2e](https://github.com/baumrock/RockFrontend/commit/e4fda2e6efb3104945a89ca0976e8e4bff889154))
+* add multilang support for sitemap ([71c6e41](https://github.com/baumrock/RockFrontend/commit/71c6e414324c3fab3af6e856b8be087463c5244a))
+* add warning that ALFRED needs frontend module ([971ef4a](https://github.com/baumrock/RockFrontend/commit/971ef4a7a31c6d96c8dab4f1c8393fba4bd2fd36))
+* block direct access of ajax endpoints for guest users ([3c14dcd](https://github.com/baumrock/RockFrontend/commit/3c14dcd7361535817015c8187e8ce067e8e9d363))
+* copy layout file on module screen without refresh ([1fe297b](https://github.com/baumrock/RockFrontend/commit/1fe297bc87e304946f47babdd79e8dda657bcf59))
+* improve ajax endpoints as of issue [#26](https://github.com/baumrock/RockFrontend/issues/26) ([865d2ef](https://github.com/baumrock/RockFrontend/commit/865d2ef5409f9de01e321d1dc599512a3494cf0c))
+* improve sitemap tools ([154b76c](https://github.com/baumrock/RockFrontend/commit/154b76c956421ef94af8422a04b4804e7725e139))
+* make template file variables available in layout files ([7e01bb1](https://github.com/baumrock/RockFrontend/commit/7e01bb1cb2ad10f4a72c0b7855b4bdc9404f6269))
+* support relative urls in svgDom() method ([38b9c67](https://github.com/baumrock/RockFrontend/commit/38b9c67574e4a4d41d53c0567f576d49d7bf88fd))
+* upgrade dependencies ([ac2dc3e](https://github.com/baumrock/RockFrontend/commit/ac2dc3e851880d59a016f476f6668d1982392610))
+
+
+### Bug Fixes
+
+* load styles before scripts ([70de35f](https://github.com/baumrock/RockFrontend/commit/70de35f4e058558038940de1b2dd0ce957bbeed4))
+
 ## [3.13.1](https://github.com/baumrock/RockFrontend/compare/v3.13.0...v3.13.1) (2024-04-03)
 
 
@@ -51,32 +77,4 @@
 ### Features
 
 * add option to trigger "npm run build" on changed file ([85079f0](https://github.com/baumrock/RockFrontend/commit/85079f029a3c220146487d459f4023a64710b56f))
-
-## [3.10.0](https://github.com/baumrock/RockFrontend/compare/v3.9.0...v3.10.0) (2024-02-02)
-
-
-### Features
-
-* add lighten() and darken() methods for hex values ([852ea50](https://github.com/baumrock/RockFrontend/commit/852ea5008d8220e1724aacf54af05e8888f8237a))
-* add once() helper ([0938e98](https://github.com/baumrock/RockFrontend/commit/0938e98c84f88b7ff585f8d89494edabeafc53a0))
-* add sortable toggle to topbar ([f08e14d](https://github.com/baumrock/RockFrontend/commit/f08e14d39d3c55b9a3728e46dbb90d9966638b39))
-* improve consent tools, add "has-consent-click" and "needs-consent-click" ([fdfa07f](https://github.com/baumrock/RockFrontend/commit/fdfa07fe31afba74ce9e456afe8742761b5c2270))
-* improve topbar ([27f20d3](https://github.com/baumrock/RockFrontend/commit/27f20d3ab00ab7b6a8fd80d35921551fe8bd5179))
-* improve topbar toggle ([d6f5c76](https://github.com/baumrock/RockFrontend/commit/d6f5c762d5a23666227c893d0ff06360f5431f76))
-* improve ui of sortable toggle ([332fd0e](https://github.com/baumrock/RockFrontend/commit/332fd0e65fc1438cded81a2842dc2173f50bf2a0))
-* make link handler for alfred links configurable ([89ae18c](https://github.com/baumrock/RockFrontend/commit/89ae18c67dbc44cd89a46ddf2458627518e1d836))
-* make loadLatte hookable ([c3e4f47](https://github.com/baumrock/RockFrontend/commit/c3e4f47196d5d5f86759a503a418211a370ff7c7))
-* make svg() work with pagefiles ([c21ea10](https://github.com/baumrock/RockFrontend/commit/c21ea10f72fda25588504b2c9b4b60a5f265aa3a))
-* refactor topbar ([79a688f](https://github.com/baumrock/RockFrontend/commit/79a688ff6907193c9072858ee4f099c452f0cf07))
-* remove homepage field migrations ([9853553](https://github.com/baumrock/RockFrontend/commit/9853553bbb5a24cdb0fb6563d5a62d39280f48ed))
-* toggle alfred ui on CMD/CTRL ([f23fb4b](https://github.com/baumrock/RockFrontend/commit/f23fb4ba7b1a70fab54b68a291454c059b00b804))
-* update profile to use layout.latte ([15ad6cf](https://github.com/baumrock/RockFrontend/commit/15ad6cfa032c0b37c6e6db10d608f8d80d975b2e))
-
-
-### Bug Fixes
-
-* autoprepend throwing errors, fix [#21](https://github.com/baumrock/RockFrontend/issues/21) ([594dd2b](https://github.com/baumrock/RockFrontend/commit/594dd2b1090519cc43f585919e7d47d9c472f381))
-* don't create manifest by default ([1b17b86](https://github.com/baumrock/RockFrontend/commit/1b17b862c34133fb67a29373ccf1e82198a917d3))
-* fix debugInfo throwing error if folders are null ([c69a79e](https://github.com/baumrock/RockFrontend/commit/c69a79e382d51b2bdc3697886a6a35fc6567aabb))
-* prevent loading AutoPrepend on non-templatefile render() calls ([0eeb184](https://github.com/baumrock/RockFrontend/commit/0eeb1840e2eade6f27e9ebbfb4a378b7374324e4))
 
