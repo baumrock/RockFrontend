@@ -1766,10 +1766,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$minFile) $minFile = $file->minPath();
     $minFile = new Asset($minFile);
     if ($minFile->m < $file->m) {
-      require_once __DIR__ . "/vendor/autoload.php";
-      if ($file->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($file);
-      else $minify = new \MatthiasMullie\Minify\CSS($file);
-      $minify->minify($minFile->path);
+      try {
+        require_once __DIR__ . "/vendor/autoload.php";
+        if ($file->ext == 'js') $minify = new \MatthiasMullie\Minify\JS($file);
+        else $minify = new \MatthiasMullie\Minify\CSS($file);
+        $minify->minify($minFile->path);
+      } catch (\Throwable $th) {
+        $this->log($th->getMessage());
+      }
     }
     return $minFile->path;
   }
