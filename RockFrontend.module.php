@@ -368,6 +368,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $config = $this->wire->config;
     if (!$config->livereload) return false;
+    if ($config->rockformsPreserveSuccess) return false;
     if ($config->ajax) return false;
     if ($config->external) return false;
     return true;
