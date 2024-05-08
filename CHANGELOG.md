@@ -1,3 +1,15 @@
+## [3.15.0](https://github.com/baumrock/RockFrontend/compare/v3.14.0...v3.15.0) (2024-05-08)
+
+
+### Features
+
+* catch minify error ([8404bc3](https://github.com/baumrock/RockFrontend/commit/8404bc3bbe0169cafcaf2ecb1414dee4a665c8ed))
+
+
+### Bug Fixes
+
+* rename liveReloadForce to livereloadForce ([ee17e88](https://github.com/baumrock/RockFrontend/commit/ee17e880cb9165e38e1f3c1b27a091eb0022ff7b))
+
 ## [3.14.0](https://github.com/baumrock/RockFrontend/compare/v3.13.1...v3.14.0) (2024-05-06)
 
 
@@ -70,11 +82,4 @@
 * livereload tag added when livereload was disabled ([1818083](https://github.com/baumrock/RockFrontend/commit/181808339351bc1b027c1ef37b6f02678f5a1686))
 * remove unused old script ([8c499d2](https://github.com/baumrock/RockFrontend/commit/8c499d2fd4a00379767c2516c7cfdc4f5b498230))
 * show rockmigrations outdated warning ([a269e26](https://github.com/baumrock/RockFrontend/commit/a269e2677ef60ff5d9c8c84b08ebc6696dcf47de))
-
-## [3.11.0](https://github.com/baumrock/RockFrontend/compare/v3.10.0...v3.11.0) (2024-02-02)
-
-
-### Features
-
-* add option to trigger "npm run build" on changed file ([85079f0](https://github.com/baumrock/RockFrontend/commit/85079f029a3c220146487d459f4023a64710b56f))
 
