@@ -1646,7 +1646,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $file = $this->minifyFile($this->path . "livereload.js");
     $src = $this->url($file, true);
 
-    $force = (int)$this->wire->config->liveReloadForce;
+    $force = (int)$this->wire->config->livereloadForce;
     return "
       <script>
       var LiveReloadUrl = '{$this->wire->config->urls->root}';

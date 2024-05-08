@@ -47,7 +47,7 @@ setTimeout(() => {
           setTimeout(() => {
             UIkit.notification({
               message:
-                "Unsaved changes prevent reload - use $config->liveReloadForce to force reload.",
+                "Unsaved changes prevent reload - use $config->livereloadForce to force reload.",
               status: "warning",
               pos: "top-center",
               timeout: 0,
@@ -59,7 +59,7 @@ setTimeout(() => {
           console.log("detected change - open panel prevents reload");
           UIkit.notification({
             message:
-              "Open panel prevents reload - use $config->liveReloadForce to force reload.",
+              "Open panel prevents reload - use $config->livereloadForce to force reload.",
             status: "warning",
             pos: "top-center",
             timeout: 0,
