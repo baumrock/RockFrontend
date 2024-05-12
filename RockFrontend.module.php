@@ -2451,7 +2451,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // create markup
     $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
-    $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
+    $out .= "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9' xmlns:xhtml='http://www.w3.org/1999/xhtml'>\n";
 
     // recursive function to traverse the page tree
     $count = 0;
