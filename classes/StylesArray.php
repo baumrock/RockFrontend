@@ -62,6 +62,51 @@ class StylesArray extends AssetsArray
   }
 
   /**
+   * Recursive Glob function, needed for the SASS Parser
+   *
+   * @param $base
+   * @param $pattern
+   * @param $flags
+   * @return array|false
+   */
+  private function glob_recursive($base, $pattern, $flags = 0)
+  {
+    $glob_nocheck = $flags & GLOB_NOCHECK;
+    $flags = $flags & ~GLOB_NOCHECK;
+    function check_folder($base, $pattern, $flags)
+    {
+      if (substr($base, -1) !== DIRECTORY_SEPARATOR) {
+        $base .= DIRECTORY_SEPARATOR;
+      }
+      $files = glob($base . $pattern, $flags);
+      if (!is_array($files)) {
+        $files = [];
+      }
+      $dirs = glob($base . '*', GLOB_ONLYDIR | GLOB_NOSORT | GLOB_MARK);
+      if (!is_array($dirs)) {
+        return $files;
+      }
+      foreach ($dirs as $dir) {
+        $dirFiles = check_folder($dir, $pattern, $flags);
+        $files = array_merge($files, $dirFiles);
+      }
+      return $files;
+    }
+    $files = check_folder($base, $pattern, $flags);
+    if ($glob_nocheck && count($files) === 0) {
+      return [$pattern];
+    }
+    return $files;
+  }
+
+  public function getChangedFiles($lessCache, $lessCurrent): array
+  {
+    $lessCache = array_filter(explode("--", (string)$lessCache));
+    $lessCurrent = array_filter(explode("--", (string)$lessCurrent));
+    return array_diff($lessCache, $lessCurrent);
+  }
+
+  /**
    * Parse LESS files and add the generated CSS file to output
    * If there are any less files we render them at the beginning.
    * This makes it possible to overwrite styles via plain CSS later.
@@ -178,43 +223,6 @@ class StylesArray extends AssetsArray
     }
 
     foreach ($entries->reverse() as $entry) $this->prepend($entry);
-  }
-
-  /**
-   * Recursive Glob function, needed for the SASS Parser
-   *
-   * @param $base
-   * @param $pattern
-   * @param $flags
-   * @return array|false
-   */
-  private function glob_recursive($base, $pattern, $flags = 0) {
-    $glob_nocheck = $flags & GLOB_NOCHECK;
-    $flags = $flags & ~GLOB_NOCHECK;
-    function check_folder($base, $pattern, $flags)
-    {
-      if (substr($base, -1) !== DIRECTORY_SEPARATOR) {
-        $base .= DIRECTORY_SEPARATOR;
-      }
-      $files = glob($base . $pattern, $flags);
-      if (!is_array($files)) {
-        $files = [];
-      }
-      $dirs = glob($base . '*', GLOB_ONLYDIR | GLOB_NOSORT | GLOB_MARK);
-      if (!is_array($dirs)) {
-        return $files;
-      }
-      foreach ($dirs as $dir) {
-        $dirFiles = check_folder($dir, $pattern, $flags);
-        $files = array_merge($files, $dirFiles);
-      }
-      return $files;
-    }
-    $files = check_folder($base, $pattern, $flags);
-    if ($glob_nocheck && count($files) === 0) {
-      return [$pattern];
-    }
-    return $files;
   }
 
   /**
@@ -342,13 +350,6 @@ class StylesArray extends AssetsArray
     }
 
     foreach ($entries->reverse() as $entry) $this->prepend($entry);
-  }
-
-  public function getChangedFiles($lessCache, $lessCurrent): array
-  {
-    $lessCache = array_filter(explode("--", (string)$lessCache));
-    $lessCurrent = array_filter(explode("--", (string)$lessCurrent));
-    return array_diff($lessCache, $lessCurrent);
   }
 
   /**
