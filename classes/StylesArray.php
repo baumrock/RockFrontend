@@ -44,7 +44,7 @@ class StylesArray extends AssetsArray
     $this->addAll('/site/templates/layouts');
     $this->addAll('/site/templates/styles');
     $this->addAll('/site/templates/less');
-    $this->addAll('/site/templates/sass');
+    $this->addAll('/site/templates/scss');
     $this->addAll('/site/templates/sections');
     $this->addAll('/site/templates/partials');
 
@@ -59,51 +59,6 @@ class StylesArray extends AssetsArray
     if (is_file($file)) $this->add($file);
 
     return $this;
-  }
-
-  /**
-   * Recursive Glob function, needed for the SASS Parser
-   *
-   * @param $base
-   * @param $pattern
-   * @param $flags
-   * @return array|false
-   */
-  private function glob_recursive($base, $pattern, $flags = 0)
-  {
-    $glob_nocheck = $flags & GLOB_NOCHECK;
-    $flags = $flags & ~GLOB_NOCHECK;
-    function check_folder($base, $pattern, $flags)
-    {
-      if (substr($base, -1) !== DIRECTORY_SEPARATOR) {
-        $base .= DIRECTORY_SEPARATOR;
-      }
-      $files = glob($base . $pattern, $flags);
-      if (!is_array($files)) {
-        $files = [];
-      }
-      $dirs = glob($base . '*', GLOB_ONLYDIR | GLOB_NOSORT | GLOB_MARK);
-      if (!is_array($dirs)) {
-        return $files;
-      }
-      foreach ($dirs as $dir) {
-        $dirFiles = check_folder($dir, $pattern, $flags);
-        $files = array_merge($files, $dirFiles);
-      }
-      return $files;
-    }
-    $files = check_folder($base, $pattern, $flags);
-    if ($glob_nocheck && count($files) === 0) {
-      return [$pattern];
-    }
-    return $files;
-  }
-
-  public function getChangedFiles($lessCache, $lessCurrent): array
-  {
-    $lessCache = array_filter(explode("--", (string)$lessCache));
-    $lessCurrent = array_filter(explode("--", (string)$lessCurrent));
-    return array_diff($lessCache, $lessCurrent);
   }
 
   /**
@@ -226,15 +181,15 @@ class StylesArray extends AssetsArray
   }
 
   /**
-   * Parse SASS files and add the generated CSS file to output
-   * If there are any sass files we render them at the beginning.
+   * Parse SCSS files and add the generated CSS file to output
+   * If there are any scss files we render them at the beginning.
    * This makes it possible to overwrite styles via plain CSS later.
    */
-  private function parseSassFiles($opt, $cacheName)
+  private function parseScssFiles($opt, $cacheName)
   {
     $compiler = $this->wire->modules->get('Scss');
-    $sassCache = $this->wire->cache->get($cacheName);
-    $sassCurrent = ''; // string to store file info
+    $scssCache = $this->wire->cache->get($cacheName);
+    $scssCurrent = ''; // string to store file info
     $mtime = 0;
     $parse = false;
     $entries = new WireArray();
@@ -248,7 +203,7 @@ class StylesArray extends AssetsArray
         $entries->add(new AssetComment("loading {$asset->url} ({$asset->debug()})"));
       }
       if (!$compiler) {
-        $entries->add(new AssetComment("install sassphp with composer for parsing {$asset->url}"));
+        $entries->add(new AssetComment("install scss processwire module (https://processwire.com/modules/scss/) for parsing {$asset->url}"));
         continue;
       }
       $cssPathAsset = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
@@ -260,7 +215,7 @@ class StylesArray extends AssetsArray
       );
       $parse = true;
       if ($asset->m > $mtime) $mtime = $asset->m;
-      $sassCurrent .= $url . "|" . $asset->m . "--";
+      $scssCurrent .= $url . "|" . $asset->m . "--";
     }
 
     // if a modification timestamp is set in the options we apply it now
@@ -272,7 +227,7 @@ class StylesArray extends AssetsArray
     $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
     $cssFile = $cssPath . $opt->cssName . ".css";
     $SourcemapFile = $cssPath . $asset->filename . ".map";
-    $sassCacheArray = $this->getChangedFiles($sassCache, $sassCurrent);
+    $scssCacheArray = $this->getChangedFiles($scssCache, $scssCurrent);
 
     // we have a scss parser installed and some scss files to parse
     if ($compiler and $parse) {
@@ -289,9 +244,9 @@ class StylesArray extends AssetsArray
 
       // cache strings are different
       // that means a file or a timestamp has changed
-      elseif ($sassCurrent !== $sassCache) {
+      elseif ($scssCurrent !== $scssCache) {
         // show info which file changed to log
-        foreach ($sassCacheArray as $str) {
+        foreach ($scssCacheArray as $str) {
           $parts = explode("|", $str);
           $url = $this->rockfrontend()->toUrl($parts[0]);
           $this->log("$intro: Change detected in $url");
@@ -302,7 +257,7 @@ class StylesArray extends AssetsArray
       // nothing changed so far, check for mtime variable
       elseif ($mtime > filemtime($cssFile)) {
         $recompile = true;
-        $this->log("$intro: Change detected in sass variables from PHP file");
+        $this->log("$intro: Change detected in scss variables from PHP file");
       }
 
       // maybe recompile is forced by the session flag?
@@ -313,7 +268,7 @@ class StylesArray extends AssetsArray
 
       // check if any of the SCSS files contained in the asset folder (recursively) has changed as usually you only load the master scss file
       else {
-        foreach ($this->glob_recursive($asset->dir, '*.scss') as $f) {
+        foreach($this->wire->files->find($asset->dir, ['extensions' => ['scss'], 'recursive' => 3]) as $f) {
           if (filemtime($f) > filemtime($cssFile)) {
             $this->log("$intro: $f changed.");
             $recompile = true;
@@ -337,7 +292,7 @@ class StylesArray extends AssetsArray
 
         $compiler->compileRF($asset->basename, $cssFile, $cssPath, $asset->dir, $style, $sourcemap);
 
-        $this->wire->cache->save($cacheName, $sassCurrent);
+        $this->wire->cache->save($cacheName, $scssCurrent);
         $this->wire->session->set(RockFrontend::recompile, false);
 
         $url = $this->rockfrontend()->toUrl($cssFile);
@@ -345,11 +300,18 @@ class StylesArray extends AssetsArray
       }
 
       $asset = new Asset($cssFile);
-      $asset->debug('SASS compiled by RockFrontend');
+      $asset->debug('SCSS compiled by RockFrontend');
       $entries->add($asset);
     }
 
     foreach ($entries->reverse() as $entry) $this->prepend($entry);
+  }
+
+  public function getChangedFiles($lessCache, $lessCurrent): array
+  {
+    $lessCache = array_filter(explode("--", (string)$lessCache));
+    $lessCurrent = array_filter(explode("--", (string)$lessCurrent));
+    return array_diff($lessCache, $lessCurrent);
   }
 
   /**
@@ -418,7 +380,7 @@ class StylesArray extends AssetsArray
 
     $cacheName = "rockfrontend-styles-" . $this->name;
     $this->parseLessFiles($opt, $cacheName);
-    $this->parseSassFiles($opt, $cacheName);
+    $this->parseScssFiles($opt, $cacheName);
     $out = $this->renderAssets($opt);
     if ($out) $out = $this->addInfo($opt) . $out;
     try {
