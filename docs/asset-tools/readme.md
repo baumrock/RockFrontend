@@ -159,6 +159,21 @@ Renders something like to the following:
   <link href='/site/assets/RockFrontend/css/head.css?m=1680272932' rel='stylesheet'><!-- LESS compiled by RockFrontend -->
 ```
 
+### SCSS Parser
+
+The SCSS Parser works similiar to the Less Parser, but uses the filetype .scss. In order for it to work, you need to install the module "Scss": https://processwire.com/modules/scss/
+
+```php
+$rockfrontend->styles()
+  ->add('/site/templates/theme/site.scss'))
+  ->addDefaultFolders() // finally autoload styles in sections, partials, etc
+  ->minify(!$config->debug);
+```
+
+You can work with a main entry file according to the official UIKit (https://getuikit.com/docs/sass) or Bootstrap documentation (https://getbootstrap.com/docs/5.2/customize/sass/) as shown in the snippet above. In this case, consider creating a new folder (i.e. /site/templates/theme/) and using this folder for your main SCSS files. This gives you a certain level of control over your SCSS setup.
+
+Or you can just have RockFrontend autoload everything in the /site/templates/sass/ folder.
+
 ## Cache Busting
 
 All rendered assets will automatically get a cache busting timestamp based on the file modification date:
