@@ -19,7 +19,11 @@ As you can see - to further simplify the process - if your endpoint returns an a
 
 ## Debugging Endpoints for Superusers
 
-When logged in as a superuser, RockFrontend provides a straightforward UI for debugging your endpoints. This feature is particularly useful for quickly identifying and resolving issues, ensuring your HTMX endpoints function as expected:
+When logged in as a superuser, RockFrontend provides a straightforward UI for debugging your endpoints.
+
+**Visit /ajax/your-endpoint-name in the browser**
+
+This feature is particularly useful for quickly identifying and resolving issues, ensuring your HTMX endpoints function as expected:
 
 <img src=ajax.png class=blur>
 
