@@ -163,11 +163,19 @@ class LiveReload extends Wire
   public function validSecret()
   {
     $secret = $this->getSecret();
-    $cache = $this->wire->cache->get(RockFrontend::livereloadCacheName) ?: [];
-    foreach ($cache as $k => $v) {
-      if ($secret !== $v) continue;
-      unset($cache[$k]);
-      $this->wire->cache->save(RockFrontend::livereloadCacheName, $cache);
+    $cacheName = RockFrontend::livereloadCacheName . "_$secret";
+
+    // delete outdated caches
+    // test
+    $time = date("Y-m-d H:i:s", time());
+    $this->database->query("DELETE
+      FROM `caches`
+      WHERE `name` LIKE 'rockfrontend_livereload_%'
+      AND `expires` < '$time'
+    ");
+
+    if ($this->wire->cache->get($cacheName)) {
+      $this->wire->cache->delete($cacheName);
       return true;
     }
     return false;
@@ -178,6 +186,10 @@ class LiveReload extends Wire
    */
   public function watch()
   {
+    // we dont want warnings in the stream
+    // for debugging you can uncomment this line
+    error_reporting(E_ALL & ~E_WARNING);
+
     header("Cache-Control: no-cache");
     header("Content-Type: text/event-stream");
     $build = $this->wire->config->livereloadBuild;
@@ -207,11 +219,10 @@ class LiveReload extends Wire
       $this->sse($file);
 
       // add note to log
-      if ($file) {
-        ob_end_flush();
-        return;
-      }
+      if ($file) ob_end_flush();
       while (ob_get_level() > 0) ob_end_flush();
+
+      // stop loop when connection is aborted
       if (connection_aborted()) break;
 
       // sleep until next try

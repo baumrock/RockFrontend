@@ -298,7 +298,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (!strpos($html, "</head>")) return;
 
         $this->addRockFrontendJS();
-        $this->addAlfredMarkup($html);
+        $html = $this->addAlfredMarkup($html);
         $this->addTopBar($html);
         $this->injectJavascriptSettings($html);
         $this->injectAssets($html);
@@ -307,14 +307,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     );
   }
 
-  private function addAlfredMarkup(string &$html): void
+  private function addAlfredMarkup(string $html, $skipAssets = false): string
   {
-    if (!$this->loadAlfred()) return;
+    if (!$this->loadAlfred()) return $html;
 
-    $this->js("rootUrl", $this->wire->config->urls->root);
-    $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-    $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js");
-    $this->addAlfredStyles();
+    if (!$skipAssets) {
+      $this->js("rootUrl", $this->wire->config->urls->root);
+      $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
+      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js");
+      $this->addAlfredStyles();
+    }
 
     // replace alfred cache markup
     // if alfred was added without |noescape it has quotes around
@@ -334,7 +336,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // this ensures that jQuery is loaded via PageFrontEdit
     $faketag = "<div edit=title hidden>title</div>";
     $html = str_replace("</body", "$faketag</body", $html);
+
+    return $html;
   }
+
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
@@ -474,7 +479,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $base = pathinfo($endpoint, PATHINFO_FILENAME);
         if (in_array($base, $added)) continue;
         $added[] = $base;
-        $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint) {
+        $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint, $base) {
           $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
           $ajax = $this->wire->config->ajax || $isHtmx;
 
@@ -482,7 +487,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           if (!$ajax) {
             // show debug screen for pw superusers
             if ($this->wire->user->isSuperuser()) {
-              return $this->ajaxDebug($endpoint);
+              return $this->ajaxDebug($endpoint, $base);
             } else {
               // guest and no ajax: no access!
               if ($this->wire->modules->isInstalled('TracyDebugger')) {
@@ -500,7 +505,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
-  private function ajaxDebug($endpoint): string
+  private function ajaxDebug($endpoint, $base): string
   {
     // dont catch errors when debugging
     $raw = $this->ajaxResponse($endpoint);
@@ -509,6 +514,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // render html
     $markup = $this->render(__DIR__ . "/stubs/ajax-debug.latte", [
       'endpoint' => $endpoint,
+      'base' => $base,
       'response' => $response,
       'formatted' => $this->ajaxFormatted($raw, $endpoint),
       'contenttype' => $this->contenttype, // must be after formatted!
@@ -569,15 +575,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function ajaxResponse($endpoint)
   {
+    // for superusers we don't catch errors
     if ($this->wire->user->isSuperuser()) {
-      return $this->wire->files->render($endpoint);
+      return $this->ajaxResult($endpoint);
     }
+    // non superusers - use try catch
     try {
-      return $this->wire->files->render($endpoint);
+      $this->ajaxResult($endpoint);
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
       return self::ajax_rendererror;
     }
+  }
+
+  private function ajaxResult($endpoint)
+  {
+    $result = $this->wire->files->render($endpoint);
+    if (is_string($result)) {
+      return $this->addAlfredMarkup(
+        $result,
+        true
+      );
+    } else return $result;
   }
 
   /**
@@ -1635,11 +1654,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // create secret and send it to js
     /** @var WireRandom $rand */
     $rand = $this->wire(new WireRandom());
-    $cache = $this->wire->cache->get(self::livereloadCacheName);
-    if (!is_array($cache)) $cache = [];
     $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
-    $merged = array_merge($cache, [$secret]);
-    $this->wire->cache->save(self::livereloadCacheName, $merged);
+    $this->wire->cache->save(
+      self::livereloadCacheName . "_$secret",
+      true,
+      10
+    );
+
+    // remove all expired caches that start with self::livereloadCacheName
+    $this->wire->cache->maintenance();
 
     // get and minify the livereload script
     // dont worry, this will only be done for superusers ;)
@@ -1662,7 +1685,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $cachefile = $this->wire->config->paths->cache . self::livereloadCacheName . ".txt";
     if (is_file($cachefile)) $this->wire->files->unlink($cachefile);
-    $this->wire->cache->save(self::livereloadCacheName, null);
+    // $this->wire->cache->save(self::livereloadCacheName, null);
   }
 
   /**

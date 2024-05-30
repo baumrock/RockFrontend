@@ -24,13 +24,18 @@ setTimeout(() => {
       if (!changed) return;
       if (reloading) return;
 
+      // test
+      console.log(changed);
+
       // check if the current tab is active
       // if not, we do not reload
       // this prevents multiple simultaneous reloads that can lead to errors
       // when using RockMigrations
-      if (document.hidden) return;
+      if (document.hidden) {
+        console.log("tab is not visible - waiting for reload");
+        return;
+      }
 
-      console.log(changed);
       if (LiveReloadForce) {
         document
           .querySelectorAll(".InputfieldStateChanged")
@@ -76,6 +81,13 @@ setTimeout(() => {
       setTimeout(() => {
         document.location.reload(true);
       }, redirecttimeout);
+    };
+
+    evtSource.onerror = function (event) {
+      console.log("Error occurred in EventSource, reloading window.");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     };
   };
 
