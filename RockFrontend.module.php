@@ -464,44 +464,29 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   protected function ajaxAddEndpoints(): void
   {
-    // scan for these extensions
-    // earlier listed extensions have priority
-    $extensions = ['latte', 'php'];
+    foreach ($this->ajaxEndpoints() as $base => $endpoint) {
+      $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint, $base) {
+        $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
+        $ajax = $this->wire->config->ajax || $isHtmx;
 
-    // attach hook for every found endpoint
-    $added = [];
-    foreach ($extensions as $ext) {
-      $endpoints = $this->wire->files->find(
-        $this->wire->config->paths->templates . "ajax",
-        ['extensions' => [$ext]]
-      );
-      foreach ($endpoints as $endpoint) {
-        $base = pathinfo($endpoint, PATHINFO_FILENAME);
-        if (in_array($base, $added)) continue;
-        $added[] = $base;
-        $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint, $base) {
-          $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
-          $ajax = $this->wire->config->ajax || $isHtmx;
-
-          // ajax or no ajax?
-          if (!$ajax) {
-            // show debug screen for pw superusers
-            if ($this->wire->user->isSuperuser()) {
-              return $this->ajaxDebug($endpoint, $base);
-            } else {
-              // guest and no ajax: no access!
-              if ($this->wire->modules->isInstalled('TracyDebugger')) {
-                Debugger::$showBar = false;
-              }
-              http_response_code(403);
-              return "Access Denied";
-            }
+        // ajax or no ajax?
+        if (!$ajax) {
+          // show debug screen for pw superusers
+          if ($this->wire->user->isSuperuser()) {
+            return $this->ajaxDebug($endpoint, $base);
           } else {
-            // render public endpoint (ajax response)
-            return $this->ajaxPublic($endpoint);
+            // guest and no ajax: no access!
+            if ($this->wire->modules->isInstalled('TracyDebugger')) {
+              Debugger::$showBar = false;
+            }
+            http_response_code(403);
+            return "Access Denied";
           }
-        });
-      }
+        } else {
+          // render public endpoint (ajax response)
+          return $this->ajaxPublic($endpoint);
+        }
+      });
     }
   }
 
@@ -514,13 +499,36 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // render html
     $markup = $this->render(__DIR__ . "/stubs/ajax-debug.latte", [
       'endpoint' => $endpoint,
-      'base' => $base,
+      'ajaxUrl' => $this->ajaxUrl($base),
       'response' => $response,
       'formatted' => $this->ajaxFormatted($raw, $endpoint),
       'contenttype' => $this->contenttype, // must be after formatted!
     ]);
 
     return $markup;
+  }
+
+  private function ajaxEndpoints(): array
+  {
+    // scan for these extensions
+    // earlier listed extensions have priority
+    $extensions = ['latte', 'php'];
+
+    // attach hook for every found endpoint
+    $arr = [];
+    foreach ($extensions as $ext) {
+      $endpoints = $this->wire->files->find(
+        $this->wire->config->paths->templates . "ajax",
+        ['extensions' => [$ext]]
+      );
+      foreach ($endpoints as $endpoint) {
+        $base = pathinfo($endpoint, PATHINFO_FILENAME);
+        if (array_key_exists($base, $arr)) continue;
+        $arr[$base] = $endpoint;
+      }
+    }
+
+    return $arr;
   }
 
   private function ajaxFormatted($raw, $endpoint): string
@@ -597,6 +605,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         true
       );
     } else return $result;
+  }
+
+  public function ajaxUrl($base): string
+  {
+    return $this->wire->pages->get(1)->url . "ajax/$base";
   }
 
   /**
@@ -2850,10 +2863,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->configLivereload($inputfields);
     $this->configLatte($inputfields);
     $this->configTailwind($inputfields);
+    $this->configAjax($inputfields);
     $this->configSettings($inputfields);
     $this->configTools($inputfields);
 
     return $inputfields;
+  }
+
+  private function configAjax(InputfieldWrapper $inputfields): void
+  {
+    $html = '';
+    foreach ($this->ajaxEndpoints() as $base => $file) {
+      $url = $this->ajaxUrl($base);
+      $html .= "<div><a href=$url>$url</a></div>";
+    }
+    $f = new InputfieldMarkup();
+    $f->label = 'AJAX';
+    $f->icon = 'exchange';
+    $f->value = $html ?: 'No endpoints found.';
+    $f->notes = 'To create a new endpoint simply add a LATTE or PHP file in /site/templates/ajax
+      Detailed docs at [https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/ajax/](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/ajax/)';
+    $f->collapsed = Inputfield::collapsedYes;
+    $inputfields->add($f);
   }
 
   private function configLatte(InputfieldWrapper $inputfields): void
