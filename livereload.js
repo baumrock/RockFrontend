@@ -24,7 +24,7 @@ setTimeout(() => {
       if (!changed) return;
       if (reloading) return;
 
-      // test
+      // show changed file
       console.log(changed);
 
       // check if the current tab is active
