@@ -1,3 +1,17 @@
+## [3.16.0](https://github.com/baumrock/RockFrontend/compare/v3.15.1...v3.16.0) (2024-06-03)
+
+
+### Features
+
+* add links to ajax-endpoints to module config ([542917c](https://github.com/baumrock/RockFrontend/commit/542917cfdb183cabc28243d421a3a5f21fc800c6))
+* refactor pr and bump version ([9589d88](https://github.com/baumrock/RockFrontend/commit/9589d88359a29eb38c6cd22ae1d37a1628117962))
+
+
+### Bug Fixes
+
+* livereload wrong mimetype issue + fix ajax endpoints alfred markup ([fe7d906](https://github.com/baumrock/RockFrontend/commit/fe7d906f84c3f13a9872ad40121574fd24067cfe))
+* prevent reload loop on tracy bluescreen ([bbe20e2](https://github.com/baumrock/RockFrontend/commit/bbe20e23ae3f8ca768731bfd1c81ad91bc74be54))
+
 ## [3.15.1](https://github.com/baumrock/RockFrontend/compare/v3.15.0...v3.15.1) (2024-05-12)
 
 
@@ -49,24 +63,4 @@
 ### Bug Fixes
 
 * hide topbar on formbuilder iframes ([168c223](https://github.com/baumrock/RockFrontend/commit/168c223bb7fbe49a90c7a2faf78fbf1e7df56738))
-
-## [3.13.0](https://github.com/baumrock/RockFrontend/compare/v3.12.0...v3.13.0) (2024-04-02)
-
-
-### Features
-
-* add basic seo checks on config screen ([4d26c73](https://github.com/baumrock/RockFrontend/commit/4d26c730ef65d2cfb0bb893b80b5f24031c24d10))
-* add check for favicon ([203c833](https://github.com/baumrock/RockFrontend/commit/203c83379286080079416b6d59785274bdfcd20a))
-* add debug info for sitemap.xml generation ([e030f26](https://github.com/baumrock/RockFrontend/commit/e030f26fe00b78f69e045ee6162c4ef5fe7b8a0d))
-* add ogimage minify warning ([1bbfd4a](https://github.com/baumrock/RockFrontend/commit/1bbfd4a4e65cdf1249a61c0b90c0dcfcadf13d94))
-* add sitemap() method 😍 ([600bb32](https://github.com/baumrock/RockFrontend/commit/600bb320939371c1e678e09719431478feffbddf))
-* add tailwind config installation option ([0edcc00](https://github.com/baumrock/RockFrontend/commit/0edcc00951ceab918f22a40b4d5949a2eed34630))
-* detect htmx requests ([93a6181](https://github.com/baumrock/RockFrontend/commit/93a6181195a1973964391058fba5c481d692b073))
-* improve asset minification features ([d3a07ba](https://github.com/baumrock/RockFrontend/commit/d3a07ba18816f11cb82c049d05133f4d08e313f0))
-* load layout.less if it exists ([c8f2876](https://github.com/baumrock/RockFrontend/commit/c8f2876892d2ca037dddf71b7b8da1841ee0bcde))
-
-
-### Bug Fixes
-
-* remove migrations from module config to prevent auto-install of RockMigrations ([614dd46](https://github.com/baumrock/RockFrontend/commit/614dd46868944318ee8cb92052c131697528502c))
 
