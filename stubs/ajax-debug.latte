@@ -33,10 +33,10 @@
     <div class="uk-alert">
       <div class="uk-text-bold">Send AJAX Request</div>
       <div class="uk-margin-small uk-background-default uk-padding-small">
-        <button hx-get="{$input->url}" hx-target="#hx-response" class="uk-button">
+        <button hx-get="{$ajaxUrl}" hx-target="#hx-response" class="uk-button">
           GET
         </button>
-        <button hx-post="{$input->url}" hx-target="#hx-response" class="uk-button">
+        <button hx-post="{$ajaxUrl}" hx-target="#hx-response" class="uk-button">
           POST
         </button>
         <div class="uk-margin-small-top">

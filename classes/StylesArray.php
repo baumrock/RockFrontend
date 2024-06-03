@@ -5,6 +5,7 @@ namespace RockFrontend;
 use Latte\Runtime\Html;
 use ProcessWire\Debug;
 use ProcessWire\Less;
+use ProcessWire\Scss;
 use ProcessWire\RockFrontend;
 use ProcessWire\WireArray;
 use ProcessWire\WireData;
@@ -26,7 +27,7 @@ class StylesArray extends AssetsArray
     $path,
     $suffix = '',
     $levels = 2,
-    $ext = ['css', 'less'],
+    $ext = ['css', 'less', 'scss'],
     $endsWith = null,
   ) {
     return parent::addAll($path, $suffix, $levels, $ext);
@@ -43,6 +44,7 @@ class StylesArray extends AssetsArray
     $this->addAll('/site/templates/layouts');
     $this->addAll('/site/templates/styles');
     $this->addAll('/site/templates/less');
+    $this->addAll('/site/templates/scss');
     $this->addAll('/site/templates/sections');
     $this->addAll('/site/templates/partials');
 
@@ -178,6 +180,133 @@ class StylesArray extends AssetsArray
     foreach ($entries->reverse() as $entry) $this->prepend($entry);
   }
 
+  /**
+   * Parse SCSS files and add the generated CSS file to output
+   * If there are any scss files we render them at the beginning.
+   * This makes it possible to overwrite styles via plain CSS later.
+   */
+  private function parseScssFiles($opt, $cacheName)
+  {
+    $compiler = $this->wire->modules->get('Scss');
+    $scssCache = $this->wire->cache->get($cacheName);
+    $scssCurrent = ''; // string to store file info
+    $mtime = 0;
+    $parse = false;
+    $entries = new WireArray();
+    $intro = "Recompile $cacheName";
+
+    // loop all scss files and add them to the scss parser
+    // this will also memorize the latest file timestamp to check for recompile
+    foreach ($this as $asset) {
+      if ($asset->ext !== 'scss') continue;
+      if ($opt->debug) {
+        $entries->add(new AssetComment("loading {$asset->url} ({$asset->debug()})"));
+      }
+      if (!$compiler) {
+        $entries->add(new AssetComment("install scss processwire module (https://processwire.com/modules/scss/) for parsing {$asset->url}"));
+        continue;
+      }
+      $cssPathAsset = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
+      $cssFileAsset = $cssPathAsset . $asset->filename . ".css";
+      $url = str_replace(
+        $this->wire->config->paths->root,
+        $this->wire->config->urls->root,
+        $cssFileAsset
+      );
+      $parse = true;
+      if ($asset->m > $mtime) $mtime = $asset->m;
+      $scssCurrent .= $url . "|" . $asset->m . "--";
+    }
+
+    // if a modification timestamp is set in the options we apply it now
+    // this is necessary for making LESS recompile if less variables in
+    // PHP have been changed without updating any less files
+    $mtime = max($mtime, $opt->lessVarsModified);
+
+    // prepare variables needed for recompile check
+    $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
+    $cssFile = $cssPath . $opt->cssName . ".css";
+    $SourcemapFile = $cssPath . $asset->filename . ".map";
+    $scssCacheArray = $this->getChangedFiles($scssCache, $scssCurrent);
+
+    // we have a scss parser installed and some scss files to parse
+    if ($compiler and $parse) {
+      $recompile = false;
+
+      // if it is a livereload stream we do not recompile
+      if ($this->rockfrontend()->isLiveReload) $recompile = false;
+
+      // if css file does not exist we recompile
+      elseif (!is_file($cssFile)) {
+        $this->log("$intro: $cssFile does not exist.");
+        $recompile = true;
+      }
+
+      // cache strings are different
+      // that means a file or a timestamp has changed
+      elseif ($scssCurrent !== $scssCache) {
+        // show info which file changed to log
+        foreach ($scssCacheArray as $str) {
+          $parts = explode("|", $str);
+          $url = $this->rockfrontend()->toUrl($parts[0]);
+          $this->log("$intro: Change detected in $url");
+        }
+        $recompile = true;
+      }
+
+      // nothing changed so far, check for mtime variable
+      elseif ($mtime > filemtime($cssFile)) {
+        $recompile = true;
+        $this->log("$intro: Change detected in scss variables from PHP file");
+      }
+
+      // maybe recompile is forced by the session flag?
+      elseif ($this->wire->session->get(RockFrontend::recompile)) {
+        $this->log("$intro: Forced by RockFrontend::recompile.");
+        $recompile = true;
+      }
+
+      // check if any of the SCSS files contained in the asset folder (recursively) has changed as usually you only load the master scss file
+      else {
+        foreach($this->wire->files->find($asset->dir, ['extensions' => ['scss'], 'recursive' => 3]) as $f) {
+          if (filemtime($f) > filemtime($cssFile)) {
+            $this->log("$intro: $f changed.");
+            $recompile = true;
+          }
+        }
+      }
+
+      // recompile CSS
+      if ($recompile) {
+        if (!is_dir($cssPath)) $this->wire->files->mkdir($cssPath);
+
+        $style = 'compressed';
+        if ($opt->debug) {
+          $style = "expanded";
+        }
+
+        $sourcemap = '';
+        if ($opt->sourcemaps) {
+          $sourcemap = $SourcemapFile;
+        }
+
+        $compiler->compileRF($asset->basename, $cssFile, $cssPath, $asset->dir, $style, $sourcemap);
+
+        $this->wire->cache->save($cacheName, $scssCurrent);
+        $this->wire->session->set(RockFrontend::recompile, false);
+
+        $url = $this->rockfrontend()->toUrl($cssFile);
+        $this->log("Recompiled RockFrontend $url");
+      }
+
+      $asset = new Asset($cssFile);
+      $asset->debug('SCSS compiled by RockFrontend');
+      $entries->add($asset);
+    }
+
+    foreach ($entries->reverse() as $entry) $this->prepend($entry);
+  }
+
   public function getChangedFiles($lessCache, $lessCurrent): array
   {
     $lessCache = array_filter(explode("--", (string)$lessCache));
@@ -251,6 +380,7 @@ class StylesArray extends AssetsArray
 
     $cacheName = "rockfrontend-styles-" . $this->name;
     $this->parseLessFiles($opt, $cacheName);
+    $this->parseScssFiles($opt, $cacheName);
     $out = $this->renderAssets($opt);
     if ($out) $out = $this->addInfo($opt) . $out;
     try {
@@ -268,6 +398,7 @@ class StylesArray extends AssetsArray
     $out = '';
     foreach ($this as $asset) {
       if ($asset->ext === 'less') continue;
+      if ($asset->ext === 'scss') continue;
       $asset = $this->minifyAsset($asset);
       $asset = $this->postCSS($asset);
       $out .= $this->renderTag($asset, $opt, 'style');
