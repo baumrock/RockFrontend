@@ -589,7 +589,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
     // non superusers - use try catch
     try {
-      $this->ajaxResult($endpoint);
+      return $this->ajaxResult($endpoint);
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
       return self::ajax_rendererror;
