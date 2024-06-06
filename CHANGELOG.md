@@ -1,3 +1,10 @@
+## [3.16.1](https://github.com/baumrock/RockFrontend/compare/v3.16.0...v3.16.1) (2024-06-06)
+
+
+### Bug Fixes
+
+* add missing return statement for public ajax endpoints ([17f7649](https://github.com/baumrock/RockFrontend/commit/17f7649b701fa10b84ea8d92c05f640ccb034e17))
+
 ## [3.16.0](https://github.com/baumrock/RockFrontend/compare/v3.15.1...v3.16.0) (2024-06-03)
 
 
@@ -56,11 +63,4 @@
 ### Bug Fixes
 
 * load styles before scripts ([70de35f](https://github.com/baumrock/RockFrontend/commit/70de35f4e058558038940de1b2dd0ce957bbeed4))
-
-## [3.13.1](https://github.com/baumrock/RockFrontend/compare/v3.13.0...v3.13.1) (2024-04-03)
-
-
-### Bug Fixes
-
-* hide topbar on formbuilder iframes ([168c223](https://github.com/baumrock/RockFrontend/commit/168c223bb7fbe49a90c7a2faf78fbf1e7df56738))
 
