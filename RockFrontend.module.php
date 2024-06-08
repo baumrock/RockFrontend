@@ -299,7 +299,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
         $this->addRockFrontendJS();
         $html = $this->addAlfredMarkup($html);
-        $this->addTopBar($html);
+        try {
+          $this->addTopBar($html);
+        } catch (\Throwable $th) {
+          $this->log($th->getMessage());
+        }
         $this->injectJavascriptSettings($html);
         $this->injectAssets($html);
         $event->return = $html;
