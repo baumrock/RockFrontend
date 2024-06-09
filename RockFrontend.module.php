@@ -76,6 +76,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private $addMarkup;
 
+  private $ajaxFolders = [];
+
   /** @var WireData */
   public $alfredCache;
 
@@ -226,6 +228,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->layoutFolders->add($this->config->paths->templates);
     $this->layoutFolders->add($this->config->paths->assets);
 
+    // add ajax folders
+    // you can add custom endpoints in 3rd party modules in the same way
+    // see RockCommerce for an example
+    $this->addAjaxFolder(
+      'ajax',
+      $this->wire->config->paths->templates . 'ajax'
+    );
+
     // Alfred
     require_once __DIR__ . "/Functions.php";
     $this->createPermission(
@@ -261,7 +271,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
 
     // others
-    $this->ajaxAddEndpoints();
     $this->checkHealth();
 
     // development helpers by rockmigrations
@@ -277,6 +286,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function ready()
   {
+    $this->ajaxAddEndpoints();
     $this->addAssets();
   }
 
@@ -342,6 +352,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $html = str_replace("</body", "$faketag</body", $html);
 
     return $html;
+  }
+
+  public function addAjaxFolder(string $url, string $folder): void
+  {
+    $url = '/' . trim($url, '/') . '/';
+    $folder = '/' . trim(Paths::normalizeSeparators($folder), '/') . '/';
+    $this->ajaxFolders[$url] = $folder;
   }
 
   private function addRockFrontendJS(): void
@@ -468,33 +485,36 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   protected function ajaxAddEndpoints(): void
   {
-    foreach ($this->ajaxEndpoints() as $base => $endpoint) {
-      $this->wire->addHook("/ajax/$base", function (HookEvent $event) use ($endpoint, $base) {
-        $isHtmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
-        $ajax = $this->wire->config->ajax || $isHtmx;
+    foreach ($this->ajaxEndpoints() as $url => $endpoint) {
+      $this->wire->addHook($url, function (HookEvent $event) use ($endpoint, $url) {
+        $isAJAX = false;
+        if ($this->wire->config->ajax) $isAJAX = true;
+        if (!$isAJAX && $_SERVER['REQUEST_METHOD'] !== 'GET') $isAJAX = true;
+        if (
+          !$isAJAX &&
+          isset($_SERVER['HTTP_HX_REQUEST']) &&
+          $_SERVER['HTTP_HX_REQUEST']
+        ) $isAJAX = true;
 
-        // ajax or no ajax?
-        if (!$ajax) {
-          // show debug screen for pw superusers
-          if ($this->wire->user->isSuperuser()) {
-            return $this->ajaxDebug($endpoint, $base);
-          } else {
-            // guest and no ajax: no access!
-            if ($this->wire->modules->isInstalled('TracyDebugger')) {
-              Debugger::$showBar = false;
-            }
-            http_response_code(403);
-            return "Access Denied";
-          }
+        // render public endpoint (ajax response)
+        if ($isAJAX) return $this->ajaxPublic($endpoint);
+
+        // show debug screen for pw superusers
+        if ($this->wire->user->isSuperuser()) {
+          return $this->ajaxDebug($endpoint, $url);
         } else {
-          // render public endpoint (ajax response)
-          return $this->ajaxPublic($endpoint);
+          // guest and no ajax: no access!
+          if ($this->wire->modules->isInstalled('TracyDebugger')) {
+            Debugger::$showBar = false;
+          }
+          http_response_code(403);
+          return "Access Denied";
         }
       });
     }
   }
 
-  private function ajaxDebug($endpoint, $base): string
+  private function ajaxDebug($endpoint, $url): string
   {
     // dont catch errors when debugging
     $raw = $this->ajaxResponse($endpoint);
@@ -503,7 +523,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // render html
     $markup = $this->render(__DIR__ . "/stubs/ajax-debug.latte", [
       'endpoint' => $endpoint,
-      'ajaxUrl' => $this->ajaxUrl($base),
+      'ajaxUrl' => $url,
       'response' => $response,
       'formatted' => $this->ajaxFormatted($raw, $endpoint),
       'contenttype' => $this->contenttype, // must be after formatted!
@@ -515,20 +535,24 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function ajaxEndpoints(): array
   {
     // scan for these extensions
-    // earlier listed extensions have priority
-    $extensions = ['latte', 'php'];
+    // later listed extensions have priority
+    $extensions = [
+      'php',
+      'latte',
+    ];
 
     // attach hook for every found endpoint
     $arr = [];
     foreach ($extensions as $ext) {
-      $endpoints = $this->wire->files->find(
-        $this->wire->config->paths->templates . "ajax",
-        ['extensions' => [$ext]]
-      );
-      foreach ($endpoints as $endpoint) {
-        $base = pathinfo($endpoint, PATHINFO_FILENAME);
-        if (array_key_exists($base, $arr)) continue;
-        $arr[$base] = $endpoint;
+      $opt = ['extensions' => [$ext]];
+      foreach ($this->ajaxFolders as $baseurl => $folder) {
+        $endpoints = $this->wire->files->find($folder, $opt);
+        foreach ($endpoints as $endpoint) {
+          $base = pathinfo($endpoint, PATHINFO_FILENAME);
+          $url = $baseurl . $base;
+          if (array_key_exists($base, $arr)) continue;
+          $arr[$url] = $endpoint;
+        }
       }
     }
 
@@ -2877,8 +2901,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function configAjax(InputfieldWrapper $inputfields): void
   {
     $html = '';
-    foreach ($this->ajaxEndpoints() as $base => $file) {
-      $url = $this->ajaxUrl($base);
+    foreach ($this->ajaxEndpoints() as $url => $file) {
       $html .= "<div><a href=$url>$url</a></div>";
     }
     $f = new InputfieldMarkup();
