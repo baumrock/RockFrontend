@@ -1,3 +1,10 @@
+## [3.17.0](https://github.com/baumrock/RockFrontend/compare/v3.16.2...v3.17.0) (2024-06-09)
+
+
+### Features
+
+* add support for 3rd party ajax endpoints ([47302a0](https://github.com/baumrock/RockFrontend/commit/47302a0f2122dabaeda4defc1625a0b16c6992af))
+
 ## [3.16.2](https://github.com/baumrock/RockFrontend/compare/v3.16.1...v3.16.2) (2024-06-08)
 
 
@@ -32,16 +39,4 @@
 ### Bug Fixes
 
 * sitemap error on multi-language [#28](https://github.com/baumrock/RockFrontend/issues/28) ([34b2b96](https://github.com/baumrock/RockFrontend/commit/34b2b96d9df89544503543905ebf2fa8b1666403))
-
-## [3.15.0](https://github.com/baumrock/RockFrontend/compare/v3.14.0...v3.15.0) (2024-05-08)
-
-
-### Features
-
-* catch minify error ([8404bc3](https://github.com/baumrock/RockFrontend/commit/8404bc3bbe0169cafcaf2ecb1414dee4a665c8ed))
-
-
-### Bug Fixes
-
-* rename liveReloadForce to livereloadForce ([ee17e88](https://github.com/baumrock/RockFrontend/commit/ee17e880cb9165e38e1f3c1b27a091eb0022ff7b))
 
