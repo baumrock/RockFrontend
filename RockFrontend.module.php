@@ -214,11 +214,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // set ajax flag
     $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
-    $this->ajax = (
-      $this->wire->config->ajax ||
-      $_SERVER['REQUEST_METHOD'] !== 'GET' ||
-      $htmx
-    );
+    $this->ajax = $this->wire->config->ajax || $htmx;
 
     // JS defaults
     // set the remBase either from config setting or use 16 as fallback
@@ -506,8 +502,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     foreach ($this->ajaxEndpoints() as $url => $endpoint) {
       wire()->addHook($url, function (HookEvent $event) use ($endpoint, $url) {
+        $GET = $this->wire->input->requestMethod() === 'GET';
+
         // ajax requests always return the public endpoint
-        if ($this->ajax) return $this->ajaxPublic($endpoint);
+        if ($this->ajax || !$GET) return $this->ajaxPublic($endpoint);
 
         // non-ajax request show the debug screen for superusers
         if (wire()->user->isSuperuser()) return $this->ajaxDebug($endpoint, $url);
