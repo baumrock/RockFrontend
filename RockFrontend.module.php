@@ -76,6 +76,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private $addMarkup;
 
+  /**
+   * Property that is true for ajax requests.
+   * Compared to $config->ajax this will also account for HTMX etc.
+   * @var false
+   */
+  public $ajax = false;
+
   private $ajaxFolders = [];
 
   /** @var WireData */
@@ -205,6 +212,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->autoloadStyles = new WireArray();
     $this->alfredCache = $this->wire(new WireData());
 
+    // set ajax flag
+    $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
+    $this->ajax = (
+      $this->wire->config->ajax ||
+      $_SERVER['REQUEST_METHOD'] !== 'GET' ||
+      $htmx
+    );
+
     // JS defaults
     // set the remBase either from config setting or use 16 as fallback
     $this->remBase = $this->remBase ?: 16;
@@ -317,7 +332,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $this->injectJavascriptSettings($html);
         $this->injectAssets($html);
         $event->return = $html;
-      }
+      },
+      // other modules also hooking to page::render can define load order
+      // via hook priority, for example RockCommerce uses 200 to make sure
+      // all RockCommerce releated stuff is loaded after default RF assets
+      ['priority' => 100]
     );
   }
 
@@ -486,30 +505,19 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   protected function ajaxAddEndpoints(): void
   {
     foreach ($this->ajaxEndpoints() as $url => $endpoint) {
-      $this->wire->addHook($url, function (HookEvent $event) use ($endpoint, $url) {
-        $isAJAX = false;
-        if ($this->wire->config->ajax) $isAJAX = true;
-        if (!$isAJAX && $_SERVER['REQUEST_METHOD'] !== 'GET') $isAJAX = true;
-        if (
-          !$isAJAX &&
-          isset($_SERVER['HTTP_HX_REQUEST']) &&
-          $_SERVER['HTTP_HX_REQUEST']
-        ) $isAJAX = true;
+      wire()->addHook($url, function (HookEvent $event) use ($endpoint, $url) {
+        // ajax requests always return the public endpoint
+        if ($this->ajax) return $this->ajaxPublic($endpoint);
 
-        // render public endpoint (ajax response)
-        if ($isAJAX) return $this->ajaxPublic($endpoint);
+        // non-ajax request show the debug screen for superusers
+        if (wire()->user->isSuperuser()) return $this->ajaxDebug($endpoint, $url);
 
-        // show debug screen for pw superusers
-        if ($this->wire->user->isSuperuser()) {
-          return $this->ajaxDebug($endpoint, $url);
-        } else {
-          // guest and no ajax: no access!
-          if ($this->wire->modules->isInstalled('TracyDebugger')) {
-            Debugger::$showBar = false;
-          }
-          http_response_code(403);
-          return "Access Denied";
+        // guest and no ajax: no access!
+        if (wire()->modules->isInstalled('TracyDebugger')) {
+          Debugger::$showBar = false;
         }
+        http_response_code(403);
+        return "Access Denied";
       });
     }
   }
