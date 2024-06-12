@@ -1357,6 +1357,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Get uikit versions from github
+   * @param bool $noCache load from cache?
+   * @return array
    */
   public function getUikitVersions($noCache = false)
   {
@@ -1364,20 +1366,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($noCache) $expire = WireCache::expireNow;
     $versions = $this->wire->cache->get(self::cache, $expire, function () {
       $http = new WireHttp();
-      $json = $http->get('https://api.github.com/repos/uikit/uikit/git/refs/tags');
-      $refs = json_decode($json);
-      $versions = [];
-      foreach ($refs as $ref) {
-        $version = str_replace("refs/tags/", "", $ref->ref);
-        $v = $version;
-        if (strpos($version, "v.") === 0) continue;
-        if (strpos($version, "v") !== 0) continue;
-        $versions[$v] = $version;
+      $refs = $http->getJSON('https://api.github.com/repos/uikit/uikit/git/refs/tags', $assoc = false);
+      if ($refs) {
+        $versions = [];
+        foreach ($refs as $ref) {
+          $version = str_replace("refs/tags/", "", $ref->ref);
+          $v = $version;
+          if (strpos($version, "v.") === 0) continue;
+          if (strpos($version, "v") !== 0) continue;
+          $versions[$v] = $version;
+        }
+        uasort($versions, "version_compare");
+        return array_reverse($versions);
       }
-      uasort($versions, "version_compare");
-      return array_reverse($versions);
+      return [];
     });
-    if ($versions) return $versions;
+    if (!empty($versions)) return $versions;
     if (!$noCache) return $this->getUikitVersions(true);
     return [];
   }
