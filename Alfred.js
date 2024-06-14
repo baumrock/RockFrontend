@@ -291,6 +291,10 @@
       // add the class .no-alfred to prevent double click alfred, eg in forms
       if (e.target.closest(".no-alfred")) return;
 
+      // dont trigger modal on links and buttons
+      if (e.target.closest("button")) return;
+      if (e.target.closest("a")) return;
+
       let $alfred = $(e.target).closest(".alfred");
       // console.log($alfred);
       // if we are currently inline-editing somthing in this block
