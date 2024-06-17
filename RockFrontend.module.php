@@ -1815,6 +1815,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
+  public function ___loadTwig()
+  {
+    try {
+      $debug = !!$this->wire->config->debugTwig;
+      require_once $this->wire->config->paths->root . 'vendor/autoload.php';
+      $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
+      $twig = new \Twig\Environment($loader, ['debug' => $debug]);
+      if ($debug) $twig->addExtension(new \Twig\Extension\DebugExtension());
+      return $twig;
+    } catch (\Throwable $th) {
+      return false;
+    }
+  }
+
   /**
    * Create a site webmanifest in PW root
    * @return Manifest
@@ -2130,24 +2144,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   protected function renderFileTwig($file, $vars)
   {
-    try {
-      require_once $this->wire->config->paths->root . 'vendor/autoload.php';
-      $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
-      $twig = new \Twig\Environment($loader, [
-        'debug' => true,
-      ]);
-      $twig->addExtension(new \Twig\Extension\DebugExtension());
-      $relativePath = str_replace(
-        $this->wire->config->paths->root,
-        $this->wire->config->urls->root,
-        $file
-      );
-      $vars = array_merge((array)$this->wire('all'), $vars);
-      return $twig->render($relativePath, $vars);
-    } catch (\Throwable $th) {
-      return $th->getMessage() .
-        '<br><br>Use composer require "twig/twig:^3.0" in PW root';
+    $twig = $this->loadTwig();
+    if ($twig === false) {
+      return 'Error loading Twig. Use composer require "twig/twig:^3.0" in PW root.';
     }
+    $relativePath = str_replace(
+      $this->wire->config->paths->root,
+      $this->wire->config->urls->root,
+      $file
+    );
+    $vars = array_merge((array)$this->wire('all'), $vars);
+    return $twig->render($relativePath, $vars);
   }
 
   /**
