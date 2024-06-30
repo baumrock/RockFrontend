@@ -1,5 +1,7 @@
 # Asset Tools
 
+<div class='uk-alert uk-alert-warning'>NOTE: RockFrontend's asset tools may cause problems when using template cache! See https://processwire.com/talk/topic/30145-- for details. ProCache works fine!</div>
+
 Working with site assets can be tedious.
 
 In your HTML markup the browser expects file urls whereas PHP expects system paths for several file operations. Converting from one to another can quickly lead to errors like forgetting to add/remove a slash somewhere. Or you forget to add a cache busting mechanism and waste time fixing bugs that do actually not exist just because your browser is serving an outdated version...
