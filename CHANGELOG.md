@@ -1,3 +1,17 @@
+## [3.18.0](https://github.com/baumrock/RockFrontend/compare/v3.17.0...v3.18.0) (2024-07-01)
+
+
+### Features
+
+* add $rockfrontend->ajax flag ([280b215](https://github.com/baumrock/RockFrontend/commit/280b21538e5be7e99a7c9225881b080af3592f56))
+* dont trigger alfred modal on double clicks on links and buttons ([f217bbe](https://github.com/baumrock/RockFrontend/commit/f217bbe80e9030c05fce937cc142f73cf04c5a22))
+* make loadTwig hookable ([9343d21](https://github.com/baumrock/RockFrontend/commit/9343d21f7d3dec32f3bfe16e0463d836f862759d))
+
+
+### Bug Fixes
+
+* error when $refs null due to network problems ([e75f9cb](https://github.com/baumrock/RockFrontend/commit/e75f9cb3718f5840c3962d854703e6a201920eae))
+
 ## [3.17.0](https://github.com/baumrock/RockFrontend/compare/v3.16.2...v3.17.0) (2024-06-09)
 
 
@@ -32,11 +46,4 @@
 
 * livereload wrong mimetype issue + fix ajax endpoints alfred markup ([fe7d906](https://github.com/baumrock/RockFrontend/commit/fe7d906f84c3f13a9872ad40121574fd24067cfe))
 * prevent reload loop on tracy bluescreen ([bbe20e2](https://github.com/baumrock/RockFrontend/commit/bbe20e23ae3f8ca768731bfd1c81ad91bc74be54))
-
-## [3.15.1](https://github.com/baumrock/RockFrontend/compare/v3.15.0...v3.15.1) (2024-05-12)
-
-
-### Bug Fixes
-
-* sitemap error on multi-language [#28](https://github.com/baumrock/RockFrontend/issues/28) ([34b2b96](https://github.com/baumrock/RockFrontend/commit/34b2b96d9df89544503543905ebf2fa8b1666403))
 
