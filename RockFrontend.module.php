@@ -76,6 +76,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private $addMarkup;
 
+  /**
+   * Property that is true for ajax requests.
+   * Compared to $config->ajax this will also account for HTMX etc.
+   * @var false
+   */
+  public $ajax = false;
+
   private $ajaxFolders = [];
 
   /** @var WireData */
@@ -205,6 +212,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->autoloadStyles = new WireArray();
     $this->alfredCache = $this->wire(new WireData());
 
+    // set ajax flag
+    $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
+    $this->ajax = $this->wire->config->ajax || $htmx;
+
     // JS defaults
     // set the remBase either from config setting or use 16 as fallback
     $this->remBase = $this->remBase ?: 16;
@@ -317,7 +328,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $this->injectJavascriptSettings($html);
         $this->injectAssets($html);
         $event->return = $html;
-      }
+      },
+      // other modules also hooking to page::render can define load order
+      // via hook priority, for example RockCommerce uses 200 to make sure
+      // all RockCommerce releated stuff is loaded after default RF assets
+      ['priority' => 100]
     );
   }
 
@@ -486,30 +501,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   protected function ajaxAddEndpoints(): void
   {
     foreach ($this->ajaxEndpoints() as $url => $endpoint) {
-      $this->wire->addHook($url, function (HookEvent $event) use ($endpoint, $url) {
-        $isAJAX = false;
-        if ($this->wire->config->ajax) $isAJAX = true;
-        if (!$isAJAX && $_SERVER['REQUEST_METHOD'] !== 'GET') $isAJAX = true;
-        if (
-          !$isAJAX &&
-          isset($_SERVER['HTTP_HX_REQUEST']) &&
-          $_SERVER['HTTP_HX_REQUEST']
-        ) $isAJAX = true;
+      wire()->addHook($url, function (HookEvent $event) use ($endpoint, $url) {
+        $GET = $this->wire->input->requestMethod() === 'GET';
 
-        // render public endpoint (ajax response)
-        if ($isAJAX) return $this->ajaxPublic($endpoint);
+        // ajax requests always return the public endpoint
+        if ($this->ajax || !$GET) return $this->ajaxPublic($endpoint);
 
-        // show debug screen for pw superusers
-        if ($this->wire->user->isSuperuser()) {
-          return $this->ajaxDebug($endpoint, $url);
-        } else {
-          // guest and no ajax: no access!
-          if ($this->wire->modules->isInstalled('TracyDebugger')) {
-            Debugger::$showBar = false;
-          }
-          http_response_code(403);
-          return "Access Denied";
+        // non-ajax request show the debug screen for superusers
+        if (wire()->user->isSuperuser()) return $this->ajaxDebug($endpoint, $url);
+
+        // guest and no ajax: no access!
+        if (wire()->modules->isInstalled('TracyDebugger')) {
+          Debugger::$showBar = false;
         }
+        http_response_code(403);
+        return "Access Denied";
       });
     }
   }
@@ -1351,6 +1357,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Get uikit versions from github
+   * @param bool $noCache load from cache?
+   * @return array
    */
   public function getUikitVersions($noCache = false)
   {
@@ -1358,20 +1366,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($noCache) $expire = WireCache::expireNow;
     $versions = $this->wire->cache->get(self::cache, $expire, function () {
       $http = new WireHttp();
-      $json = $http->get('https://api.github.com/repos/uikit/uikit/git/refs/tags');
-      $refs = json_decode($json);
-      $versions = [];
-      foreach ($refs as $ref) {
-        $version = str_replace("refs/tags/", "", $ref->ref);
-        $v = $version;
-        if (strpos($version, "v.") === 0) continue;
-        if (strpos($version, "v") !== 0) continue;
-        $versions[$v] = $version;
+      $refs = $http->getJSON('https://api.github.com/repos/uikit/uikit/git/refs/tags', $assoc = false);
+      if ($refs) {
+        $versions = [];
+        foreach ($refs as $ref) {
+          $version = str_replace("refs/tags/", "", $ref->ref);
+          $v = $version;
+          if (strpos($version, "v.") === 0) continue;
+          if (strpos($version, "v") !== 0) continue;
+          $versions[$v] = $version;
+        }
+        uasort($versions, "version_compare");
+        return array_reverse($versions);
       }
-      uasort($versions, "version_compare");
-      return array_reverse($versions);
+      return [];
     });
-    if ($versions) return $versions;
+    if (!empty($versions)) return $versions;
     if (!$noCache) return $this->getUikitVersions(true);
     return [];
   }
@@ -1805,6 +1815,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
+  public function ___loadTwig()
+  {
+    try {
+      $debug = !!$this->wire->config->debugTwig;
+      require_once $this->wire->config->paths->root . 'vendor/autoload.php';
+      $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
+      $twig = new \Twig\Environment($loader, ['debug' => $debug]);
+      if ($debug) $twig->addExtension(new \Twig\Extension\DebugExtension());
+      return $twig;
+    } catch (\Throwable $th) {
+      return false;
+    }
+  }
+
   /**
    * Create a site webmanifest in PW root
    * @return Manifest
@@ -2120,24 +2144,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   protected function renderFileTwig($file, $vars)
   {
-    try {
-      require_once $this->wire->config->paths->root . 'vendor/autoload.php';
-      $loader = new \Twig\Loader\FilesystemLoader($this->wire->config->paths->root);
-      $twig = new \Twig\Environment($loader, [
-        'debug' => true,
-      ]);
-      $twig->addExtension(new \Twig\Extension\DebugExtension());
-      $relativePath = str_replace(
-        $this->wire->config->paths->root,
-        $this->wire->config->urls->root,
-        $file
-      );
-      $vars = array_merge((array)$this->wire('all'), $vars);
-      return $twig->render($relativePath, $vars);
-    } catch (\Throwable $th) {
-      return $th->getMessage() .
-        '<br><br>Use composer require "twig/twig:^3.0" in PW root';
+    $twig = $this->loadTwig();
+    if ($twig === false) {
+      return 'Error loading Twig. Use composer require "twig/twig:^3.0" in PW root.';
     }
+    $relativePath = str_replace(
+      $this->wire->config->paths->root,
+      $this->wire->config->urls->root,
+      $file
+    );
+    $vars = array_merge((array)$this->wire('all'), $vars);
+    return $twig->render($relativePath, $vars);
   }
 
   /**
