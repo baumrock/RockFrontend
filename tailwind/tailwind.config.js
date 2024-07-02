@@ -13,4 +13,10 @@ module.exports = {
     },
   },
   plugins: [],
+  // disable preflight
+  // this prevents tailwind from conflicting with uikit overrides
+  // see https://tailwindcss.com/docs/preflight
+  corePlugins: {
+    preflight: false,
+  },
 };
