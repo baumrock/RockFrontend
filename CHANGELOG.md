@@ -1,3 +1,10 @@
+## [3.18.1](https://github.com/baumrock/RockFrontend/compare/v3.18.0...v3.18.1) (2024-07-02)
+
+
+### Bug Fixes
+
+* disable preflight ([c4e3723](https://github.com/baumrock/RockFrontend/commit/c4e37232ca220f713991de20d672bae83e3d7608))
+
 ## [3.18.0](https://github.com/baumrock/RockFrontend/compare/v3.17.0...v3.18.0) (2024-07-01)
 
 
@@ -32,18 +39,4 @@
 ### Bug Fixes
 
 * add missing return statement for public ajax endpoints ([17f7649](https://github.com/baumrock/RockFrontend/commit/17f7649b701fa10b84ea8d92c05f640ccb034e17))
-
-## [3.16.0](https://github.com/baumrock/RockFrontend/compare/v3.15.1...v3.16.0) (2024-06-03)
-
-
-### Features
-
-* add links to ajax-endpoints to module config ([542917c](https://github.com/baumrock/RockFrontend/commit/542917cfdb183cabc28243d421a3a5f21fc800c6))
-* refactor pr and bump version ([9589d88](https://github.com/baumrock/RockFrontend/commit/9589d88359a29eb38c6cd22ae1d37a1628117962))
-
-
-### Bug Fixes
-
-* livereload wrong mimetype issue + fix ajax endpoints alfred markup ([fe7d906](https://github.com/baumrock/RockFrontend/commit/fe7d906f84c3f13a9872ad40121574fd24067cfe))
-* prevent reload loop on tracy bluescreen ([bbe20e2](https://github.com/baumrock/RockFrontend/commit/bbe20e23ae3f8ca768731bfd1c81ad91bc74be54))
 
