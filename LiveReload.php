@@ -202,17 +202,19 @@ class LiveReload extends Wire
 
     // start loop
     $start = time();
+    $executed = false;
     while (true) {
       $file = $this->findModifiedFile($start);
 
       // file changed
-      if ($file && $debug) {
+      if (!$executed && $file && $debug) {
         $this->wire->log->save('livereload', "File changed: $file", $opt);
         if ($build) {
           $cmd = "npm run build";
           $this->wire->log->save('livereload', "Rebuilding tailwind with '$cmd'", $opt);
           exec($cmd);
         }
+        $executed = true;
       }
 
       // send trigger to frontend
