@@ -1,3 +1,11 @@
+## [3.18.2](https://github.com/baumrock/RockFrontend/compare/v3.18.1...v3.18.2) (2024-07-09)
+
+
+### Bug Fixes
+
+* add minified topbar css ([034f0e2](https://github.com/baumrock/RockFrontend/commit/034f0e21557cf5aa6e62ef321cf12247a754799d))
+* prevent livereload from calling npm run build in the loop more than once ([4a787c4](https://github.com/baumrock/RockFrontend/commit/4a787c47f15f1dccd809e020b729380da3c4b92f))
+
 ## [3.18.1](https://github.com/baumrock/RockFrontend/compare/v3.18.0...v3.18.1) (2024-07-02)
 
 
@@ -32,11 +40,4 @@
 ### Bug Fixes
 
 * catch errors in addtopbar ([0e31657](https://github.com/baumrock/RockFrontend/commit/0e31657ab4ac23ee6a890ee0eda657e6796087b9))
-
-## [3.16.1](https://github.com/baumrock/RockFrontend/compare/v3.16.0...v3.16.1) (2024-06-06)
-
-
-### Bug Fixes
-
-* add missing return statement for public ajax endpoints ([17f7649](https://github.com/baumrock/RockFrontend/commit/17f7649b701fa10b84ea8d92c05f640ccb034e17))
 
