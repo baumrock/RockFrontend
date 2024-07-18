@@ -405,7 +405,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
   }
 
-  private function addLiveReload(): bool
+  public function ___addLiveReload(): bool
   {
     $config = $this->wire->config;
     if (!$config->livereload) return false;

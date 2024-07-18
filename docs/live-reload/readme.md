@@ -53,6 +53,20 @@ $config->livereload = [
 
 RockFrontend starts an SSE stream once you visit a page. In that SSE stream it triggers LiveReload::watch() in the configured interval (usually every second). If it finds a file that has changed since the page has been visited it triggers a reload via JavaScript.
 
+## Disabling LiveReload based on conditions
+
+You can enable/disable Livereload globally via the `$config->livereload` flag. If you want to prevent loading of Livereload on the frontend based on some criteria you can add a hook like this:
+
+```php
+// site/ready.php
+wire()->addHookAfter("RockFrontend::addLiveReload", function ($event) {
+  // if the current user is a guest user we override the
+  // original return value and set it to false
+  // which will tell RF to not add livereload markup
+  if(wire()->user->isGuest()) $event->return = false;
+});
+```
+
 ## Debugging
 
 If you get unexpected reloads check the `livereload` log in the PW backend. Whenever RockFrontend detects a changed file in the LiveReload stream it will log the filename in the livereload log.
