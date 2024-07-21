@@ -17,7 +17,7 @@ setTimeout(() => {
 
   let evtSource;
   let startStream = function () {
-    let url = LiveReloadUrl + "?rockfrontend-livereload=" + LiveReloadSecret;
+    let url = LiveReloadUrl + "?rockfrontend-livereload=" + LiveReloadPage;
     evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
       let changed = event.data;

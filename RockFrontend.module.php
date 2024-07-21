@@ -161,33 +161,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function __construct()
   {
     $this->folders = $this->wire(new WireArray());
-
-    // is this a livereload request having the proper get param in the url?
-    if (!array_key_exists(self::getParam, $_GET)) return;
-
-    // if livereload is not enabled we show a message for better debugging
-    if (!$this->wire->config->livereload) {
-      die("LiveReload is not enabled in the config!");
-    }
-
-    // attach hook to stream file changes to the browser
-    $this->addHookBefore("Session::init", function (HookEvent $event) {
-
-      // disable tracy for the SSE stream
-      $event->wire->config->tracy = ['enabled' => false];
-
-      // get livereload instance
-      $live = $this->getLiveReload();
-      $this->liveReload = $live;
-
-      // return silently if secret does not match
-      // somehow this check is called twice and always throws an error
-      if (!$live->validSecret()) return;
-
-      $event->object->sessionAllow = false;
-      $this->isLiveReload = true;
-      $live->watch();
-    });
+    $this->addLiveReloadWatch();
   }
 
   public function init()
@@ -413,6 +387,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($config->ajax) return false;
     if ($config->external) return false;
     return true;
+  }
+
+  private function addLiveReloadWatch(): void
+  {
+    if (!$this->wire->config->livereload) return;
+    if (!array_key_exists(self::getParam, $_GET)) return;
+    $this->addHookBefore("Session::init", function (HookEvent $event) {
+      // disable tracy for the SSE stream
+      $event->wire->config->tracy = ['enabled' => false];
+
+      // get livereload instance
+      $live = $this->getLiveReload();
+      $this->liveReload = $live;
+      $event->object->sessionAllow = false;
+      $this->isLiveReload = true;
+      $live->watch($_GET[self::getParam]);
+    });
   }
 
   /**
@@ -1702,19 +1693,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function liveReloadMarkup(): string
   {
-    // create secret and send it to js
-    /** @var WireRandom $rand */
-    $rand = $this->wire(new WireRandom());
-    $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
-    $this->wire->cache->save(
-      self::livereloadCacheName . "_$secret",
-      true,
-      10
-    );
-
-    // remove all expired caches that start with self::livereloadCacheName
-    $this->wire->cache->maintenance();
-
     // get and minify the livereload script
     // dont worry, this will only be done for superusers ;)
     $file = $this->minifyFile($this->path . "livereload.js");
@@ -1724,7 +1702,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return "
       <script>
       var LiveReloadUrl = '{$this->wire->config->urls->root}';
-      var LiveReloadSecret = '$secret';
+      var LiveReloadPage = {$this->wire->page->id};
       var LiveReloadForce = $force;
       console.log('Loading LiveReload');
       </script>

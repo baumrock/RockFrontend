@@ -10,6 +10,8 @@ use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
+use function ProcessWire\wire;
+
 class LiveReload extends Wire
 {
   private $config;
@@ -133,14 +135,6 @@ class LiveReload extends Wire
   }
 
   /**
-   * Return secret from get variable
-   */
-  public function getSecret(): string
-  {
-    return (string)$_GET[RockFrontend::getParam];
-  }
-
-  /**
    * Has the file changed since given timestamp?
    */
   public function hasChanged($file, $since): bool
@@ -160,31 +154,10 @@ class LiveReload extends Wire
     flush();
   }
 
-  public function validSecret()
-  {
-    $secret = $this->getSecret();
-    $cacheName = RockFrontend::livereloadCacheName . "_$secret";
-
-    // delete outdated caches
-    // test
-    $time = date("Y-m-d H:i:s", time());
-    $this->database->query("DELETE
-      FROM `caches`
-      WHERE `name` LIKE 'rockfrontend_livereload_%'
-      AND `expires` < '$time'
-    ");
-
-    if ($this->wire->cache->get($cacheName)) {
-      $this->wire->cache->delete($cacheName);
-      return true;
-    }
-    return false;
-  }
-
   /**
    * Watch the system for changed files
    */
-  public function watch()
+  public function watch($pid)
   {
     // we dont want warnings in the stream
     // for debugging you can uncomment this line
@@ -192,13 +165,15 @@ class LiveReload extends Wire
 
     header("Cache-Control: no-cache");
     header("Content-Type: text/event-stream");
-    $build = $this->wire->config->livereloadBuild;
     $debug = $this->wire->config->debug;
     $this->wire->log->prune('livereload', 1);
     $opt = [
       'showURL' => false,
       'showUser' => false,
     ];
+
+    // expose page variable for included actionFile
+    $page = wire()->pages->get($pid);
 
     // start loop
     $start = time();
@@ -209,11 +184,8 @@ class LiveReload extends Wire
       // file changed
       if (!$executed && $file && $debug) {
         $this->wire->log->save('livereload', "File changed: $file", $opt);
-        if ($build) {
-          $cmd = "npm run build";
-          $this->wire->log->save('livereload', "Rebuilding tailwind with '$cmd'", $opt);
-          exec($cmd);
-        }
+        $actionFile = wire()->config->paths->site . 'livereload.php';
+        if (is_file($actionFile)) include $actionFile;
         $executed = true;
       }
 
