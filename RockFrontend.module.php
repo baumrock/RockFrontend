@@ -350,6 +350,80 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->ajaxFolders[$url] = $folder;
   }
 
+  /**
+   * This method makes it possible to add a custom InputfieldWrapper to a
+   * page edit form in the backend. You can for example easily place two fields
+   * side-by-side using flexbox.
+   *
+   * Usage:
+   * rockfrontend()->addPageEditWrapper(
+   *   templateName: 'your-template',
+   *   renderFile: '/path/to/markup.latte',
+   * );
+   */
+  public function addPageEditWrapper(
+    string $templateName,
+    string $renderFile,
+  ): void {
+    // do everything only on buildForm
+    wire()->addHookAfter(
+      'ProcessPageEdit::buildForm',
+      function ($e) use ($templateName, $renderFile) {
+        if ($e->process->getPage()->template != $templateName) return;
+
+        $markup = $this->render($renderFile);
+        if (!$markup) return;
+
+        // get array of field:myfield tags
+        $fields = [];
+        preg_match_all('/field:([a-zA-Z0-9_]+)/', $markup, $matches);
+        if (!count($matches) === 2) return;
+
+        $fields = $matches[1];
+        if (!count($fields)) return;
+
+        /** @var InputfieldForm $form */
+        $form = $e->return;
+
+        // add wrapper that holds the new markup
+        $f = new InputfieldWrapper();
+        $f->addHookBefore(
+          'render',
+          function ($e) use ($markup) {
+            $e->return = $markup;
+            $e->replace = true;
+          }
+        );
+        $lastField = $fields[count($fields) - 1];
+        $form->insertAfter($f, $form->get($lastField));
+
+        // manipulate the form html via dom tools
+        $form->addHookAfter(
+          'render',
+          function ($e) use ($fields) {
+            $html = $e->return;
+            $dom = $this->dom($html);
+
+            $replace = [];
+            foreach ($fields as $i => $f) {
+              $li = $dom->filter("#wrap_Inputfield_$f")->outerHtml();
+              $replace["field:$f"] = "<ul style='margin:0;padding:0'>$li</ul>";
+              $dom->filter("#wrap_Inputfield_$f")->remove();
+            }
+
+            $html = str_replace(
+              array_keys($replace),
+              array_values($replace),
+              $dom->outerHtml()
+            );
+
+            $e->return = $html;
+          }
+        );
+      }
+    );
+  }
+
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
