@@ -395,7 +395,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           }
         );
         $lastField = $fields[count($fields) - 1];
-        $form->insertAfter($f, $form->get($lastField));
+        $existing = $form->get($lastField);
+        if (!$existing) return;
+        $form->insertAfter($f, $existing);
 
         // manipulate the form html via dom tools
         $form->addHookAfter(
@@ -407,7 +409,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
             $replace = [];
             foreach ($fields as $i => $f) {
               $li = $dom->filter("#wrap_Inputfield_$f")->outerHtml();
-              $replace["field:$f"] = "<ul style='margin:0;padding:0'>$li</ul>";
+              $replace["field:$f"] = "
+                <style>
+                .rf-pageeditwrapper { padding: 0; margin: 0; height: 100%; }
+                .rf-pageeditwrapper > li { height: 100%; }
+                </style>
+                <ul class='rf-pageeditwrapper'>$li</ul>
+              ";
               $dom->filter("#wrap_Inputfield_$f")->remove();
             }
 
