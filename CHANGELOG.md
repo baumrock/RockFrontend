@@ -1,3 +1,18 @@
+## [3.19.0](https://github.com/baumrock/RockFrontend/compare/v3.18.2...v3.19.0) (2024-08-01)
+
+
+### Features
+
+* load /site/livereload.php on file change ([12105da](https://github.com/baumrock/RockFrontend/commit/12105daeda8182a29cf3768066a4610ab099bacb))
+* make addLiveReload hookable ([2f3f95b](https://github.com/baumrock/RockFrontend/commit/2f3f95b66457e3b5e54b1b25a6c19ddf52081757))
+* new method addPageEditWrapper() for custom page edit markup ([c80f566](https://github.com/baumrock/RockFrontend/commit/c80f566db13ba575c61b1de6682e0e5b2357e6f6))
+
+
+### Bug Fixes
+
+* issue in addPageEditWrapper when no field exists ([604349a](https://github.com/baumrock/RockFrontend/commit/604349a79a688bb3712af6080231c58fc656d928))
+* remove reload on error ([d43f14f](https://github.com/baumrock/RockFrontend/commit/d43f14fcf4644750da90331ffd78164352ddc870))
+
 ## [3.18.2](https://github.com/baumrock/RockFrontend/compare/v3.18.1...v3.18.2) (2024-07-09)
 
 
@@ -33,11 +48,4 @@
 ### Features
 
 * add support for 3rd party ajax endpoints ([47302a0](https://github.com/baumrock/RockFrontend/commit/47302a0f2122dabaeda4defc1625a0b16c6992af))
-
-## [3.16.2](https://github.com/baumrock/RockFrontend/compare/v3.16.1...v3.16.2) (2024-06-08)
-
-
-### Bug Fixes
-
-* catch errors in addtopbar ([0e31657](https://github.com/baumrock/RockFrontend/commit/0e31657ab4ac23ee6a890ee0eda657e6796087b9))
 
