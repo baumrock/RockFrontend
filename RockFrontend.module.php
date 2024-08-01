@@ -161,33 +161,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function __construct()
   {
     $this->folders = $this->wire(new WireArray());
-
-    // is this a livereload request having the proper get param in the url?
-    if (!array_key_exists(self::getParam, $_GET)) return;
-
-    // if livereload is not enabled we show a message for better debugging
-    if (!$this->wire->config->livereload) {
-      die("LiveReload is not enabled in the config!");
-    }
-
-    // attach hook to stream file changes to the browser
-    $this->addHookBefore("Session::init", function (HookEvent $event) {
-
-      // disable tracy for the SSE stream
-      $event->wire->config->tracy = ['enabled' => false];
-
-      // get livereload instance
-      $live = $this->getLiveReload();
-      $this->liveReload = $live;
-
-      // return silently if secret does not match
-      // somehow this check is called twice and always throws an error
-      if (!$live->validSecret()) return;
-
-      $event->object->sessionAllow = false;
-      $this->isLiveReload = true;
-      $live->watch();
-    });
+    $this->addLiveReloadWatch();
   }
 
   public function init()
@@ -376,6 +350,88 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->ajaxFolders[$url] = $folder;
   }
 
+  /**
+   * This method makes it possible to add a custom InputfieldWrapper to a
+   * page edit form in the backend. You can for example easily place two fields
+   * side-by-side using flexbox.
+   *
+   * Usage:
+   * rockfrontend()->addPageEditWrapper(
+   *   templateName: 'your-template',
+   *   renderFile: '/path/to/markup.latte',
+   * );
+   */
+  public function addPageEditWrapper(
+    string $templateName,
+    string $renderFile,
+  ): void {
+    // do everything only on buildForm
+    wire()->addHookAfter(
+      'ProcessPageEdit::buildForm',
+      function ($e) use ($templateName, $renderFile) {
+        if ($e->process->getPage()->template != $templateName) return;
+
+        $markup = $this->render($renderFile);
+        if (!$markup) return;
+
+        // get array of field:myfield tags
+        $fields = [];
+        preg_match_all('/field:([a-zA-Z0-9_]+)/', $markup, $matches);
+        if (!count($matches) === 2) return;
+
+        $fields = $matches[1];
+        if (!count($fields)) return;
+
+        /** @var InputfieldForm $form */
+        $form = $e->return;
+
+        // add wrapper that holds the new markup
+        $f = new InputfieldWrapper();
+        $f->addHookBefore(
+          'render',
+          function ($e) use ($markup) {
+            $e->return = $markup;
+            $e->replace = true;
+          }
+        );
+        $lastField = $fields[count($fields) - 1];
+        $existing = $form->get($lastField);
+        if (!$existing) return;
+        $form->insertAfter($f, $existing);
+
+        // manipulate the form html via dom tools
+        $form->addHookAfter(
+          'render',
+          function ($e) use ($fields) {
+            $html = $e->return;
+            $dom = $this->dom($html);
+
+            $replace = [];
+            foreach ($fields as $i => $f) {
+              $li = $dom->filter("#wrap_Inputfield_$f")->outerHtml();
+              $replace["field:$f"] = "
+                <style>
+                .rf-pageeditwrapper { padding: 0; margin: 0; height: 100%; }
+                .rf-pageeditwrapper > li { height: 100%; }
+                </style>
+                <ul class='rf-pageeditwrapper'>$li</ul>
+              ";
+              $dom->filter("#wrap_Inputfield_$f")->remove();
+            }
+
+            $html = str_replace(
+              array_keys($replace),
+              array_values($replace),
+              $dom->outerHtml()
+            );
+
+            $e->return = $html;
+          }
+        );
+      }
+    );
+  }
+
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
@@ -405,7 +461,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
   }
 
-  private function addLiveReload(): bool
+  public function ___addLiveReload(): bool
   {
     $config = $this->wire->config;
     if (!$config->livereload) return false;
@@ -413,6 +469,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($config->ajax) return false;
     if ($config->external) return false;
     return true;
+  }
+
+  private function addLiveReloadWatch(): void
+  {
+    if (!$this->wire->config->livereload) return;
+    if (!array_key_exists(self::getParam, $_GET)) return;
+    $this->addHookBefore("Session::init", function (HookEvent $event) {
+      // disable tracy for the SSE stream
+      $event->wire->config->tracy = ['enabled' => false];
+
+      // get livereload instance
+      $live = $this->getLiveReload();
+      $this->liveReload = $live;
+      $event->object->sessionAllow = false;
+      $this->isLiveReload = true;
+      $live->watch($_GET[self::getParam]);
+    });
   }
 
   /**
@@ -1702,19 +1775,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function liveReloadMarkup(): string
   {
-    // create secret and send it to js
-    /** @var WireRandom $rand */
-    $rand = $this->wire(new WireRandom());
-    $secret = $rand->alphanumeric(0, ['minLength' => 30, 'maxLength' => 40]);
-    $this->wire->cache->save(
-      self::livereloadCacheName . "_$secret",
-      true,
-      10
-    );
-
-    // remove all expired caches that start with self::livereloadCacheName
-    $this->wire->cache->maintenance();
-
     // get and minify the livereload script
     // dont worry, this will only be done for superusers ;)
     $file = $this->minifyFile($this->path . "livereload.js");
@@ -1724,7 +1784,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return "
       <script>
       var LiveReloadUrl = '{$this->wire->config->urls->root}';
-      var LiveReloadSecret = '$secret';
+      var LiveReloadPage = {$this->wire->page->id};
       var LiveReloadForce = $force;
       console.log('Loading LiveReload');
       </script>

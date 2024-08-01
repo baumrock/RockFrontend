@@ -53,6 +53,33 @@ $config->livereload = [
 
 RockFrontend starts an SSE stream once you visit a page. In that SSE stream it triggers LiveReload::watch() in the configured interval (usually every second). If it finds a file that has changed since the page has been visited it triggers a reload via JavaScript.
 
+## Disabling LiveReload based on conditions
+
+You can enable/disable Livereload globally via the `$config->livereload` flag. If you want to prevent loading of Livereload on the frontend based on some criteria you can add a hook like this:
+
+```php
+// site/ready.php
+wire()->addHookAfter("RockFrontend::addLiveReload", function ($event) {
+  // if the current user is a guest user we override the
+  // original return value and set it to false
+  // which will tell RF to not add livereload markup
+  if(wire()->user->isGuest()) $event->return = false;
+});
+```
+
+## Executing build scripts on file change
+
+RockFrontend can trigger a build script whenever a file has been changed. It even knows about the page that has been viewed. All you need to do is to add a file `/site/livereload.php` like this one:
+
+```php
+<?php
+if ($page->template == 'admin') {
+  exec('npx tailwindcss -c ./tailwind-admin.config.js -i site/templates/_tailwind-admin.css -o site/templates/bundle/tailwind-admin.min.css --minify');
+} else {
+  exec('npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.min.css --minify');
+}
+```
+
 ## Debugging
 
 If you get unexpected reloads check the `livereload` log in the PW backend. Whenever RockFrontend detects a changed file in the LiveReload stream it will log the filename in the livereload log.

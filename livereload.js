@@ -17,7 +17,7 @@ setTimeout(() => {
 
   let evtSource;
   let startStream = function () {
-    let url = LiveReloadUrl + "?rockfrontend-livereload=" + LiveReloadSecret;
+    let url = LiveReloadUrl + "?rockfrontend-livereload=" + LiveReloadPage;
     evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
       let changed = event.data;
@@ -85,10 +85,7 @@ setTimeout(() => {
 
     evtSource.onerror = function (event) {
       if (document.querySelector("#tracy-bs")) return;
-      console.log("Error occurred in EventSource, reloading window.");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      console.log("Error occurred in EventSource.");
     };
   };
 
