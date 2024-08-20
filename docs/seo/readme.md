@@ -208,8 +208,10 @@ Let's say we wanted to add a new `foo` tag to our SEO tools:
 
 ```php
 $rockfrontend->seo()
-  ->setMarkup("foo", "<meta property='foo' content='{value:20}'>");
+  ->setMarkup('foo', '<meta property="foo" content="{value:20}">');
 ```
+
+See full example below!
 
 ### setValue()
 
@@ -218,10 +220,18 @@ Now we can set a new value for the `foo` tag based on the page's title:
 `label: string`
 ```php
 $rockfrontend->seo()
-  ->setValue($page->title);
+  ->setValue('foo', $page->title);
 ```
 
 Note that as we defined `{value:20}` in the tag's markup the page title will be truncated to 20 characters!
+
+Full example:
+
+```php
+$rockfrontend->seo()
+  ->setMarkup("foo", "<meta property='foo' content='{value:20}'>")
+  ->setValue("foo", $page->title);
+```
 
 ## Page Title
 
