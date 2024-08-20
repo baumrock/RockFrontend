@@ -255,13 +255,13 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
   for (let i = 0; i < scrollElements.length; i++) {
     let el = scrollElements[i];
     let attrs = el.getAttribute("rf-scrollclass").split(" ");
-    for (j = 0; j < attrs.length; j++) {
+    for (let j = 0; j < attrs.length; j++) {
       let parts = attrs[j].split("@");
       if (parts.length != 2) return;
       let cls = parts[0];
       let y = parts[1] * 1;
       window.addEventListener("scroll", function () {
-        scrollpos = window.scrollY;
+        let scrollpos = window.scrollY;
         if (scrollpos >= y) el.classList.add(cls);
         else el.classList.remove(cls);
       });

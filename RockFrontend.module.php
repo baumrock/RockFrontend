@@ -201,7 +201,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->isDDEV()) $this->js('isDDEV', true);
 
     // watch this file and run "migrate" on change or refresh
-    if ($rm = $this->rm()) $rm->watch($this, 0.01);
+    if ($rm = $this->rm()) {
+      $rm->watch($this, 0.01);
+      $rm->minify(__DIR__ . '/RockFrontend.js');
+    }
 
     // setup folders that are scanned for files
     $this->folders->add($this->config->paths->templates);
@@ -435,13 +438,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
-    $file = $min = __DIR__ . "/RockFrontend.js";
-
-    // while developing we create a minified js file
-    if ($this->isDev()) $min = $this->minifyFile($file);
-
-    // add file to scripts array
-    $this->scripts('rockfrontend')->add($min, "defer");
+    $this->scripts('rockfrontend')->add(__DIR__ . '/RockFrontend.min.js', 'defer');
   }
 
   public function ___addAlfredStyles()
