@@ -1783,7 +1783,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       var LiveReloadUrl = '{$this->wire->config->urls->root}';
       var LiveReloadPage = {$this->wire->page->id};
       var LiveReloadForce = $force;
-      console.log('Loading LiveReload');
+      var livecnt = localStorage.getItem('livereload-count') || 0;
+      console.log('Loading LiveReload - ' + livecnt);
       </script>
       <script src='$src'></script>
     ";
