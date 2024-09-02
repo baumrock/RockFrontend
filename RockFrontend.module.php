@@ -1121,6 +1121,47 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get field via short name (useful for prefixed fields)
+   *
+   * For convenient use with Latte this will return a HTML object if possible.
+   *
+   * Options for type:
+   * e (default) = edit
+   * u = unformatted
+   * f = formatted
+   *
+   * Example:
+   * field = my_prefix_myfield
+   * echo $page->field('myfield', 'u');
+   */
+  public function field(
+    Page $page,
+    string $shortname,
+    string $type = null,
+  ) {
+    if (!$type) $type = 'e';
+    $type = strtolower($type);
+    $fieldname = $this->getRealFieldname($page, $shortname);
+    if (!$fieldname) return false;
+
+    // the noEdit flag prevents rendering editable fields
+    if ($type === 'e' && $this->noEdit) $type = 'f';
+
+    // edit field
+    if ($type === 'e') return $this->html($page->edit($fieldname));
+
+    // formatted
+    if ($type === 'f') {
+      $val = $page->getFormatted($fieldname);
+      if (is_string($val)) return $this->html($val);
+      return $val;
+    }
+
+    // unformatted
+    if ($type === 'u') return $page->getUnformatted($fieldname);
+  }
+
+  /**
    * Find files to suggest
    * @return array
    */
@@ -1358,6 +1399,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     if ($forcePath) return rtrim($path, '/') . '/';
+
+    return false;
+  }
+
+  /**
+   * Given the short fieldname "foo" find the real fieldname "my_prefixed_foo"
+   */
+  public function getRealFieldname(Page $page, string $shortname): string|false
+  {
+    $fieldnames = $page->fields->each('name');
+
+    // if the fieldname exists we return the unmodified name
+    if (in_array($shortname, $fieldnames)) return $shortname;
+
+    // otherwise we check for the final _xxx part of the name
+    foreach ($page->fields as $field) {
+      $suffix = strrchr($field->name, '_');
+      if ($suffix === "_$shortname") return $field->name;
+    }
 
     return false;
   }
