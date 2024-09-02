@@ -1163,7 +1163,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     // formatted as array (eg pageimages)
-    if ($type === 'a') {
+    if ($type === 'a' || $type === '[]') {
       return $page->getFormatted("$fieldname.[]");
     }
 
