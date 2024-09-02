@@ -1567,7 +1567,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // don't return empty string as html object
     // this os for easier checks in if conditions, eg n:if='$val'
     // as this condition would always be true for html objects
-    if ($trim) $str = trim($str);
+    if ($trim) $str = trim((string)$str);
     if (!$str) return '';
 
     // we try to return a latte html object
