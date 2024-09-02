@@ -28,6 +28,10 @@ function rockfrontend(): RockFrontend
   return wire()->modules->get('RockFrontend');
 }
 
+// load the fieldmethod trait here,
+// otherwise it throws an error when used in DefaultPage
+require_once __DIR__ . '/classes/FieldMethod.php';
+
 /**
  * @author Bernhard Baumrock, 05.01.2022
  * @license MIT
