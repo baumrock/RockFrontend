@@ -28,6 +28,10 @@ function rockfrontend(): RockFrontend
   return wire()->modules->get('RockFrontend');
 }
 
+// load the fieldmethod trait here,
+// otherwise it throws an error when used in DefaultPage
+require_once __DIR__ . '/classes/FieldMethod.php';
+
 /**
  * @author Bernhard Baumrock, 05.01.2022
  * @license MIT
@@ -201,7 +205,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->isDDEV()) $this->js('isDDEV', true);
 
     // watch this file and run "migrate" on change or refresh
-    if ($rm = $this->rm()) $rm->watch($this, 0.01);
+    if ($rm = $this->rm()) {
+      $rm->watch($this, 0.01);
+      $rm->minify(__DIR__ . '/RockFrontend.js');
+    }
 
     // setup folders that are scanned for files
     $this->folders->add($this->config->paths->templates);
@@ -317,7 +324,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$skipAssets) {
       $this->js("rootUrl", $this->wire->config->urls->root);
       $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js");
+      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js", "defer");
       $this->addAlfredStyles();
     }
 
@@ -435,13 +442,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private function addRockFrontendJS(): void
   {
     if (!$this->isEnabled('RockFrontend.js')) return;
-    $file = $min = __DIR__ . "/RockFrontend.js";
-
-    // while developing we create a minified js file
-    if ($this->isDev()) $min = $this->minifyFile($file);
-
-    // add file to scripts array
-    $this->scripts('rockfrontend')->add($min, "defer");
+    $this->scripts('rockfrontend')->add(__DIR__ . '/RockFrontend.min.js', 'defer');
   }
 
   public function ___addAlfredStyles()
@@ -1120,6 +1121,62 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get field via short name (useful for prefixed fields)
+   *
+   * For convenient use with Latte this will return a HTML object if possible.
+   *
+   * Options for type:
+   * e (default) = edit
+   * u = unformatted
+   * f = formatted
+   *
+   * Example:
+   * field = my_prefix_myfield
+   * echo $page->field('myfield', 'u');
+   */
+  public function field(
+    Page $page,
+    string $shortname,
+    string $type = null,
+  ) {
+    // default type is formatted
+    if (!$type) $type = 'f';
+
+    $type = strtolower($type);
+    $fieldname = $this->getRealFieldname($page, $shortname);
+    if (!$fieldname) return false;
+
+    // the noEdit flag prevents rendering editable fields
+    if ($type === 'e' && $this->noEdit) $type = 'f';
+
+    // edit field
+    if ($type === 'e') return $this->html($page->edit($fieldname));
+
+    // force string
+
+    // formatted
+    if ($type === 'f' || $type === 's') {
+      $val = $page->getFormatted($fieldname);
+      if ($type === 's') $val = (string)$val;
+      if (is_string($val)) return $this->html($val);
+      return $val;
+    }
+
+    // formatted as array (eg pageimages)
+    if ($type === 'a' || $type === '[]') {
+      return $page->getFormatted("$fieldname.[]");
+    }
+
+    // formatted as single item (eg pageimage)
+    if ($type === 'first') {
+      return $page->getFormatted("$fieldname.first");
+    }
+
+    // unformatted
+    if ($type === 'u') return $page->getUnformatted($fieldname);
+  }
+
+  /**
    * Find files to suggest
    * @return array
    */
@@ -1362,6 +1419,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Given the short fieldname "foo" find the real fieldname "my_prefixed_foo"
+   */
+  public function getRealFieldname(Page $page, string $shortname): string|false
+  {
+    $fieldnames = $page->fields->each('name');
+
+    // if the fieldname exists we return the unmodified name
+    if (in_array($shortname, $fieldnames)) return $shortname;
+
+    // otherwise we check for the final _xxx part of the name
+    foreach ($page->fields as $field) {
+      $suffix = strrchr($field->name, '_');
+      if ($suffix === "_$shortname") return $field->name;
+    }
+
+    return false;
+  }
+
+  /**
    * Find template file from trace
    * @return string
    */
@@ -1489,8 +1565,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Return a latte HTML object that doesn't need to be |noescaped
    * @return Html
    */
-  public static function html($str)
+  public static function html($str, $trim = true)
   {
+    // don't return empty string as html object
+    // this os for easier checks in if conditions, eg n:if='$val'
+    // as this condition would always be true for html objects
+    if ($trim) $str = trim((string)$str);
+    if (!$str) return '';
+
     // we try to return a latte html object
     // If we are not calling that from within a latte file
     // the html object will not be available. This can be the case in Seo tags.
@@ -1786,7 +1868,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       var LiveReloadUrl = '{$this->wire->config->urls->root}';
       var LiveReloadPage = {$this->wire->page->id};
       var LiveReloadForce = $force;
-      console.log('Loading LiveReload');
+      var livecnt = localStorage.getItem('livereload-count') || 0;
+      console.log('Loading LiveReload - ' + livecnt);
       </script>
       <script src='$src'></script>
     ";
