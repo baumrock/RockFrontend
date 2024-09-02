@@ -1139,7 +1139,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     string $shortname,
     string $type = null,
   ) {
-    if (!$type) $type = 'e';
+    // default type is formatted
+    if (!$type) $type = 'f';
+
     $type = strtolower($type);
     $fieldname = $this->getRealFieldname($page, $shortname);
     if (!$fieldname) return false;
@@ -1155,6 +1157,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $val = $page->getFormatted($fieldname);
       if (is_string($val)) return $this->html($val);
       return $val;
+    }
+
+    // formatted as array (eg pageimages)
+    if ($type === 'a') {
+      return $page->getFormatted("$fieldname.[]");
+    }
+
+    // formatted as single item (eg pageimage)
+    if ($type === 'first') {
+      return $page->getFormatted("$fieldname.first");
     }
 
     // unformatted
@@ -1550,8 +1562,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Return a latte HTML object that doesn't need to be |noescaped
    * @return Html
    */
-  public static function html($str)
+  public static function html($str, $trim = true)
   {
+    // don't return empty string as html object
+    // this os for easier checks in if conditions, eg n:if='$val'
+    // as this condition would always be true for html objects
+    if ($trim) $str = trim($str);
+    if (!$str) return '';
+
     // we try to return a latte html object
     // If we are not calling that from within a latte file
     // the html object will not be available. This can be the case in Seo tags.
