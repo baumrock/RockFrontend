@@ -324,7 +324,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$skipAssets) {
       $this->js("rootUrl", $this->wire->config->urls->root);
       $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js");
+      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js", "defer");
       $this->addAlfredStyles();
     }
 
