@@ -1152,17 +1152,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // edit field
     if ($type === 'e') return $this->html($page->edit($fieldname));
 
+    // force string
+
     // formatted
-    if ($type === 'f') {
+    if ($type === 'f' || $type === 's') {
       $val = $page->getFormatted($fieldname);
-      try {
-        // this will try to typecast the field to a string value
-        // this is to support fields like RockIcons that are an object
-        // that supports the magic __toString method
-        return $this->html((string)$val);
-      } catch (\Throwable $th) {
-        return $val;
-      }
+      if ($type === 's') $val = (string)$val;
+      if (is_string($val)) return $this->html($val);
+      return $val;
     }
 
     // formatted as array (eg pageimages)
