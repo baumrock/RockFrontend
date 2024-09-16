@@ -15,9 +15,11 @@ use function ProcessWire\wire;
 class LiveReload extends Wire
 {
   private $config;
+  public $started;
 
   public function __construct()
   {
+    $this->started = time();
     $config = $this->wire->config->livereload;
     if (is_bool($config)) $config = (int)$config; // convert true/false to int
     if (is_int($config)) $config = ['interval' => $config]; // set interval
@@ -67,10 +69,11 @@ class LiveReload extends Wire
   /**
    * Find modified file after timestamp
    * This will return on first match
-   * @return void
    */
-  public function findModifiedFile($since)
+  public function findModifiedFile($since = null)
   {
+    if (!$since) $since = $this->started;
+
     // db(date("H:i:s", $since));
     // $timer = Debug::startTimer();
 
@@ -101,7 +104,7 @@ class LiveReload extends Wire
       foreach ($files as $file) {
         if ($this->hasChanged($file, $since)) {
           // bd(Debug::stopTimer($timer, "ms"));
-          return $file;
+          return (string)$file;
         }
       }
     }

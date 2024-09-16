@@ -17,15 +17,16 @@ setTimeout(() => {
 
   let evtSource;
   let startStream = function () {
-    let url = LiveReloadUrl + "?rockfrontend-livereload=" + LiveReloadPage;
+    let url = "./?rockfrontend-livereload=" + LiveReloadPage;
     evtSource = new EventSource(url, { withCredentials: true });
     evtSource.onmessage = function (event) {
-      let changed = event.data;
+      // changed means data starts with "File changed:"
+      let changed = event.data.startsWith("File changed:");
       if (!changed) return;
       if (reloading) return;
 
-      // show changed file
-      console.log(changed);
+      // save message to display on next page load
+      localStorage.setItem("livereload-message", event.data);
 
       // check if the current tab is active
       // if not, we do not reload
@@ -43,7 +44,7 @@ setTimeout(() => {
             input.classList.remove("InputfieldStateChanged");
           });
       } else {
-        // check if we are in the admin and have unsaved changes
+        // check if we are in the admin and have unsaved changes xx
         if (document.querySelectorAll(".InputfieldStateChanged").length) {
           console.log("detected change - unsaved changes prevent reload");
           // show notification
@@ -78,6 +79,11 @@ setTimeout(() => {
       localStorage.setItem("livereload-count", ++cnt);
       console.log("detected change - reloading " + cnt);
       reloading = true;
+
+      // close eventsource connection
+      evtSource.close();
+
+      // reload window on next tick
       setTimeout(() => {
         document.location.reload(true);
       }, redirecttimeout);
@@ -87,8 +93,13 @@ setTimeout(() => {
       if (document.querySelector("#tracy-bs")) return;
       console.log("Error occurred in EventSource.");
     };
+
+    // before window unload, close event source
+    window.addEventListener("beforeunload", () => {
+      evtSource.close();
+    });
   };
 
   startStream();
-  console.log("RockFrontend is listening for file changes...");
+  console.log("RockFrontend is listening for file changes ...");
 }, 1000);

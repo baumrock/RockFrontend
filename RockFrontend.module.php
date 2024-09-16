@@ -165,6 +165,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function __construct()
   {
     $this->folders = $this->wire(new WireArray());
+
+    // add livereload watch
     $this->addLiveReloadWatch();
   }
 
@@ -260,7 +262,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         });
       }
     }
-
 
     // others
     $this->checkHealth();
@@ -474,18 +475,34 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function addLiveReloadWatch(): void
   {
-    if (!$this->wire->config->livereload) return;
-    if (!array_key_exists(self::getParam, $_GET)) return;
-    $this->addHookBefore("Session::init", function (HookEvent $event) {
-      // disable tracy for the SSE stream
-      $event->wire->config->tracy = ['enabled' => false];
+    if (!wire()->config->debug) return;
+    if (!wire()->config->livereload) return;
+    if (!array_key_exists('rockfrontend-livereload', $_GET)) return;
 
-      // get livereload instance
-      $live = $this->getLiveReload();
-      $this->liveReload = $live;
-      $event->object->sessionAllow = false;
-      $this->isLiveReload = true;
-      $live->watch($_GET[self::getParam]);
+    // TODO: remove this once SSE is added to core
+    $sse = wire()->sse;
+    if (!$sse instanceof WireSSE) {
+      require_once __DIR__ . '/../WireSSE/WireSSE.php';
+      $sse = $this->wire(new WireSSE());
+      wire()->wire('sse', $sse);
+    }
+    if (!$sse instanceof WireSSE) return;
+
+    // we start the stream before ProcessWire starts sessions
+    // this is to make sure that the stream is non-blocking, which ensures
+    // that the user can still refresh the page even if the stream is not ready
+    wire()->addHookBefore('Session::init', function (HookEvent $event) {
+      wire()->sse->loop(function ($sse) {
+        $live = $this->getLiveReload();
+        $file = $live->findModifiedFile();
+        if (!$file) sleep(1);
+        else {
+          $sse->send("File changed: $file");
+          $actionFile = wire()->config->paths->site . 'livereload.php';
+          if (is_file($actionFile)) include $actionFile;
+          return false;
+        }
+      });
     });
   }
 
@@ -1870,6 +1887,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       var LiveReloadForce = $force;
       var livecnt = localStorage.getItem('livereload-count') || 0;
       console.log('Loading LiveReload - ' + livecnt);
+      console.log('Last message: ' + localStorage.getItem('livereload-message'));
       </script>
       <script src='$src'></script>
     ";
