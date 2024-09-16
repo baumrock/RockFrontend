@@ -173,7 +173,9 @@ class LiveReload extends Wire
     ];
 
     // expose page variable for included actionFile
-    $page = wire()->pages->get($pid);
+    // EDIT dont load the page as this can cause problems
+    // if the page uses traits that are not loaded on Session::init
+    // $page = wire()->pages->get($pid);
 
     // start loop
     $start = time();
