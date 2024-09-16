@@ -489,8 +489,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$sse instanceof WireSSE) return;
 
     // we start the stream before ProcessWire starts sessions
-    // this is to make sure that the stream is non-blocking, which ensures
-    // that the user can still refresh the page even if the stream is not ready
+    // this is to make sure that the stream is non-blocking, which ensures that
+    // the user can still refresh the page even if the stream is still active
     wire()->addHookBefore('Session::init', function (HookEvent $event) {
       wire()->sse->loop(function ($sse) {
         $live = $this->getLiveReload();
