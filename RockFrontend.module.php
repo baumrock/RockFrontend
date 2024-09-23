@@ -2243,11 +2243,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $html = $this->wire->files->render($file, $vars, $options);
     } elseif ($ext == 'svg') $html = $this->svg($file, $vars);
     else {
-      try {
+      if (wire()->config->debug) {
         $method = "renderFile" . ucfirst(strtolower($ext));
         $html = $this->$method($file, $vars);
-      } catch (\Throwable $th) {
-        $html = $th->getMessage();
+      } else {
+        try {
+          $method = "renderFile" . ucfirst(strtolower($ext));
+          $html = $this->$method($file, $vars);
+        } catch (\Throwable $th) {
+          $this->log($th->getMessage());
+          $html = '';
+        }
       }
     }
 
