@@ -53,6 +53,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
   const defaultVspaceScale = 0.66;
+  const layoutFile = '_main.latte';
 
   const ajax_noaccess = "ajax-noaccess";
   const ajax_rendererror = "ajax-render-error";
@@ -120,7 +121,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var Engine */
   private $latteWithLayout;
 
-  public $layoutFile = 'layout.latte';
+  public $layoutFile = self::layoutFile;
 
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
@@ -1805,7 +1806,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $tpl = rtrim($this->wire->config->paths->templates, "/");
     $layoutFile = ltrim($this->layoutFile, "/");
     if ($layoutFile) return "$tpl/$layoutFile";
-    return "$tpl/layout.latte";
+    return "$tpl/" . self::layoutFile;
   }
 
   /**
@@ -3113,7 +3114,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'layoutFile';
     $f->label = 'Filename of Autoload-Layout';
     $f->icon = 'file-code-o';
-    $f->value = $this->layoutFile ?: 'layout.latte';
+    $f->value = $this->layoutFile ?: self::layoutFile;
     $f->notes = "File relative to $dir";
     $f->showIf = "noLayoutFile=0";
     $fs->add($f);
