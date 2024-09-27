@@ -1132,6 +1132,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * e (default) = edit
    * u = unformatted
    * f = formatted
+   * s = string
+   * h = latte html object
+   * a = array
+   * [] = array
+   * first = single item
    *
    * Example:
    * field = my_prefix_myfield
@@ -1156,13 +1161,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($type === 'e') return $this->html($page->edit($fieldname));
 
     // force string
+    if ($type === 's') {
+      return (string)$page->getFormatted($fieldname);
+    }
 
     // formatted
-    if ($type === 'f' || $type === 's') {
-      $val = $page->getFormatted($fieldname);
-      if ($type === 's') $val = (string)$val;
-      if (is_string($val)) return $this->html($val);
-      return $val;
+    if ($type === 'f') {
+      return $page->getFormatted($fieldname);
+    }
+
+    // latte html object
+    if ($type === 'h') {
+      return $this->html((string)$page->getFormatted($fieldname));
     }
 
     // formatted as array (eg pageimages)
