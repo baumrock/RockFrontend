@@ -69,15 +69,19 @@ wire()->addHookAfter("RockFrontend::addLiveReload", function ($event) {
 
 ## Executing build scripts on file change
 
-RockFrontend can trigger a build script whenever a file has been changed. It even knows about the page that has been viewed. All you need to do is to add a file `/site/livereload.php` like this one:
+RockFrontend can trigger a build script whenever a file has been changed. Just create a file `/site/livereload.php` like this one:
 
 ```php
 <?php
-if ($page->template == 'admin') {
-  exec('npx tailwindcss -c ./tailwind-admin.config.js -i site/templates/_tailwind-admin.css -o site/templates/bundle/tailwind-admin.min.css --minify');
-} else {
-  exec('npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.min.css --minify');
-}
+
+if (!defined('PROCESSWIRE')) die();
+
+// early exit if not in debug mode or livereload is not enabled
+if (!wire()->config->debug) return;
+if (!wire()->config->livereload) return;
+
+// run npm build to compile css from tailwind
+exec('npm run build');
 ```
 
 ## Debugging
