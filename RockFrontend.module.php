@@ -134,6 +134,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var bool */
   public $noAssets = false;
 
+  public $noLayoutFile;
+
   private $onceKeys = [];
 
   /** @var string */
@@ -3094,8 +3096,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = new InputfieldCheckbox();
     $f->name = "noLayoutFile";
     $f->label = "Disable Autoload-Layout";
+    $f->notes = 'Please see [the docs](https://www.baumrock.com/en/processwire/modules/rockfrontend/docs/autoload-layout/) for details!';
     $f->attr('checked', $this->noLayoutFile);
-    $f->columnWidth = 50;
     $fs->add($f);
 
     $f = new InputfieldCheckbox();
@@ -3103,7 +3105,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->entityEncodeLabel = false;
     $f->label = "Copy file <i class='uk-background-muted' style='padding: 5px 10px;'>_rockfrontend.php</i> to /site/templates";
     $f->attr('checked', $this->copyLayoutFile);
-    $f->columnWidth = 50;
     $f->showIf = "noLayoutFile=0";
     $f->notes = 'Make sure to also set this in /site/config.php:
       $config->appendTemplateFile = "_rockfrontend.php";';
