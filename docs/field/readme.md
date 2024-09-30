@@ -30,12 +30,13 @@ Or using latte syntax:
 - **Page $page**: The Page object from which the field will be retrieved.
 - **string $shortname**: The short name of the field to be retrieved. This is useful for fields with prefixes.
 - **string $type**: (optional) The type of rendering to be applied to the field's value. The default is 'f' for formatted. The available options are:
-  - 'e': Frontend editable field.
-  - 'u': Unformatted value.
-  - 'f': Formatted value (default).
-  - 's': Formatted value forced as a string.
-  - 'a' or '[]': Formatted value as an array (e.g., for page images).
-  - 'first': Formatted value as a single item (e.g., for a single page image).
+  - e: Frontend editable field.
+  - u: Unformatted value.
+  - f: Formatted value (default).
+  - s: Formatted value forced as a string.
+  - h: Formatted value as HTML object (for latte).
+  - a or []: Formatted value as an array (e.g., for page images).
+  - first: Formatted value as a single item (e.g., for a single page image).
 
 ## Short fieldname and prefixed fieldnames
 

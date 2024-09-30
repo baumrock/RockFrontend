@@ -3,6 +3,8 @@
 namespace ProcessWire;
 
 /**
+ * DO NOT CHANGE THIS FILE!
+ *
  * This file was created by RockFrontend
  * Do not change it to make sure that updating RockFrontend will not break
  * your site! Use _init.php to add custom modifications to your site.

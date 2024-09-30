@@ -18,6 +18,54 @@ Then refresh your page and open the developer tools. In the console you should s
 <div class="uk-text-small">This is to make sure that when using RockMigrations you don't get multiple migration runs at the same time because of multiple open browser tabs.</div>
 </div>
 
+## How does it work?
+
+RockFrontend starts an SSE stream once you visit a page. In that SSE stream it triggers LiveReload::watch() in the configured interval (usually every second). If it finds a file that has changed since the page has been visited it triggers a reload via JavaScript.
+
+## Disabling LiveReload based on conditions
+
+You can enable/disable Livereload globally via the `$config->livereload` flag. If you want to prevent loading of Livereload on the frontend based on some criteria you can add a hook like this:
+
+```php
+// site/ready.php
+wire()->addHookAfter("RockFrontend::addLiveReload", function ($event) {
+  // if the current user is a guest user we override the
+  // original return value and set it to false
+  // which will tell RF to not add livereload markup
+  if(wire()->user->isGuest()) $event->return = false;
+});
+```
+
+## Executing build scripts on file change
+
+RockFrontend can trigger a build script whenever a file has been changed. Just create a file `/site/livereload.php` like this one:
+
+```php
+<?php
+
+if (!defined('PROCESSWIRE')) die();
+
+// early exit if not in debug mode or livereload is not enabled
+if (!wire()->config->debug) return;
+if (!wire()->config->livereload) return;
+
+// run npm build to compile css from tailwind
+exec('npm run build');
+```
+
+## Debugging
+
+If you get unexpected reloads check the `livereload` log in the PW backend. Whenever RockFrontend detects a changed file in the LiveReload stream it will log the filename in the livereload log.
+
+## Browser Support
+
+Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position!
+
+## DDEV
+
+If using DDEV make sure you have a correct webserver type otherwise the reloads might be buggy and slow! You need to have `webserver_type: apache-fpm`
+
+
 ## Config
 
 If you do a `bd($rockfrontend->getLiveReload());` you can see the default setup:
@@ -48,46 +96,3 @@ $config->livereload = [
   'excludeDefaults' => [],
 ];
 ```
-
-## How does it work?
-
-RockFrontend starts an SSE stream once you visit a page. In that SSE stream it triggers LiveReload::watch() in the configured interval (usually every second). If it finds a file that has changed since the page has been visited it triggers a reload via JavaScript.
-
-## Disabling LiveReload based on conditions
-
-You can enable/disable Livereload globally via the `$config->livereload` flag. If you want to prevent loading of Livereload on the frontend based on some criteria you can add a hook like this:
-
-```php
-// site/ready.php
-wire()->addHookAfter("RockFrontend::addLiveReload", function ($event) {
-  // if the current user is a guest user we override the
-  // original return value and set it to false
-  // which will tell RF to not add livereload markup
-  if(wire()->user->isGuest()) $event->return = false;
-});
-```
-
-## Executing build scripts on file change
-
-RockFrontend can trigger a build script whenever a file has been changed. It even knows about the page that has been viewed. All you need to do is to add a file `/site/livereload.php` like this one:
-
-```php
-<?php
-if ($page->template == 'admin') {
-  exec('npx tailwindcss -c ./tailwind-admin.config.js -i site/templates/_tailwind-admin.css -o site/templates/bundle/tailwind-admin.min.css --minify');
-} else {
-  exec('npx tailwindcss -i site/templates/_tailwind.css -o site/templates/bundle/tailwind.min.css --minify');
-}
-```
-
-## Debugging
-
-If you get unexpected reloads check the `livereload` log in the PW backend. Whenever RockFrontend detects a changed file in the LiveReload stream it will log the filename in the livereload log.
-
-## Browser Support
-
-Note that Firefox will always jump to the top of the page while Chrome will keep the scroll position!
-
-## DDEV
-
-If using DDEV make sure you have a correct webserver type otherwise the reloads might be buggy and slow! You need to have `webserver_type: apache-fpm`

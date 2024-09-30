@@ -173,7 +173,9 @@ class LiveReload extends Wire
     ];
 
     // expose page variable for included actionFile
-    $page = wire()->pages->get($pid);
+    // EDIT dont load the page as this can cause problems
+    // if the page uses traits that are not loaded on Session::init
+    // $page = wire()->pages->get($pid);
 
     // start loop
     $start = time();
@@ -185,7 +187,12 @@ class LiveReload extends Wire
       if (!$executed && $file && $debug) {
         $this->wire->log->save('livereload', "File changed: $file", $opt);
         $actionFile = wire()->config->paths->site . 'livereload.php';
-        if (is_file($actionFile)) include $actionFile;
+        if (is_file($actionFile)) {
+          $this->wire->log->save('livereload', "Loading actionfile $actionFile");
+          include $actionFile;
+        } else {
+          $this->wire->log->save('livereload', "No actionfile $actionFile");
+        }
         $executed = true;
       }
 
