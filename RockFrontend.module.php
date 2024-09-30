@@ -355,6 +355,26 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Add a folder as ajax endpoint
+   *
+   * Usage:
+   * rockfrontend()->addAjaxFolder(
+   *   '/rockcommerce/',
+   *   __DIR__ . '/ajax/',
+   * );
+   *
+   * This will add all .php files as ajax-endpoints. It also supports nested
+   * folders, for example:
+   *
+   * /cart/add.php
+   * /cart/reset.php
+   *
+   * rockfrontend()->addAjaxFolder(
+   *   '/rockcommerce/',
+   *   __DIR__ . '/ajax/',
+   * );
+   * --> /rockcommerce/cart/add
+   * --> /rockcommerce/cart/reset
+   *
    * @param string $url
    * @param string $folder
    * @return void
@@ -623,6 +643,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $markup;
   }
 
+  /**
+   * Get array of all added ajax endpoints
+   * Array is in format [endpoint-url => filepath]
+   * @return array
+   */
   private function ajaxEndpoints(): array
   {
     // scan for these extensions
@@ -639,9 +664,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       foreach ($this->ajaxFolders as $baseurl => $folder) {
         $endpoints = $this->wire->files->find($folder, $opt);
         foreach ($endpoints as $endpoint) {
-          $base = pathinfo($endpoint, PATHINFO_FILENAME);
-          $url = $baseurl . $base;
-          if (array_key_exists($base, $arr)) continue;
+          $url = $baseurl . substr($endpoint, strlen($folder), -4);
+          if (array_key_exists($url, $arr)) continue;
           $arr[$url] = $endpoint;
         }
       }
