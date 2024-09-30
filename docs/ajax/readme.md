@@ -2,6 +2,8 @@
 
 <div class='uk-alert uk-alert-warning'>Always make sure to properly sanitize user input and also make sure to protect your endpoints from unauthorized access!</div>
 
+<a href='https://youtu.be/xT4Y7MQwP3M'><img src=https://i.imgur.com/JEiNnIq.png></a>
+
 As modern websites become more interactive, the need for AJAX endpoints has become increasingly important. RockFrontend makes it easy to create and use AJAX endpoints with HTMX, `fetch()` or any other AJAX technology.
 
 To create a new endpoint, all you need to do is place a PHP file within the `/site/templates/ajax/` directory. For example, adding a file named `foo.php` in this directory automatically generates an endpoint accessible via `/ajax/foo`.
