@@ -2,7 +2,7 @@
 
 <div class='uk-alert uk-alert-warning'>Always make sure to properly sanitize user input and also make sure to protect your endpoints from unauthorized access!</div>
 
-<a href='https://youtu.be/xT4Y7MQwP3M'><img src=https://i.imgur.com/JEiNnIq.png></a>
+<a href='https://youtu.be/xT4Y7MQwP3M'><img src=https://i.imgur.com/qOlJKRz.jpeg></a>
 
 As modern websites become more interactive, the need for AJAX endpoints has become increasingly important. RockFrontend makes it easy to create and use AJAX endpoints with HTMX, `fetch()` or any other AJAX technology.
 
@@ -89,13 +89,15 @@ if (!wire()->user->isSuperuser()) {
 return ['foo' => 'bar'];
 ```
 
-## Debugging Endpoints for Superusers
+## Debugging Endpoints (for Superusers)
 
 <div class='uk-alert'>Visit /ajax/your-endpoint-name in the browser</div>
 
 When logged in as a superuser, RockFrontend provides a straightforward UI that shows all the important information for debugging your endpoints:
 
 <img src=ajax.png class=blur>
+
+RockFrontend will automatically reload the page when the endpoint file is changed. If TracyDebugger is installed you can also use `bd()` in your endpoint to dump data.
 
 ## Adding Endpoints to 3rd party modules
 
