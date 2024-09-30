@@ -353,8 +353,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $html;
   }
 
-  public function addAjaxFolder(string $url, string $folder): void
-  {
+  /**
+   * Add a folder as ajax endpoint
+   * @param string $url
+   * @param string $folder
+   * @return void
+   */
+  public function addAjaxFolder(
+    string $url,
+    string $folder,
+  ): void {
     $url = '/' . trim($url, '/') . '/';
     $folder = '/' . trim(Paths::normalizeSeparators($folder), '/') . '/';
     $this->ajaxFolders[$url] = $folder;
