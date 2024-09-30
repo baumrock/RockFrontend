@@ -1,3 +1,10 @@
+## [3.21.1](https://github.com/baumrock/RockFrontend/compare/v3.21.0...v3.21.1) (2024-09-30)
+
+
+### Bug Fixes
+
+* toPath() issue on subfolder installations ([911dd3b](https://github.com/baumrock/RockFrontend/commit/911dd3bfb79566ae5f4dbfc03febe28bd89c0a39))
+
 ## [3.21.0](https://github.com/baumrock/RockFrontend/compare/v3.20.0...v3.21.0) (2024-09-30)
 
 
@@ -55,11 +62,4 @@
 
 * add minified topbar css ([034f0e2](https://github.com/baumrock/RockFrontend/commit/034f0e21557cf5aa6e62ef321cf12247a754799d))
 * prevent livereload from calling npm run build in the loop more than once ([4a787c4](https://github.com/baumrock/RockFrontend/commit/4a787c47f15f1dccd809e020b729380da3c4b92f))
-
-## [3.18.1](https://github.com/baumrock/RockFrontend/compare/v3.18.0...v3.18.1) (2024-07-02)
-
-
-### Bug Fixes
-
-* disable preflight ([c4e3723](https://github.com/baumrock/RockFrontend/commit/c4e37232ca220f713991de20d672bae83e3d7608))
 
