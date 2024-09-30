@@ -17,6 +17,12 @@
       <p>Endpoint: <strong>{$endpoint}</strong></p>
     </div>
     <div class="uk-alert">
+      <div class="uk-text-bold">Input variables (GET/POST):</div>
+      <div class="uk-margin-small uk-background-default">{$input|noescape}</div>
+      <div class='uk-text-small'>Note: Use <code>$input->foo</code> to access variables in your endpoint file.</div>
+      <div class='uk-text-small'>Note: POST has precedence over GET.</div>
+    </div>
+    <div class="uk-alert">
       <div class="uk-text-bold">Raw response:</div>
       <div class="uk-margin-small uk-background-default">{$response|noescape}</div>
     </div>
@@ -33,12 +39,17 @@
     <div class="uk-alert">
       <div class="uk-text-bold">Send AJAX Request</div>
       <div class="uk-margin-small uk-background-default uk-padding-small">
-        <button hx-get="{$ajaxUrl}" hx-target="#hx-response" class="uk-button">
+        <button hx-get="{$ajaxUrl}" hx-target="#hx-response" hx-trigger="click" class="uk-button">
           GET
         </button>
-        <button hx-post="{$ajaxUrl}" hx-target="#hx-response" class="uk-button">
+        <button hx-post="{$ajaxUrl}" hx-target="#hx-response" hx-trigger="click" class="uk-button">
           POST
         </button>
+        <div class="uk-margin-small-top">
+          <div><strong>Payload:</strong></div>
+          {var $placeholder = "foo: FOO!\nbar: BAR!\n"}
+          <textarea id="hx-payload" class="uk-textarea" placeholder="{$placeholder}">{$textarea}</textarea>
+        </div>
         <div class="uk-margin-small-top">
           <strong>Response:</strong>
           <pre class="tracy-dump" id="hx-response">
@@ -52,9 +63,18 @@
     </div>
   </section>
   <script>
-  document.addEventListener('htmx:beforeRequest', function(event) {
-    document.getElementById('hx-response').innerHTML = 'loading ...';
+  document.body.addEventListener('htmx:configRequest', function(evt) {
+    const payload = document.getElementById('hx-payload').value;
+    if (payload) {
+      payload.split('\n').forEach(line => {
+        const [key, value] = line.split(':').map(item => item.trim());
+        if (key && value) {
+          evt.detail.parameters[key] = value;
+        }
+      });
+    }
   });
+
   document.addEventListener('htmx:afterRequest', function(event) {
     try {
       const response = JSON.parse(event.detail.xhr.response);
