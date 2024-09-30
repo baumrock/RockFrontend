@@ -18,37 +18,6 @@ Then refresh your page and open the developer tools. In the console you should s
 <div class="uk-text-small">This is to make sure that when using RockMigrations you don't get multiple migration runs at the same time because of multiple open browser tabs.</div>
 </div>
 
-## Config
-
-If you do a `bd($rockfrontend->getLiveReload());` you can see the default setup:
-
-<img src=livereload.png class=blur>
-
-I've never had the need to do that, but you can optionally customize the config of LiveReload:
-
-```php
-$config->livereload = [
-  // interval to watch for changes
-  'interval' => 1, // 1s = default
-
-  // user defined include paths
-  'include' => [
-    '.*/foo/bar',
-  ],
-
-  // you can reset default include paths
-  'includeDefaults' => [],
-
-  // user defined exclude regexes
-  'exclude' => [
-    '.*/site/my-ignored-folder',
-  ],
-
-  // you can reset default excludes
-  'excludeDefaults' => [],
-];
-```
-
 ## How does it work?
 
 RockFrontend starts an SSE stream once you visit a page. In that SSE stream it triggers LiveReload::watch() in the configured interval (usually every second). If it finds a file that has changed since the page has been visited it triggers a reload via JavaScript.
@@ -95,3 +64,35 @@ Note that Firefox will always jump to the top of the page while Chrome will keep
 ## DDEV
 
 If using DDEV make sure you have a correct webserver type otherwise the reloads might be buggy and slow! You need to have `webserver_type: apache-fpm`
+
+
+## Config
+
+If you do a `bd($rockfrontend->getLiveReload());` you can see the default setup:
+
+<img src=livereload.png class=blur>
+
+I've never had the need to do that, but you can optionally customize the config of LiveReload:
+
+```php
+$config->livereload = [
+  // interval to watch for changes
+  'interval' => 1, // 1s = default
+
+  // user defined include paths
+  'include' => [
+    '.*/foo/bar',
+  ],
+
+  // you can reset default include paths
+  'includeDefaults' => [],
+
+  // user defined exclude regexes
+  'exclude' => [
+    '.*/site/my-ignored-folder',
+  ],
+
+  // you can reset default excludes
+  'excludeDefaults' => [],
+];
+```
