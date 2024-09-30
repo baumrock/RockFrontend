@@ -3053,6 +3053,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function toPath($url): string
   {
     $url = $this->toUrl($url);
+
+    // remove part after root folder for subfolder installations
+    if (str_starts_with($url, wire()->config->urls->root)) {
+      $url = substr($url, strlen(wire()->config->urls->root));
+    }
+
     return $this->wire->config->paths->root . ltrim($url, "/");
   }
 
