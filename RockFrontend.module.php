@@ -682,7 +682,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       foreach ($this->ajaxFolders as $baseurl => $folder) {
         $endpoints = $this->wire->files->find($folder, $opt);
         foreach ($endpoints as $endpoint) {
-          $url = $baseurl . substr($endpoint, strlen($folder), -4);
+          // remove endpoint file extension
+          $url = $baseurl . substr($endpoint, strlen($folder), - (strlen($ext) + 1));
           if (array_key_exists($url, $arr)) continue;
           $arr[$url] = $endpoint;
         }
