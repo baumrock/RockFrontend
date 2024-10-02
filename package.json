@@ -1,5 +1,5 @@
 {
-  "version": "3.21.1",
+  "version": "3.21.2",
   "dependencies": {
     "vitepress": "^1.0.0-alpha.51"
   },

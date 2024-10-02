@@ -1,3 +1,10 @@
+## [3.21.2](https://github.com/baumrock/RockFrontend/compare/v3.21.1...v3.21.2) (2024-10-02)
+
+
+### Bug Fixes
+
+* latte files not working in ajax endpoints ([3e6e8a1](https://github.com/baumrock/RockFrontend/commit/3e6e8a13edbc98e068bc470370e8f0e938fbb2b5))
+
 ## [3.21.1](https://github.com/baumrock/RockFrontend/compare/v3.21.0...v3.21.1) (2024-09-30)
 
 
@@ -54,12 +61,4 @@
 
 * issue in addPageEditWrapper when no field exists ([604349a](https://github.com/baumrock/RockFrontend/commit/604349a79a688bb3712af6080231c58fc656d928))
 * remove reload on error ([d43f14f](https://github.com/baumrock/RockFrontend/commit/d43f14fcf4644750da90331ffd78164352ddc870))
-
-## [3.18.2](https://github.com/baumrock/RockFrontend/compare/v3.18.1...v3.18.2) (2024-07-09)
-
-
-### Bug Fixes
-
-* add minified topbar css ([034f0e2](https://github.com/baumrock/RockFrontend/commit/034f0e21557cf5aa6e62ef321cf12247a754799d))
-* prevent livereload from calling npm run build in the loop more than once ([4a787c4](https://github.com/baumrock/RockFrontend/commit/4a787c47f15f1dccd809e020b729380da3c4b92f))
 
