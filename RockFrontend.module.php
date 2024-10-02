@@ -1210,23 +1210,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * Get field via short name (useful for prefixed fields)
-   *
-   * For convenient use with Latte this will return a HTML object if possible.
-   *
-   * Options for type:
-   * e (default) = edit
-   * u = unformatted
-   * f = formatted
-   * s = string
-   * h = latte html object
-   * a = array
-   * [] = array
-   * first = single item
+   * Get field via short name (useful for prefixed fields) and define return type
    *
    * Example:
    * field = my_prefix_myfield
    * echo $page->field('myfield', 'u');
+   *
+   * See possible type values from the switch statement below
    */
   public function field(
     Page $page,
@@ -1242,37 +1232,41 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // the noEdit flag prevents rendering editable fields
     if ($type === 'e' && $this->noEdit) $type = 'f';
-
-    // edit field
-    if ($type === 'e') return $this->html($page->edit($fieldname));
-
-    // force string
-    if ($type === 's') {
-      return (string)$page->getFormatted($fieldname);
+    switch ($type) {
+      case 'e':
+      case 'edit':
+        // edit field
+        return $this->html($page->edit($fieldname));
+      case 'f':
+      case 'formatted':
+        // formatted
+        return $page->getFormatted($fieldname);
+      case 'u':
+      case 'unformatted':
+        // unformatted
+        return $page->getUnformatted($fieldname);
+      case 's':
+      case 'string':
+        // string
+        return (string)$page->getFormatted($fieldname);
+      case 'h':
+      case 'html':
+        // latte html object
+        return $this->html((string)$page->getFormatted($fieldname));
+      case 'i':
+      case 'int':
+        // integer
+        // using (string) to convert pages to ids
+        return (int)(string)$page->getFormatted($fieldname);
+      case 'a':
+      case 'array':
+      case '[]':
+        // formatted as array (eg pageimages)
+        return $page->getFormatted("$fieldname.[]");
+      case 'first':
+        // formatted as single item (eg pageimage)
+        return $page->getFormatted("$fieldname.first");
     }
-
-    // formatted
-    if ($type === 'f') {
-      return $page->getFormatted($fieldname);
-    }
-
-    // latte html object
-    if ($type === 'h') {
-      return $this->html((string)$page->getFormatted($fieldname));
-    }
-
-    // formatted as array (eg pageimages)
-    if ($type === 'a' || $type === '[]') {
-      return $page->getFormatted("$fieldname.[]");
-    }
-
-    // formatted as single item (eg pageimage)
-    if ($type === 'first') {
-      return $page->getFormatted("$fieldname.first");
-    }
-
-    // unformatted
-    if ($type === 'u') return $page->getUnformatted($fieldname);
   }
 
   /**
