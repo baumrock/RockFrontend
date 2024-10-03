@@ -732,11 +732,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function ajaxPublic($endpoint): string
   {
-    try {
+    // return function to keep code DRY
+    $return = function ($endpoint) {
       $raw = $this->ajaxResponse($endpoint);
       $response = $this->ajaxFormatted($raw, $endpoint);
       header('Content-Type: ' . $this->contenttype);
       return $response;
+    };
+
+    // for debugging we don't catch errors
+    if (wire()->config->debug) return $return($endpoint);
+
+    // public endpoints return a generic error message
+    // to avoid leaking information
+    try {
+      return $return($endpoint);
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
       return "Error in AJAX endpoint - error has been logged";
