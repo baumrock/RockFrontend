@@ -173,6 +173,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
+    // load composer autoloader as early as possible
+    // this is so that anyone can create custom latte extensions
+    // without having to require the autoloader in their extension
+    require_once $this->path . "vendor/autoload.php";
     $this->wire->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
 
     // if settings are set in config.php we make sure to use these settings
@@ -2007,8 +2011,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     try {
       require_once __DIR__ . "/translate.php";
-      require_once $this->path . "vendor/autoload.php";
-
       $latte = new Engine;
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
       if ($this->wire->modules->isInstalled("TracyDebugger")) {
