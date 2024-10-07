@@ -121,15 +121,9 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
     });
 
     // toggle checkboxes based on enabled state
-    let checkboxes = document.querySelectorAll(".rf-consent-checkbox");
-    this.each(checkboxes, (cb) => {
-      let name = cb.getAttribute("data-name");
-      if (this.isEnabled(name)) {
-        cb.setAttribute("checked", "checked");
-      } else {
-        cb.removeAttribute("checked");
-      }
-    });
+    setTimeout(() => {
+      this.toggleCheckboxes();
+    }, 0);
 
     // debugging
     // console.log(C.getStorage());
@@ -140,6 +134,19 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
     let storage = this.getStorage();
     storage[name] = value;
     localStorage.setItem("rockfrontend-consent", JSON.stringify(storage));
+  };
+
+  // toggle checkboxes based on consent state
+  Consent.prototype.toggleCheckboxes = function () {
+    let checkboxes = document.querySelectorAll(".rf-consent-checkbox");
+    this.each(checkboxes, (cb) => {
+      let name = cb.getAttribute("data-name");
+      if (this.isEnabled(name)) {
+        cb.setAttribute("checked", "checked");
+      } else {
+        cb.removeAttribute("checked");
+      }
+    });
   };
 
   // monitor checkbox changes
@@ -235,6 +242,12 @@ if (typeof RockFrontend === "undefined") var RockFrontend = {};
       // trigger confirmation click
       document.querySelector(ask).click();
     }
+
+    // reload all checkboxes
+    // this makes sure that all checkboxes on the page have the correct state
+    // even if, for example, a checkbox is present more than once (eg on a
+    // regular page and in a modal overlay)
+    C.toggleCheckboxes();
   });
 
   RockFrontend.Consent = C;
