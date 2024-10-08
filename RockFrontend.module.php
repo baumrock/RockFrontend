@@ -2,6 +2,7 @@
 
 namespace ProcessWire;
 
+use ExposeFunctionsExtension;
 use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
@@ -2016,6 +2017,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       if ($this->wire->modules->isInstalled("TracyDebugger")) {
         $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
       }
+
+      // make processwire functions like wire() available in latte
+      // see https://processwire.com/talk/topic/30449-questions-and-syntax-latte-template-engine-by-nette/?do=findComment&comment=244743
+      // and https://forum.nette.org/en/36678-add-namespace-to-compiled-latte-files
+      require_once __DIR__ . "/latte/ExposeFunctionsExtension.php";
+      $latte->addExtension(new ExposeFunctionsExtension());
 
       // add custom filters
       // you can set $config->noLatteFilters = true to prevent loading of
