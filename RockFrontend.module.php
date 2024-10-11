@@ -2011,7 +2011,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->latte) return $this->latte;
 
     try {
-      require_once __DIR__ . "/translate.php";
       $latte = new Engine;
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
       if ($this->wire->modules->isInstalled("TracyDebugger")) {
