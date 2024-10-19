@@ -5,6 +5,7 @@ setTimeout(() => {
   let isModal = !!document.querySelector("body.modal");
   if (isModal) return;
   let reloading = false;
+  let warningShown = false;
 
   // dont load in iframes
   if (window.self !== window.top) return;
@@ -45,19 +46,22 @@ setTimeout(() => {
       } else {
         // check if we are in the admin and have unsaved changes
         if (document.querySelectorAll(".InputfieldStateChanged").length) {
-          console.log("detected change - unsaved changes prevent reload");
-          // show notification
-          // delay of 200ms prevents that the notification is shown
-          // when a page is saved that creates files in the background
-          setTimeout(() => {
-            UIkit.notification({
-              message:
-                "Unsaved changes prevent reload - use $config->livereloadForce to force reload.",
-              status: "warning",
-              pos: "top-center",
-              timeout: 0,
-            });
-          }, 200);
+          if (!warningShown) {
+            console.log("detected change - unsaved changes prevent reload");
+            // show notification
+            // delay of 200ms prevents that the notification is shown
+            // when a page is saved that creates files in the background
+            setTimeout(() => {
+              UIkit.notification({
+                message:
+                  "Unsaved changes prevent reload - use $config->livereloadForce to force reload.",
+                status: "warning",
+                pos: "top-center",
+                timeout: 0,
+              });
+            }, 200);
+            warningShown = true;
+          }
           return;
         }
         if (document.querySelectorAll("#pw-panel-shade").length) {
