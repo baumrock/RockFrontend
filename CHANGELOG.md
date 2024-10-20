@@ -1,3 +1,19 @@
+## [3.22.0](https://github.com/baumrock/RockFrontend/compare/v3.21.2...v3.22.0) (2024-10-20)
+
+
+### Features
+
+* add int as return type for field() method ([bcd403c](https://github.com/baumrock/RockFrontend/commit/bcd403c7b867945852ea987759d57c5309d635a6))
+* catch errors in public ajax endpoint only if debug=false (for better debugging) ([cfffdb5](https://github.com/baumrock/RockFrontend/commit/cfffdb53eba298e9739ccffd83b57cce84451d3d))
+* improve consent tools to work in ajax loaded modals ([119ea86](https://github.com/baumrock/RockFrontend/commit/119ea866d53c27848545c9fd9046cf870319e332))
+* make PW functions available to latte files ([e02091b](https://github.com/baumrock/RockFrontend/commit/e02091bacdd0dd167b9b790d58ae5f28f2149f32))
+
+
+### Bug Fixes
+
+* livereload warning showing up every second ([aee82a6](https://github.com/baumrock/RockFrontend/commit/aee82a6af05112644dee44f4ea71c60d4c48c33e))
+* load composer autoloader in init() ([4987feb](https://github.com/baumrock/RockFrontend/commit/4987febddaa843002aeffc7db1b19bdd73beb8b2))
+
 ## [3.21.2](https://github.com/baumrock/RockFrontend/compare/v3.21.1...v3.21.2) (2024-10-02)
 
 
@@ -46,19 +62,4 @@
 * avoid TypeError $ is not defined on slow connections ([5269d22](https://github.com/baumrock/RockFrontend/commit/5269d224b929c9132db6641bf7591f76a07f381b))
 * link broken due to linebreaks ([8f1c5ff](https://github.com/baumrock/RockFrontend/commit/8f1c5ff889c4e46173abc342ffea52c688405202))
 * passing null deprecated in trim() ([827099b](https://github.com/baumrock/RockFrontend/commit/827099b3359808578c1f60d1355b01895ca76157))
-
-## [3.19.0](https://github.com/baumrock/RockFrontend/compare/v3.18.2...v3.19.0) (2024-08-01)
-
-
-### Features
-
-* load /site/livereload.php on file change ([12105da](https://github.com/baumrock/RockFrontend/commit/12105daeda8182a29cf3768066a4610ab099bacb))
-* make addLiveReload hookable ([2f3f95b](https://github.com/baumrock/RockFrontend/commit/2f3f95b66457e3b5e54b1b25a6c19ddf52081757))
-* new method addPageEditWrapper() for custom page edit markup ([c80f566](https://github.com/baumrock/RockFrontend/commit/c80f566db13ba575c61b1de6682e0e5b2357e6f6))
-
-
-### Bug Fixes
-
-* issue in addPageEditWrapper when no field exists ([604349a](https://github.com/baumrock/RockFrontend/commit/604349a79a688bb3712af6080231c58fc656d928))
-* remove reload on error ([d43f14f](https://github.com/baumrock/RockFrontend/commit/d43f14fcf4644750da90331ffd78164352ddc870))
 
