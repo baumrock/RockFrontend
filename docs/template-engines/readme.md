@@ -28,38 +28,6 @@ $wire->addHookAfter("RockFrontend::loadLatte", function ($event) {
 
 You created a useful filter? Share it with us in the forum!
 
-### Translatable Strings
-
-Since version 2.24.0 RockFrontend supports translatable strings in latte files!! 😎🥳
-
-You just need to make sure that latte files are enabled in PW's translation system. In your PW backend search for "translator" and go to the module settings of the "Language Translator" module:
-
-<img src=translator.png class=blur>
-
-These are the three versions that you can use to translate strings in your LATTE files - choose whatever you prefer.
-
-```latte
-<p>{=__('This is a test')}</p>
-<p>{=_x('foo bar', 'context')}</p>
-<p>{=_n('Found one item', 'Found multiple items', 1)}</p>
-<p>{=_n('Found one item', 'Found multiple items', 2)}</p>
-
-<p>{$rf->_('This is a test')}</p>
-<p>{$rf->_x('foo bar', 'context')}</p>
-<p>{$rf->_n('Found one item', 'Found multiple items', 1)}</p>
-<p>{$rf->_n('Found one item', 'Found multiple items', 2)}</p>
-
-<p>{$rockfrontend->_('This is a test')}</p>
-<p>{$rockfrontend->_x('foo bar', 'context')}</p>
-<p>{$rockfrontend->_n('Found one item', 'Found multiple items', 1)}</p>
-<p>{$rockfrontend->_n('Found one item', 'Found multiple items', 2)}</p>
-```
-
-Note that when using the function-syntax you must prepend the function call with an equal sign! While the translation will - in theory - also work without the equal sign you will not be able to translate the string in the backend, because the regex will not find it!
-
-### setTextdomain
-
-TBD
 
 ## Twig
 

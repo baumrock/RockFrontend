@@ -2,6 +2,7 @@
 
 namespace ProcessWire;
 
+use ExposeFunctionsExtension;
 use HumanDates;
 use Latte\Engine;
 use Latte\Runtime\Html;
@@ -173,6 +174,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
+    // load composer autoloader as early as possible
+    // this is so that anyone can create custom latte extensions
+    // without having to require the autoloader in their extension
+    require_once $this->path . "vendor/autoload.php";
     $this->wire->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
 
     // if settings are set in config.php we make sure to use these settings
@@ -732,11 +737,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function ajaxPublic($endpoint): string
   {
-    try {
+    // return function to keep code DRY
+    $return = function ($endpoint) {
       $raw = $this->ajaxResponse($endpoint);
       $response = $this->ajaxFormatted($raw, $endpoint);
       header('Content-Type: ' . $this->contenttype);
       return $response;
+    };
+
+    // for debugging we don't catch errors
+    if (wire()->config->debug) return $return($endpoint);
+
+    // public endpoints return a generic error message
+    // to avoid leaking information
+    try {
+      return $return($endpoint);
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
       return "Error in AJAX endpoint - error has been logged";
@@ -1210,23 +1225,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * Get field via short name (useful for prefixed fields)
-   *
-   * For convenient use with Latte this will return a HTML object if possible.
-   *
-   * Options for type:
-   * e (default) = edit
-   * u = unformatted
-   * f = formatted
-   * s = string
-   * h = latte html object
-   * a = array
-   * [] = array
-   * first = single item
+   * Get field via short name (useful for prefixed fields) and define return type
    *
    * Example:
    * field = my_prefix_myfield
    * echo $page->field('myfield', 'u');
+   *
+   * See possible type values from the switch statement below
    */
   public function field(
     Page $page,
@@ -1242,37 +1247,41 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // the noEdit flag prevents rendering editable fields
     if ($type === 'e' && $this->noEdit) $type = 'f';
-
-    // edit field
-    if ($type === 'e') return $this->html($page->edit($fieldname));
-
-    // force string
-    if ($type === 's') {
-      return (string)$page->getFormatted($fieldname);
+    switch ($type) {
+      case 'e':
+      case 'edit':
+        // edit field
+        return $this->html($page->edit($fieldname));
+      case 'f':
+      case 'formatted':
+        // formatted
+        return $page->getFormatted($fieldname);
+      case 'u':
+      case 'unformatted':
+        // unformatted
+        return $page->getUnformatted($fieldname);
+      case 's':
+      case 'string':
+        // string
+        return (string)$page->getFormatted($fieldname);
+      case 'h':
+      case 'html':
+        // latte html object
+        return $this->html((string)$page->getFormatted($fieldname));
+      case 'i':
+      case 'int':
+        // integer
+        // using (string) to convert pages to ids
+        return (int)(string)$page->getFormatted($fieldname);
+      case 'a':
+      case 'array':
+      case '[]':
+        // formatted as array (eg pageimages)
+        return $page->getFormatted("$fieldname.[]");
+      case 'first':
+        // formatted as single item (eg pageimage)
+        return $page->getFormatted("$fieldname.first");
     }
-
-    // formatted
-    if ($type === 'f') {
-      return $page->getFormatted($fieldname);
-    }
-
-    // latte html object
-    if ($type === 'h') {
-      return $this->html((string)$page->getFormatted($fieldname));
-    }
-
-    // formatted as array (eg pageimages)
-    if ($type === 'a' || $type === '[]') {
-      return $page->getFormatted("$fieldname.[]");
-    }
-
-    // formatted as single item (eg pageimage)
-    if ($type === 'first') {
-      return $page->getFormatted("$fieldname.first");
-    }
-
-    // unformatted
-    if ($type === 'u') return $page->getUnformatted($fieldname);
   }
 
   /**
@@ -2002,14 +2011,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->latte) return $this->latte;
 
     try {
-      require_once __DIR__ . "/translate.php";
-      require_once $this->path . "vendor/autoload.php";
-
       $latte = new Engine;
       $latte->setTempDirectory($this->wire->config->paths->cache . "Latte");
       if ($this->wire->modules->isInstalled("TracyDebugger")) {
         $latte->addExtension(new \Latte\Bridges\Tracy\TracyExtension());
       }
+
+      // make processwire functions like wire() available in latte
+      // see https://processwire.com/talk/topic/30449-questions-and-syntax-latte-template-engine-by-nette/?do=findComment&comment=244743
+      // and https://forum.nette.org/en/36678-add-namespace-to-compiled-latte-files
+      require_once __DIR__ . "/latte/ExposeFunctionsExtension.php";
+      $latte->addExtension(new ExposeFunctionsExtension());
 
       // add custom filters
       // you can set $config->noLatteFilters = true to prevent loading of
