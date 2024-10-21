@@ -283,37 +283,6 @@ $rockfrontend->seo()
 <meta property="og:description" content="Your Page Description">
 ```
 
-## Favicon and OG Image
-
-Good buy favicon generators, hello RockFrontend! 😎
-
-RockFrontend can create a `favicon` and an `og:image` field for you if you have the `RockMigrations` module installed:
-
-<img src=seofields.png class=blur alt="RockFrontend SEO Fields">
-
-These fields will be added to the `home` template and if populated those files will be used in your SEO markup! The favicon must be PNG so that ProcessWire can create all the necessary icon size variations for you. SVG is not supported here. If you want to use an svg favicon simply add that tag manually to your markup.
-
-An example output could look like this:
-
-```html
-<link rel='icon' type='image/png' sizes='32x32' href=/site/assets/files/1/favicon.32x32.png>
-<link rel='icon' type='image/png' sizes='16x16' href=/site/assets/files/1/favicon.16x16.png>
-<link rel='icon' type='image/png' sizes='48x48' href=/site/assets/files/1/favicon.48x48.png>
-<link rel='icon' type='image/png' sizes='192x192' href=/site/assets/files/1/favicon.192x192.png>
-<link rel='apple-touch-icon' type='image/png' sizes='167x167' href=/site/assets/files/1/favicon.167x167.png>
-<link rel='apple-touch-icon' type='image/png' sizes='180x180' href=/site/assets/files/1/favicon.180x180.png>
-
-<meta property="og:image" content="https://www.example.com/site/assets/files/1/pexels-arnaud-vigne-13321059.1200x630.jpg">
-<meta property="og:image:type" content="image/jpeg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="RockFrontend - SEO Tools">
-```
-
-All these tags are generated automatically! Note that the favicon urls are relative `/site/assets/...` whereas the og:image path is absolute `https://www...`.
-
-But you don't need to know all that. RockFrontend does it for you! 🚀
-
 ## Website Manifest File
 
 You can create your website's manifest file from the RockFrontend module config. RockFrontend will then add that manifest file to your site's `<head>` section which will make the website appear in your selected color theme:
