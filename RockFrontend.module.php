@@ -3332,9 +3332,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         'notes' => $minifyWarning,
       ]);
 
-      $hasFavicon = $http->status(
-        $this->wire->pages->get(1)->httpUrl() . "favicon.ico"
-      );
+      $favicon = $this->wire->pages->get(1)->httpUrl() . "favicon.ico";
+      $hasFavicon = $http->status($favicon) === 200;
       $fs->add([
         'type' => 'markup',
         'label' => 'favicon.ico',
