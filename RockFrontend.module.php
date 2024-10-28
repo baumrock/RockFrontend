@@ -8,9 +8,11 @@ use Latte\Engine;
 use Latte\Runtime\Html;
 use LogicException;
 use MatthiasMullie\Minify\Exceptions\IOException;
+use ProcessWire\Paths as ProcessWirePaths;
 use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
+use RockFrontend\Paths;
 use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
 use RockFrontend\StylesArray;
@@ -141,6 +143,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /** @var string */
   public $path;
+
+  private $paths;
 
   /** @var WireData */
   public $postCSS;
@@ -389,7 +393,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     string $folder,
   ): void {
     $url = '/' . trim($url, '/') . '/';
-    $folder = '/' . trim(Paths::normalizeSeparators($folder), '/') . '/';
+    $folder = $this->paths()->toPath($folder);
     $this->ajaxFolders[$url] = $folder;
   }
 
@@ -613,20 +617,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   protected function ajaxAddEndpoints(): void
   {
-    foreach ($this->ajaxEndpoints() as $url => $endpoint) {
+    foreach ($this->ajaxEndpoints() as $url => $file) {
       wire()->addHook(
         $url,
-        function (HookEvent $event) use ($endpoint, $url) {
+        function (HookEvent $event) use ($file, $url) {
           $isGET = $this->wire->input->requestMethod() === 'GET';
 
           // ajax requests always return the public endpoint
           if ($this->ajax || !$isGET) {
-            return $this->ajaxPublic($endpoint);
+            return $this->ajaxPublic($file);
           }
 
           // non-ajax request show the debug screen for superusers
           if (wire()->user->isSuperuser()) {
-            return $this->ajaxDebug($endpoint, $url);
+            return $this->ajaxDebug($file, $url);
           }
 
           // guest and no ajax: no access!
@@ -640,10 +644,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
   }
 
-  private function ajaxDebug($endpoint, $url): string
+  /**
+   * Given a base url like /ajax/foo returns the subfolder-safe url like
+   * /subfolder/ajax/foo ready to be used for get/post requests
+   *
+   * @param mixed $base
+   * @return string
+   */
+  public function ajaxBaseToUrl(string $base): string
+  {
+    return $this->wire->pages->get(1)->url . ltrim($base, '/');
+  }
+
+  private function ajaxDebug($file, $url): string
   {
     // dont catch errors when debugging
-    $raw = $this->ajaxResponse($endpoint);
+    $raw = $this->ajaxResponse($file);
     $response = Dumper::toHtml($raw);
 
     // generate textarea content
@@ -654,10 +670,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // render html
     $markup = $this->render(__DIR__ . "/stubs/ajax-debug.latte", [
-      'endpoint' => $endpoint,
-      'ajaxUrl' => $url,
+      'endpoint' => $file,
+      'ajaxUrl' => $this->ajaxBaseToUrl($url),
       'response' => $response,
-      'formatted' => $this->ajaxFormatted($raw, $endpoint),
+      'formatted' => $this->ajaxFormatted($raw, $file),
       'contenttype' => $this->contenttype, // must be after formatted!
       'input' => Dumper::toHtml($this->ajaxVars()->getArray()),
       'textarea' => $textarea,
@@ -668,7 +684,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Get array of all added ajax endpoints
-   * Array is in format [endpoint-url => filepath]
+   * Array is in format [base-url => filepath]
+   *
+   * ATTENTION: The base-url is the endpoint url without the subfolder prefix!
+   *
+   * Example: /ajax/foo will be the base-url, but /subfolder/ajax/foo will be
+   * the endpoint used for GET/POST requests.
+   *
+   * You can get the subfolder-safe endpoint via ->ajaxBaseToUrl($baseurl)
+   *
    * @return array
    */
   private function ajaxEndpoints(): array
@@ -686,15 +710,13 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       $opt = ['extensions' => [$ext]];
       foreach ($this->ajaxFolders as $baseurl => $folder) {
         $endpoints = $this->wire->files->find($folder, $opt);
-        foreach ($endpoints as $endpoint) {
-          // Normalize paths to use forward slashes
-          $endpoint = Paths::normalizeSeparators($endpoint);
-          $folder = Paths::normalizeSeparators($folder);
-
-          // remove endpoint file extension
-          $url = $baseurl . substr($endpoint, strlen($folder), - (strlen($ext) + 1));
+        foreach ($endpoints as $file) {
+          // get file name without extension
+          $name = basename($file, '.' . $ext);
+          // remove file file extension
+          $url = $baseurl . $name;
           if (array_key_exists($url, $arr)) continue;
-          $arr[$url] = $endpoint;
+          $arr[$url] = $file;
         }
       }
     }
@@ -979,7 +1001,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function assetPath($path): string
   {
-    $path = Paths::normalizeSeparators($path);
+    $path = ProcessWirePaths::normalizeSeparators($path);
     $dir = $this->wire->config->paths->assets . "RockFrontend/";
     if (strpos($path, $dir) === 0) return $path;
     return $dir . trim($path, "/");
@@ -1221,7 +1243,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $rootPath = rtrim($rootPath, "/") . "/";
     $link = str_replace($this->wire->config->paths->root, $rootPath, $path);
-    $link = Paths::normalizeSeparators($link);
+    $link = ProcessWirePaths::normalizeSeparators($link);
 
     $handler = str_replace(":%line", "", $editor);
     $link = str_replace("%file", ltrim($link, "/"), $handler);
@@ -1359,7 +1381,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (strpos($file, "//") === 0) return $file;
     if (strpos($file, "http://") === 0) return $file;
     if (strpos($file, "https://") === 0) return $file;
-    $file = Paths::normalizeSeparators($file);
+    $file = ProcessWirePaths::normalizeSeparators($file);
 
     // we always add a slash to the file
     // this is to ensure that relative paths are not found by is_file() below
@@ -1379,7 +1401,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // look for the file in specified folders
     foreach ($this->folders as $folder) {
-      $folder = Paths::normalizeSeparators($folder);
+      $folder = ProcessWirePaths::normalizeSeparators($folder);
       $folder = rtrim($folder, "/") . "/";
       $path = $folder . ltrim($file, "/");
       if (is_file($path)) return $this->realpath($path);
@@ -1509,7 +1531,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function getPath($path, $forcePath = false)
   {
-    $path = Paths::normalizeSeparators($path);
+    $path = ProcessWirePaths::normalizeSeparators($path);
 
     // if the path is already absolute and exists we return it
     // we dont return relative paths!
@@ -1558,7 +1580,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $trace = debug_backtrace();
     $paths = $this->wire->config->paths;
     foreach ($trace as $step) {
-      $file = Paths::normalizeSeparators($step['file']);
+      $file = ProcessWirePaths::normalizeSeparators($step['file']);
 
       // first check for latte cache files
       // these files are .php files compiled from the original .latte file
@@ -2175,6 +2197,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Load the paths helper class
+   * @return Paths
+   */
+  public function paths(): Paths
+  {
+    return $this->paths ?? $this->paths = new Paths();
+  }
+
+  /**
    * Apply postCSS rules to given string
    */
   public function postCSS($str): string
@@ -2211,7 +2242,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ___profiles()
   {
     $profiles = [];
-    $path = Paths::normalizeSeparators(__DIR__ . "/profiles");
+    $path = ProcessWirePaths::normalizeSeparators(__DIR__ . "/profiles");
     foreach (array_diff(scandir($path), ['.', '..']) as $label) {
       $profiles["$path/$label"] = $label;
     }
@@ -2224,7 +2255,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function realpath($file)
   {
-    return Paths::normalizeSeparators(realpath($file));
+    return ProcessWirePaths::normalizeSeparators(realpath($file));
   }
 
   /**
@@ -2455,9 +2486,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function viewFile(string $file): string|false
   {
-    $file = Paths::normalizeSeparators($file);
+    $file = ProcessWirePaths::normalizeSeparators($file);
     foreach ($this->viewfolders as $folder) {
-      $folder = Paths::normalizeSeparators($folder);
+      $folder = ProcessWirePaths::normalizeSeparators($folder);
       $path = $this->wire->config->paths->root . trim($folder, "/") . "/";
       $f = $this->getFile($path . ltrim($file, "/"));
       if (is_file($f)) return $f;
@@ -2960,7 +2991,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // if data is a string that means it is a filepath or url
     elseif (is_string($data)) {
-      $data = Paths::normalizeSeparators($data);
+      $data = ProcessWirePaths::normalizeSeparators($data);
 
       // if the file does not exist we try to add the root path
       if (!is_file($data)) $data = $this->toPath($data);
@@ -3095,7 +3126,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return str_replace(
       $this->wire->config->paths->root,
       $this->wire->config->urls->root,
-      Paths::normalizeSeparators((string)$path) . $cache
+      ProcessWirePaths::normalizeSeparators((string)$path) . $cache
     );
   }
 
@@ -3189,7 +3220,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $html = '';
     foreach ($this->ajaxEndpoints() as $url => $file) {
-      $html .= "<div><a href=$url>$url</a></div>";
+      $href = rtrim(wire()->config->urls->root, '/') . $url;
+      $html .= "<div><a href=$href>$url</a></div>";
     }
     $f = new InputfieldMarkup();
     $f->label = 'AJAX';
