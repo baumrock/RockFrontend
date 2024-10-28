@@ -1,3 +1,10 @@
+## [3.23.1](https://github.com/baumrock/RockFrontend/compare/v3.23.0...v3.23.1) (2024-10-28)
+
+
+### Bug Fixes
+
+* issue with nested ajax endpoints/folders ([3f522d7](https://github.com/baumrock/RockFrontend/commit/3f522d7cdcc72319b16f16579d3694701126f414))
+
 ## [3.23.0](https://github.com/baumrock/RockFrontend/compare/v3.22.2...v3.23.0) (2024-10-28)
 
 
@@ -39,11 +46,4 @@
 
 * livereload warning showing up every second ([aee82a6](https://github.com/baumrock/RockFrontend/commit/aee82a6af05112644dee44f4ea71c60d4c48c33e))
 * load composer autoloader in init() ([4987feb](https://github.com/baumrock/RockFrontend/commit/4987febddaa843002aeffc7db1b19bdd73beb8b2))
-
-## [3.21.2](https://github.com/baumrock/RockFrontend/compare/v3.21.1...v3.21.2) (2024-10-02)
-
-
-### Bug Fixes
-
-* latte files not working in ajax endpoints ([3e6e8a1](https://github.com/baumrock/RockFrontend/commit/3e6e8a13edbc98e068bc470370e8f0e938fbb2b5))
 
