@@ -1,3 +1,15 @@
+## [3.23.0](https://github.com/baumrock/RockFrontend/compare/v3.22.2...v3.23.0) (2024-10-28)
+
+
+### Features
+
+* add new paths helper class ([0cf84be](https://github.com/baumrock/RockFrontend/commit/0cf84be630050d212b334e52477d97039823de4f))
+
+
+### Bug Fixes
+
+* use new paths helper to fix windows and subfolder issues on ajax feature ([c9fbd24](https://github.com/baumrock/RockFrontend/commit/c9fbd2430e166d304cae9af943510cb8a391bcdf))
+
 ## [3.22.2](https://github.com/baumrock/RockFrontend/compare/v3.22.1...v3.22.2) (2024-10-28)
 
 
@@ -34,11 +46,4 @@
 ### Bug Fixes
 
 * latte files not working in ajax endpoints ([3e6e8a1](https://github.com/baumrock/RockFrontend/commit/3e6e8a13edbc98e068bc470370e8f0e938fbb2b5))
-
-## [3.21.1](https://github.com/baumrock/RockFrontend/compare/v3.21.0...v3.21.1) (2024-09-30)
-
-
-### Bug Fixes
-
-* toPath() issue on subfolder installations ([911dd3b](https://github.com/baumrock/RockFrontend/commit/911dd3bfb79566ae5f4dbfc03febe28bd89c0a39))
 
