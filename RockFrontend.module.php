@@ -178,20 +178,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   public function init()
   {
+    $config = wire()->config;
+    $this->path = wire()->config->paths($this);
+    $this->home = wire()->pages->get(1);
+
     // load composer autoloader as early as possible
     // this is so that anyone can create custom latte extensions
     // without having to require the autoloader in their extension
     require_once $this->path . "vendor/autoload.php";
-    $this->wire->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
+    wire()->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
 
     // if settings are set in config.php we make sure to use these settings
-    $config = $this->wire->config;
     if ($config->livereloadBackend !== null) {
       $this->livereloadBackend = $config->livereloadBackend;
     }
-
-    $this->path = $this->wire->config->paths($this);
-    $this->home = $this->wire->pages->get(1);
 
     if (!is_array($this->features)) $this->features = [];
 
