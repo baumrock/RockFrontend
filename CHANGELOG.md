@@ -1,3 +1,10 @@
+## [3.23.2](https://github.com/baumrock/RockFrontend/compare/v3.23.1...v3.23.2) (2024-10-29)
+
+
+### Bug Fixes
+
+* issue with loading latte ([edef08f](https://github.com/baumrock/RockFrontend/commit/edef08fba71590b047bd70bf9867e86c39f0e41c))
+
 ## [3.23.1](https://github.com/baumrock/RockFrontend/compare/v3.23.0...v3.23.1) (2024-10-28)
 
 
@@ -30,20 +37,4 @@
 ### Bug Fixes
 
 * favicon.ico status detection ([9c73e13](https://github.com/baumrock/RockFrontend/commit/9c73e13e3aaef28e6978236c1fa5272605728e66))
-
-## [3.22.0](https://github.com/baumrock/RockFrontend/compare/v3.21.2...v3.22.0) (2024-10-20)
-
-
-### Features
-
-* add int as return type for field() method ([bcd403c](https://github.com/baumrock/RockFrontend/commit/bcd403c7b867945852ea987759d57c5309d635a6))
-* catch errors in public ajax endpoint only if debug=false (for better debugging) ([cfffdb5](https://github.com/baumrock/RockFrontend/commit/cfffdb53eba298e9739ccffd83b57cce84451d3d))
-* improve consent tools to work in ajax loaded modals ([119ea86](https://github.com/baumrock/RockFrontend/commit/119ea866d53c27848545c9fd9046cf870319e332))
-* make PW functions available to latte files ([e02091b](https://github.com/baumrock/RockFrontend/commit/e02091bacdd0dd167b9b790d58ae5f28f2149f32))
-
-
-### Bug Fixes
-
-* livereload warning showing up every second ([aee82a6](https://github.com/baumrock/RockFrontend/commit/aee82a6af05112644dee44f4ea71c60d4c48c33e))
-* load composer autoloader in init() ([4987feb](https://github.com/baumrock/RockFrontend/commit/4987febddaa843002aeffc7db1b19bdd73beb8b2))
 
