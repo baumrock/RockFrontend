@@ -1,3 +1,10 @@
+## [3.24.0](https://github.com/baumrock/RockFrontend/compare/v3.23.2...v3.24.0) (2024-11-30)
+
+
+### Features
+
+* add nette utils ([0f24a57](https://github.com/baumrock/RockFrontend/commit/0f24a579c62b93bbae9942187d31dda0a09dada6))
+
 ## [3.23.2](https://github.com/baumrock/RockFrontend/compare/v3.23.1...v3.23.2) (2024-10-29)
 
 
@@ -30,11 +37,4 @@
 ### Bug Fixes
 
 * try to fix windows issue with ajax endpoints ([5120f66](https://github.com/baumrock/RockFrontend/commit/5120f66c3d1cc7ea37a3139069a14e6c1b3eaedc))
-
-## [3.22.1](https://github.com/baumrock/RockFrontend/compare/v3.22.0...v3.22.1) (2024-10-21)
-
-
-### Bug Fixes
-
-* favicon.ico status detection ([9c73e13](https://github.com/baumrock/RockFrontend/commit/9c73e13e3aaef28e6978236c1fa5272605728e66))
 
