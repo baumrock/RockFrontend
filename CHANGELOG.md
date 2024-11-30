@@ -1,3 +1,14 @@
+## [4.0.0](https://github.com/baumrock/RockFrontend/compare/v3.24.0...v4.0.0) (2024-11-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* make autoPrepend optional by default and only load it if $config->rockfrontendAutoPrepend is set
+
+### Miscellaneous Chores
+
+* make autoPrepend optional by default and only load it if $config->rockfrontendAutoPrepend is set ([fa199cb](https://github.com/baumrock/RockFrontend/commit/fa199cb766d3cc652e4b0654473445c791b0926e))
+
 ## [3.24.0](https://github.com/baumrock/RockFrontend/compare/v3.23.2...v3.24.0) (2024-11-30)
 
 
@@ -30,11 +41,4 @@
 ### Bug Fixes
 
 * use new paths helper to fix windows and subfolder issues on ajax feature ([c9fbd24](https://github.com/baumrock/RockFrontend/commit/c9fbd2430e166d304cae9af943510cb8a391bcdf))
-
-## [3.22.2](https://github.com/baumrock/RockFrontend/compare/v3.22.1...v3.22.2) (2024-10-28)
-
-
-### Bug Fixes
-
-* try to fix windows issue with ajax endpoints ([5120f66](https://github.com/baumrock/RockFrontend/commit/5120f66c3d1cc7ea37a3139069a14e6c1b3eaedc))
 
