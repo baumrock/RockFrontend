@@ -1378,8 +1378,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return string
    */
-  public function getFile($file, $forcePath = false)
-  {
+  public function getFile(
+    string $file,
+    bool $forcePath = false,
+  ): string {
     if (strpos($file, "//") === 0) return $file;
     if (strpos($file, "http://") === 0) return $file;
     if (strpos($file, "https://") === 0) return $file;
