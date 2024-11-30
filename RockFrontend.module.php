@@ -1014,6 +1014,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public function autoPrepend($event)
   {
+    if (!wire()->config->rockfrontendAutoPrepend) return;
+
     /** @var Templatefile $tpl */
     $tpl = $event->object;
     $this->autoPrependFile = (string)$tpl;
