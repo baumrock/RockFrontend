@@ -175,6 +175,7 @@ class ComposerStaticInit4099f35b7b6284e2f3a57db28b8351f5
         'Latte\\Compiler\\TokenStream' => __DIR__ . '/..' . '/latte/latte/src/Latte/Compiler/TokenStream.php',
         'Latte\\ContentType' => __DIR__ . '/..' . '/latte/latte/src/Latte/ContentType.php',
         'Latte\\Engine' => __DIR__ . '/..' . '/latte/latte/src/Latte/Engine.php',
+        'Latte\\Essential\\AuxiliaryIterator' => __DIR__ . '/..' . '/latte/latte/src/Latte/Essential/AuxiliaryIterator.php',
         'Latte\\Essential\\Blueprint' => __DIR__ . '/..' . '/latte/latte/src/Latte/Essential/Blueprint.php',
         'Latte\\Essential\\CachingIterator' => __DIR__ . '/..' . '/latte/latte/src/Latte/Essential/CachingIterator.php',
         'Latte\\Essential\\CoreExtension' => __DIR__ . '/..' . '/latte/latte/src/Latte/Essential/CoreExtension.php',

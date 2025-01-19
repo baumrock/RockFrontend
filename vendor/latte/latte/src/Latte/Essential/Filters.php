@@ -23,6 +23,9 @@ use function is_array, is_string, count, strlen;
  */
 final class Filters
 {
+	public ?string $locale = null;
+
+
 	/**
 	 * Converts HTML to plain text.
 	 */
@@ -35,7 +38,7 @@ final class Filters
 
 
 	/**
-	 * Removes tags from HTML (but remains HTML entites).
+	 * Removes tags from HTML (but remains HTML entities).
 	 */
 	public static function stripTags(FilterInfo $info, $s): string
 	{
@@ -168,14 +171,11 @@ final class Filters
 	 */
 	public static function date(string|int|\DateTimeInterface|\DateInterval|null $time, ?string $format = null): ?string
 	{
+		$format ??= Latte\Runtime\Filters::$dateFormat;
 		if ($time == null) { // intentionally ==
 			return null;
-		}
-
-		$format ??= Latte\Runtime\Filters::$dateFormat;
-		if ($time instanceof \DateInterval) {
+		} elseif ($time instanceof \DateInterval) {
 			return $time->format($format);
-
 		} elseif (is_numeric($time)) {
 			$time = (new \DateTime)->setTimestamp((int) $time);
 		} elseif (!$time instanceof \DateTimeInterface) {
@@ -195,9 +195,74 @@ final class Filters
 
 
 	/**
+	 * Date/time formatting according to locale.
+	 */
+	public function localDate(
+		string|int|\DateTimeInterface|null $value,
+		?string $format = null,
+		?string $date = null,
+		?string $time = null,
+	): ?string
+	{
+		if ($this->locale === null) {
+			throw new Latte\RuntimeException('Filter |localDate requires the locale to be set using Engine::setLocale()');
+		} elseif ($value == null) { // intentionally ==
+			return null;
+		} elseif (is_numeric($value)) {
+			$value = (new \DateTime)->setTimestamp((int) $value);
+		} elseif (!$value instanceof \DateTimeInterface) {
+			$value = new \DateTime($value);
+			$errors = \DateTime::getLastErrors();
+			if (!empty($errors['warnings'])) {
+				throw new \InvalidArgumentException(reset($errors['warnings']));
+			}
+		}
+
+		if ($format === null) {
+			$xlt = ['' => \IntlDateFormatter::NONE, 'full' => \IntlDateFormatter::FULL, 'long' => \IntlDateFormatter::LONG, 'medium' => \IntlDateFormatter::MEDIUM, 'short' => \IntlDateFormatter::SHORT,
+				'relative-full' => \IntlDateFormatter::RELATIVE_FULL, 'relative-long' => \IntlDateFormatter::RELATIVE_LONG, 'relative-medium' => \IntlDateFormatter::RELATIVE_MEDIUM, 'relative-short' => \IntlDateFormatter::RELATIVE_SHORT];
+			$date ??= $time === null ? 'long' : null;
+			$formatter = new \IntlDateFormatter($this->locale, $xlt[$date], $xlt[$time]);
+		} else {
+			$formatter = new \IntlDateFormatter($this->locale, pattern: (new \IntlDatePatternGenerator($this->locale))->getBestPattern($format));
+		}
+
+		$res = $formatter->format($value);
+		$res = preg_replace('~(\d\.) ~', "\$1\u{a0}", $res);
+		return $res;
+	}
+
+
+	/**
+	 * Formats a number with grouped thousands and optionally decimal digits according to locale.
+	 */
+	public function number(
+		float $number,
+		string|int $patternOrDecimals = 0,
+		string $decimalSeparator = '.',
+		string $thousandsSeparator = ',',
+	): string
+	{
+		if (is_int($patternOrDecimals) && $patternOrDecimals < 0) {
+			throw new Latte\RuntimeException('Filter |number: the number of decimal must not be negative');
+		} elseif ($this->locale === null || func_num_args() > 2) {
+			return number_format($number, $patternOrDecimals, $decimalSeparator, $thousandsSeparator);
+		}
+
+		$formatter = new \NumberFormatter($this->locale, \NumberFormatter::DECIMAL);
+		if (is_string($patternOrDecimals)) {
+			$formatter->setPattern($patternOrDecimals);
+		} else {
+			$formatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, $patternOrDecimals);
+		}
+		return $formatter->format($number);
+	}
+
+
+	/**
 	 * Converts to human-readable file size.
 	 */
-	public static function bytes(float $bytes, int $precision = 2): string
+	public function bytes(float $bytes, int $precision = 2): string
 	{
 		$bytes = round($bytes);
 		$units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
@@ -209,7 +274,15 @@ final class Filters
 			$bytes /= 1024;
 		}
 
-		return round($bytes, $precision) . ' ' . $unit;
+		if ($this->locale === null) {
+			$bytes = (string) round($bytes, $precision);
+		} else {
+			$formatter = new \NumberFormatter($this->locale, \NumberFormatter::DECIMAL);
+			$formatter->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, $precision);
+			$bytes = $formatter->format($bytes);
+		}
+
+		return $bytes . ' ' . $unit;
 	}
 
 
@@ -449,14 +522,105 @@ final class Filters
 
 
 	/**
-	 * Sorts an array.
-	 * @param  mixed[]  $array
-	 * @return mixed[]
+	 * Sorts elements using the comparison function and preserves the key association.
+	 * @template K
+	 * @template V
+	 * @param  iterable<K, V>  $data
+	 * @return iterable<K, V>
 	 */
-	public static function sort(array $array, ?\Closure $callback = null): array
+	public function sort(
+		iterable $data,
+		?\Closure $comparison = null,
+		string|int|\Closure|null $by = null,
+		string|int|\Closure|bool $byKey = false,
+	): iterable
 	{
-		$callback ? uasort($array, $callback) : asort($array);
-		return $array;
+		if ($byKey !== false) {
+			if ($by !== null) {
+				throw new \InvalidArgumentException('Filter |sort cannot use both $by and $byKey.');
+			}
+			$by = $byKey === true ? null : $byKey;
+		}
+
+		if ($comparison) {
+		} elseif ($this->locale === null) {
+			$comparison = fn($a, $b) => $a <=> $b;
+		} else {
+			$collator = new \Collator($this->locale);
+			$comparison = fn($a, $b) => is_string($a) && is_string($b)
+				? $collator->compare($a, $b)
+				: $a <=> $b;
+		}
+
+		$comparison = match (true) {
+			$by === null => $comparison,
+			$by instanceof \Closure => fn($a, $b) => $comparison($by($a), $by($b)),
+			default => fn($a, $b) => $comparison(is_array($a) ? $a[$by] : $a->$by, is_array($b) ? $b[$by] : $b->$by),
+		};
+
+		if (is_array($data)) {
+			$byKey ? uksort($data, $comparison) : uasort($data, $comparison);
+			return $data;
+		}
+
+		$pairs = [];
+		foreach ($data as $key => $value) {
+			$pairs[] = [$key, $value];
+		}
+		uasort($pairs, fn($a, $b) => $byKey ? $comparison($a[0], $b[0]) : $comparison($a[1], $b[1]));
+
+		return new AuxiliaryIterator($pairs);
+	}
+
+
+	/**
+	 * Groups elements by the element indices and preserves the key association and order.
+	 * @template K
+	 * @template V
+	 * @param  iterable<K, V>  $data
+	 * @return iterable<iterable<K, V>>
+	 */
+	public static function group(iterable $data, string|int|\Closure $by): iterable
+	{
+		$fn = $by instanceof \Closure ? $by : fn($a) => is_array($a) ? $a[$by] : $a->$by;
+		$keys = $groups = [];
+
+		foreach ($data as $k => $v) {
+			$groupKey = $fn($v, $k);
+			if (!$groups || $prevKey !== $groupKey) {
+				$index = array_search($groupKey, $keys, true);
+				if ($index === false) {
+					$index = count($keys);
+					$keys[$index] = $groupKey;
+				}
+				$prevKey = $groupKey;
+			}
+			$groups[$index][] = [$k, $v];
+		}
+
+		return new AuxiliaryIterator(array_map(
+			fn($key, $group) => [$key, new AuxiliaryIterator($group)],
+			$keys,
+			$groups,
+		));
+	}
+
+
+	/**
+	 * Filters elements according to a given $predicate. Maintains original keys.
+	 * @template K
+	 * @template V
+	 * @param  iterable<K, V>  $iterable
+	 * @param  callable(V, K, iterable<K, V>): bool  $predicate
+	 * @return iterable<K, V>
+	 */
+	public static function filter(iterable $iterable, callable $predicate): iterable
+	{
+		foreach ($iterable as $k => $v) {
+			if ($predicate($v, $k, $iterable)) {
+				yield $k => $v;
+			}
+		}
 	}
 
 
@@ -514,11 +678,17 @@ final class Filters
 	/**
 	 * Returns the first element in an array or character in a string, or null if none.
 	 */
-	public static function first(string|array $value): mixed
+	public static function first(string|iterable $value): mixed
 	{
-		return is_array($value)
-			? ($value[array_key_first($value)] ?? null)
-			: self::substring($value, 0, 1);
+		if (is_string($value)) {
+			return self::substring($value, 0, 1);
+		}
+
+		foreach ($value as $item) {
+			return $item;
+		}
+
+		return null;
 	}
 
 

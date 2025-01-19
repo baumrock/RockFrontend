@@ -138,7 +138,7 @@ class Template
 
 		$params = $this->prepare();
 
-		if ($this->parentName === null && isset($this->global->coreParentFinder)) {
+		if ($this->parentName === null && !$this->referringTemplate && isset($this->global->coreParentFinder)) {
 			$this->parentName = ($this->global->coreParentFinder)($this);
 		}
 
@@ -170,7 +170,7 @@ class Template
 		$name = $this->engine->getLoader()->getReferredName($name, $this->name);
 		$referred = $referenceType === 'sandbox'
 			? (clone $this->engine)->setSandboxMode()->createTemplate($name, $params)
-			: $this->engine->createTemplate($name, $params);
+			: $this->engine->createTemplate($name, $params, clearCache: false);
 
 		$referred->referringTemplate = $this;
 		$referred->referenceType = $referenceType;

@@ -40,6 +40,12 @@ final class CoreExtension extends Latte\Extension
 	}
 
 
+	public function beforeRender(Runtime\Template $template): void
+	{
+		$this->filters->locale = $template->getEngine()->getLocale();
+	}
+
+
 	public function getTags(): array
 	{
 		return [
@@ -128,20 +134,23 @@ final class CoreExtension extends Latte\Extension
 			'escapeUrl' => 'rawurlencode',
 			'escapeXml' => [Latte\Runtime\Filters::class, 'escapeXml'],
 			'explode' => [$this->filters, 'explode'],
+			'filter' => [$this->filters, 'filter'],
 			'first' => [$this->filters, 'first'],
 			'firstUpper' => extension_loaded('mbstring')
 				? [$this->filters, 'firstUpper']
 				: fn() => throw new RuntimeException('Filter |firstUpper requires mbstring extension.'),
 			'floor' => [$this->filters, 'floor'],
+			'group' => [$this->filters, 'group'],
 			'implode' => [$this->filters, 'implode'],
 			'indent' => [$this->filters, 'indent'],
 			'join' => [$this->filters, 'implode'],
 			'last' => [$this->filters, 'last'],
 			'length' => [$this->filters, 'length'],
+			'localDate' => [$this->filters, 'localDate'],
 			'lower' => extension_loaded('mbstring')
 				? [$this->filters, 'lower']
 				: fn() => throw new RuntimeException('Filter |lower requires mbstring extension.'),
-			'number' => 'number_format',
+			'number' => [$this->filters, 'number'],
 			'padLeft' => [$this->filters, 'padLeft'],
 			'padRight' => [$this->filters, 'padRight'],
 			'query' => [$this->filters, 'query'],
@@ -181,6 +190,7 @@ final class CoreExtension extends Latte\Extension
 			'divisibleBy' => [$this->filters, 'divisibleBy'],
 			'even' => [$this->filters, 'even'],
 			'first' => [$this->filters, 'first'],
+			'group' => [$this->filters, 'group'],
 			'last' => [$this->filters, 'last'],
 			'odd' => [$this->filters, 'odd'],
 			'slice' => [$this->filters, 'slice'],
