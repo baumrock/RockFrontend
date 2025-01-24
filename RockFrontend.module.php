@@ -13,9 +13,7 @@ use RockFrontend\Asset;
 use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\Paths;
-use RockFrontend\ScriptsArray;
 use RockFrontend\Seo;
-use RockFrontend\StylesArray;
 use RockPageBuilder\Block;
 use Sabberworm\CSS\OutputFormat;
 use Sabberworm\CSS\Parser;
@@ -2752,31 +2750,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * Get given ScriptsArray instance or a new one if no name is provided
-   *
-   * Usage:
-   * $rockfrontend->scripts()->add(...)->add(...)->render();
-   *
-   * // file1.php
-   * $rockfrontend->scripts('main')->add(...);
-   * // file2.php
-   * $rockfrontend->scripts('main')->add(...);
-   * // _main.php
-   * $rockfrontend->scripts('main')->render();
-   *
-   * @return ScriptsArray
-   */
-  public function scripts($name = 'main')
-  {
-    $name = trim($name);
-    if (!$name) $name = 'main';
-    if (!$this->scripts) $this->scripts = new WireData();
-    $script = $this->scripts->get("rockfrontend-script-$name") ?: new ScriptsArray($name);
-    $this->scripts->set("rockfrontend-script-$name", $script);
-    return $script;
-  }
-
-  /**
    * Set viewFolders for folder rendering feature
    * This is required for RockCommerce htmx endpoint rendering.
    */
@@ -2920,32 +2893,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $file = $this->wire->config->paths->root . "sitemap.xml";
     if (is_file($file)) wire()->files->unlink($file);
-  }
-
-  /**
-   * Get given StylesArray instance or a new one if no name is provided
-   *
-   * Usage:
-   * $rockfrontend->styles()->add(...)->add(...)->render();
-   *
-   * // file1.php
-   * $rockfrontend->styles()->add(...);
-   * // file2.php
-   * $rockfrontend->styles()->add(...);
-   * // _main.php
-   * $rockfrontend->styles()->render();
-   *
-   * @return StylesArray
-   */
-  public function styles($name = 'main', $cssDir = null)
-  {
-    $name = trim($name);
-    if (!$name) $name = 'main';
-    if (!$this->styles) $this->styles = new WireData();
-    $style = $this->styles->get("rf-style-$name") ?: new StylesArray($name);
-    if ($name) $this->styles->set("rf-style-$name", $style);
-    if ($cssDir) $style->cssDir = $cssDir;
-    return $style;
   }
 
   /**
