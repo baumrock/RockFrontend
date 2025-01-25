@@ -10,7 +10,6 @@ use LogicException;
 use MatthiasMullie\Minify\Exceptions\IOException;
 use ProcessWire\Paths as ProcessWirePaths;
 use RockFrontend\Asset;
-use RockFrontend\LiveReload;
 use RockFrontend\Manifest;
 use RockFrontend\Paths;
 use RockFrontend\Seo;
@@ -48,8 +47,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   const prefix = "rockfrontend_";
   const tagsUrl = "/rockfrontend-layout-suggestions/{q}";
   const permission_alfred = "rockfrontend-alfred";
-  const livereloadCacheName = "rockfrontend_livereload"; // also in livereload.php
-  const getParam = 'rockfrontend-livereload';
   const cache = 'rockfrontend-uikit-versions';
   const installedprofilekey = 'rockfrontend-installed-profile';
   const recompile = 'rockfrontend-recompile-less';
@@ -109,8 +106,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var bool */
   public $hasAlfred = false;
 
-  public $isLiveReload = false;
-
   /** @var array */
   protected $js = [];
 
@@ -126,8 +121,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /** @var WireArray $layoutFolders */
   public $layoutFolders;
-
-  private $liveReload;
 
   /** @var Manifest */
   protected $manifest;
@@ -152,15 +145,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    */
   public $remBase;
 
-  private $scripts;
-
   /** @var Seo */
   public $seo;
 
   private $sitemapCallback;
   private $sitemapOptions;
-
-  private $styles;
 
   /** @var array */
   private $translations = [];
@@ -171,12 +160,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function __construct()
   {
     $this->folders = $this->wire(new WireArray());
-    $this->addLiveReloadWatch();
   }
 
   public function init()
   {
-    $config = wire()->config;
     $this->path = wire()->config->paths($this);
     $this->home = wire()->pages->get(1);
 
@@ -185,11 +172,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // without having to require the autoloader in their extension
     require_once $this->path . "vendor/autoload.php";
     wire()->classLoader->addNamespace("RockFrontend", __DIR__ . "/classes");
-
-    // if settings are set in config.php we make sure to use these settings
-    if ($config->livereloadBackend !== null) {
-      $this->livereloadBackend = $config->livereloadBackend;
-    }
 
     if (!is_array($this->features)) $this->features = [];
 
@@ -256,21 +238,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     wire()->addHookAfter("Page::changed",                $this, "resetCustomLess");
     wire()->addHookBefore("Page::render",                $this, "createCustomLess");
     wire()->addHookMethod("Page::otherLangUrl",          $this, "otherLangUrl");
-    wire()->addHookAfter("Modules::refresh",             $this, "livereloadResetCache");
-    wire()->addHookAfter("Page::render",                 $this, "livereloadAddMarkup");
     wire()->addHookAfter("Page::render",                 $this, "hookAddMarkup");
-
-    // LiveReload on Tracy Error Page
-    // See https://processwire.com/talk/topic/29910-how-to-inject-custom-markup-into-tracys-error-pages/#comment-240601
-    if ($this->wire->modules->isInstalled('TracyDebugger')) {
-      if ($this->addLiveReload()) {
-        $blueScreen = \Tracy\Debugger::getBlueScreen();
-        $blueScreen->addPanel(function () {
-          return ['tab' => 'RFE Panel', 'panel' => $this->liveReloadMarkup()];
-        });
-      }
-    }
-
 
     // others
     $this->checkHealth();
@@ -498,33 +466,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($f->name != self::field_footerlinks) return;
     if ($f->notes) $f->notes .= "\n";
     $f->notes .= "Superuser Note: Use \$rockfrontend->footerlinks() to access links as a PageArray in your template file (ready for foreach).";
-  }
-
-  public function ___addLiveReload(): bool
-  {
-    $config = $this->wire->config;
-    if (!$config->livereload) return false;
-    if ($config->rockformsPreserveSuccess) return false;
-    if ($config->ajax) return false;
-    if ($config->external) return false;
-    return true;
-  }
-
-  private function addLiveReloadWatch(): void
-  {
-    if (!$this->wire->config->livereload) return;
-    if (!array_key_exists(self::getParam, $_GET)) return;
-    $this->addHookBefore("Session::init", function (HookEvent $event) {
-      // disable tracy for the SSE stream
-      $event->wire->config->tracy = ['enabled' => false];
-
-      // get livereload instance
-      $live = $this->getLiveReload();
-      $this->liveReload = $live;
-      $event->object->sessionAllow = false;
-      $this->isLiveReload = true;
-      $live->watch($_GET[self::getParam]);
-    });
   }
 
   /**
@@ -1519,16 +1460,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
-   * Get a new instance of LiveReload
-   */
-  public function getLiveReload(): LiveReload
-  {
-    if ($this->liveReload) return $this->liveReload;
-    require_once __DIR__ . "/LiveReload.php";
-    return $this->liveReload = new LiveReload();
-  }
-
-  /**
    * Find path in rockfrontend folders
    * Returns path with trailing slash
    * @return string|false
@@ -1962,62 +1893,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function lighten($hex, $percent): string
   {
     return $this->adjustBrightness($hex, $percent / 100);
-  }
-
-  protected function livereloadAddMarkup(HookEvent $event)
-  {
-    if (!$this->addLiveReload()) return;
-    if ($this->livereloadAdded) return;
-
-    // early exit when page is opened in modal window
-    // this is to prevent enless reloads when the parent frame is reloading
-    if ($this->wire->input->get('modal')) return;
-
-    $page = $this->wire->page;
-
-    // for backend requests we need more caution
-    // this is because live reload will break the module installation screen for example
-    if ($page->template == 'admin') {
-      // if livereload is disabled on backend pages we exit early
-      $config = $this->wire->config;
-      $livereloadBackend = $this->livereloadBackend ?: $config->livereloadBackend;
-      if (!$livereloadBackend) return;
-
-      // on module config screens we disable livereload if it is not explicitly
-      // forced to be enabled. this is to prevent problems when downloading
-      // and installing modules!
-      if ($page->process == "ProcessModule" && !$this->liveReloadModules) return;
-    }
-
-    $this->livereloadAdded = true;
-    $event->return .= $this->liveReloadMarkup();
-  }
-
-  public function liveReloadMarkup(): string
-  {
-    // get and minify the livereload script
-    // dont worry, this will only be done for superusers ;)
-    $file = $this->minifyFile($this->path . "livereload.js");
-    $src = $this->url($file, true);
-
-    $force = (int)$this->wire->config->livereloadForce;
-    return "
-      <script>
-      var LiveReloadUrl = '{$this->wire->config->urls->root}';
-      var LiveReloadPage = {$this->wire->page->id};
-      var LiveReloadForce = $force;
-      var livecnt = localStorage.getItem('livereload-count') || 0;
-      console.log('Loading LiveReload - ' + livecnt);
-      </script>
-      <script src='$src'></script>
-    ";
-  }
-
-  protected function livereloadResetCache(): void
-  {
-    $cachefile = $this->wire->config->paths->cache . self::livereloadCacheName . ".txt";
-    if (is_file($cachefile)) $this->wire->files->unlink($cachefile);
-    // $this->wire->cache->save(self::livereloadCacheName, null);
   }
 
   /**
@@ -3159,7 +3034,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $config->styles->add($config->urls($this) . "RockFrontend.module.css");
 
     $this->configSEO($inputfields);
-    $this->configLivereload($inputfields);
     $this->configLatte($inputfields);
     $this->configTailwind($inputfields);
     $this->configAjax($inputfields);
@@ -3222,50 +3096,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->notes = "File relative to $dir";
     $f->showIf = "noLayoutFile=0";
     $fs->add($f);
-  }
-
-  private function configLivereload(InputfieldWrapper $inputfields)
-  {
-    $fs = new InputfieldFieldset();
-    $fs->label = "LiveReload";
-    $fs->icon = "refresh";
-    $fs->collapsed = Inputfield::collapsedYes;
-    $inputfields->add($fs);
-
-    $f = new InputfieldMarkup();
-    if ($live = $this->wire->config->livereload) {
-      if (is_numeric($live)) $value = "LiveReload is enabled (via config.php) - Interval: $live seconds.";
-      else $value = var_export($live, true);
-    } else $value = 'LiveReload is disabled. To enable it set this in your config.php:
-      <pre class="uk-margin-small-top uk-margin-remove-bottom">$config->livereload = 1;</pre>';
-    $f->value = $value;
-    $f->notes = "LiveReload saved you from hitting refresh <span id=live-cnt></span> times on this device :)";
-    $f->entityEncodeText = false;
-    $f->appendMarkup = "<script>document.getElementById('live-cnt').innerText = localStorage.getItem('livereload-count') || 0;</script>";
-    $fs->add($f);
-
-    // early exit if live reload is disabled
-    if (!$live) return;
-
-    $fs->add([
-      'type' => 'checkbox',
-      'name' => 'livereloadBackend',
-      'label' => 'Add livereload to backend pages',
-      'checked' => $this->livereloadBackend ? 'checked' : '',
-      'columnWidth' => 50,
-      'notes' => 'Really handy when working with RockMigrations!',
-    ]);
-
-    $fs->add([
-      'type' => 'checkbox',
-      'name' => 'liveReloadModules',
-      'label' => 'Add livereload to module pages',
-      'checked' => $this->liveReloadModules ? 'checked' : '',
-      'columnWidth' => 50,
-      'notes' => 'Caution: LiveReload on module pages can cause problems, '
-        . 'for example module installations might not work. Enable this only '
-        . 'when needed!',
-    ]);
   }
 
   private function configSEO($inputfields)
@@ -3459,10 +3289,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         <pre style="margin-top:10px;margin-bottom:10px;">npm install -D</pre>
         Then execute "npm run build" to see if it works. It should show something like this:
         <pre style="margin-top:10px;margin-bottom:10px;">Rebuilding...' . "\n"
-        . 'Done in 123ms</pre>
-        Running that on every change is no option, of course, so you can tell RockFrontend to build the CSS for you on every change:
-        <pre style="margin-top:10px;margin-bottom:10px;">$config->livereloadBuild = true;</pre>
-        This will run "npm run build" via PHP exec(). You can customise that from your package.json file; Make sure that you set this only for development!',
+        . 'Done in 123ms</pre>',
     ]);
   }
 
@@ -3918,7 +3745,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     return [
       'folders' => $this->folders->getArray(),
-      'liveReload' => $this->getLiveReload(),
       'autoloadStyles' => $this->autoloadStyles,
       'autoloadScripts' => $this->autoloadScripts,
       'ajaxEndpoints' => $this->ajaxEndpoints(),
