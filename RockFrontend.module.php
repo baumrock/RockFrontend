@@ -2608,14 +2608,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /**
    * Return a script tag for a given url
    *
-   * By default we will add the defer attribute (suffix)
+   * Usage:
+   * ->scriptTag('/site/templates/dst/foo.js');
+   * ->scriptTag('/site/templates/dst/foo.js', 'defer');
    *
    * @param mixed $url
    * @param string $suffix
    * @return string
    * @throws WireException
    */
-  public function scriptTag($url, $suffix = 'defer'): string
+  public function scriptTag($url, $suffix = ''): string
   {
     $src = wire()->config->versionUrl($url);
     return "<script src='$src' $suffix></script>";
