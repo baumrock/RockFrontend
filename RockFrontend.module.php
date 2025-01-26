@@ -277,7 +277,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         if (!strpos($html, "</body>")) return;
         if (!strpos($html, "</head>")) return;
 
-        $this->addRockFrontendJS();
         $html = $this->addAlfredMarkup($html);
         try {
           $this->addTopBar($html);
@@ -443,12 +442,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         );
       }
     );
-  }
-
-  private function addRockFrontendJS(): void
-  {
-    if (!$this->isEnabled('RockFrontend.js')) return;
-    $this->scripts('rockfrontend')->add(__DIR__ . '/RockFrontend.min.js', 'defer');
   }
 
   public function ___addAlfredStyles()
@@ -3213,9 +3206,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'features';
     $f->label = "Features";
     $f->icon = "star-o";
-    $f->addOption('RockFrontend.js', 'RockFrontend.js - Load this file on the frontend (eg to use consent tools).');
-    $f->addOption('postCSS', 'postCSS - Use the internal postCSS feature (eg to use rfGrow() syntax).');
-    $f->addOption('minify', 'minify - Auto-create minified CSS/JS assets ([see docs](https://github.com/baumrock/RockFrontend/wiki/Minify-Feature)).');
     $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
     $f->value = (array)$this->features;
     $fs->add($f);
