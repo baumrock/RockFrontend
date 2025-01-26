@@ -2606,6 +2606,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Return a script tag for a given url
+   *
+   * By default we will add the defer attribute (suffix)
+   *
+   * @param mixed $url
+   * @param string $suffix
+   * @return string
+   * @throws WireException
+   */
+  public function scriptTag($url, $suffix = 'defer'): string
+  {
+    $src = wire()->config->versionUrl($url);
+    return "<script src='$src' $suffix></script>";
+  }
+
+  /**
    * @return Seo
    */
   public function seo(
@@ -2764,6 +2780,22 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Get style tag
+   *
+   * $url must be relative to PW root!
+   *
+   * @param mixed $url
+   * @param array $replacements
+   * @return string
+   * @throws WireException
+   */
+  public function styleTag($url): string
+  {
+    $href = wire()->config->versionUrl($url);
+    return "<link rel='stylesheet' href='$href' />";
+  }
+
+  /**
    * Render svg file
    * @return string
    */
@@ -2914,21 +2946,20 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** END translation support in LATTE files */
 
   /**
-   * Make sure that the given file/directory path is absolute
-   * This will NOT check if the directory or path exists!
-   * It will always prepend the PW root directory so this method does not work
-   * for absolute paths outside of PW!
+   * Ensures that given path is a path within the PW root.
+   *
+   * Usage:
+   * $rockdevtools->toPath("/site/templates/foo.css");
+   * $rockdevtools->toPath("/var/www/html/site/templates/foo.css");
+   * @param string $path
+   * @return string
    */
-  public function toPath($url): string
+  public function toPath(string $path): string
   {
-    $url = $this->toUrl($url);
-
-    // remove part after root folder for subfolder installations
-    if (str_starts_with($url, wire()->config->urls->root)) {
-      $url = substr($url, strlen(wire()->config->urls->root));
-    }
-
-    return $this->wire->config->paths->root . ltrim($url, "/");
+    $path = ProcessWirePaths::normalizeSeparators($path);
+    $root = wire()->config->paths->root;
+    if (str_starts_with($path, $root)) return $path;
+    return $root . ltrim($path, '/');
   }
 
   /**
