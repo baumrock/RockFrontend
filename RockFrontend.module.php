@@ -199,7 +199,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // watch this file and run "migrate" on change or refresh
     if ($rm = $this->rm()) {
       $rm->watch($this, 0.01);
-      $rm->minify(__DIR__ . '/RockFrontend.js');
     }
 
     // setup folders that are scanned for files
