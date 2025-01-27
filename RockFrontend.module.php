@@ -297,13 +297,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     if (!$this->loadAlfred()) return $html;
 
-    if (!$skipAssets) {
-      $this->js("rootUrl", $this->wire->config->urls->root);
-      $this->js("defaultVspaceScale", number_format(self::defaultVspaceScale, 2, ".", ""));
-      $this->scripts('rockfrontend')->add(__DIR__ . "/Alfred.min.js", "defer");
-      $this->addAlfredStyles();
-    }
-
     // replace alfred cache markup
     // if alfred was added without |noescape it has quotes around
     if (strpos($html, '"#alfredcache-')) {
@@ -441,11 +434,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         );
       }
     );
-  }
-
-  public function ___addAlfredStyles()
-  {
-    $this->styles('rockfrontend')->add($this->path . "Alfred.css", "", ['minify' => false]);
   }
 
   /**
@@ -938,6 +926,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $dir = $this->wire->config->paths->assets . "RockFrontend/";
     if (strpos($path, $dir) === 0) return $path;
     return $dir . trim($path, "/");
+  }
+
+  public function assets(): string
+  {
+    if (!wire()->user->isLoggedin()) return '';
+    $this->js("rootUrl", wire()->config->urls->root);
+    $markup = '';
+    $url = wire()->config->urls($this);
+    $markup .= $this->scriptTag($url . 'Alfred.min.js', 'defer');
+    $markup .= $this->styleTag($url . 'Alfred.min.css');
+    return $markup;
   }
 
   /**
@@ -1671,7 +1670,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'style' => 'text-align: center; margin: 20px 0;',
     ]);
     $opt->setArray($options);
-    $url = rtrim($this->wire->config->urls($this), "/");
+    $url = rtrim(wire()->config->urls($this), "/");
     $title = $opt->title ? "title='{$opt->title}' uk-tooltip" : "";
     return "<div class='{$opt->wrapClass}' style='{$opt->style}'>
       <a href='$href' $title class='{$opt->class}' {$opt->attrs}>
