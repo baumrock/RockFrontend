@@ -936,6 +936,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $url = wire()->config->urls($this);
     $markup .= $this->scriptTag($url . 'Alfred.min.js', 'defer');
     $markup .= $this->styleTag($url . 'Alfred.min.css');
+    // if adminstylerock is installed we add alfred overrides
+    if (wire()->modules->isInstalled('AdminStyleRock')) {
+      $url = wire()->config->urls->siteModules;
+      $markup .= $this->styleTag($url . 'AdminStyleRock/dst/alfred.min.css');
+    }
     return $markup;
   }
 
