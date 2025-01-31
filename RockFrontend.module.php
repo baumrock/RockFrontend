@@ -1178,7 +1178,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     $rootPath = getenv("TRACY_LOCALROOTPATH") ?: $rootPath;
-    $editor = getenv("TRACY_EDITOR") ?: $editor;
 
     $rootPath = rtrim($rootPath, "/") . "/";
     $link = str_replace($this->wire->config->paths->root, $rootPath, $path);
