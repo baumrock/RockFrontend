@@ -1,9 +1,6 @@
-<?php
-
-namespace ProcessWire; ?>
 <a
   href="<?= $page->editUrl() ?>"
-  title="<?= __('Overlays on/off') ?>"
+  title="<?= $wire->_('Overlays on/off') ?>"
   uk-tooltip
   data-toggle="overlays"
   data-persist

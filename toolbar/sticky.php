@@ -1,8 +1,5 @@
-<?php
-
-namespace ProcessWire; ?>
 <a
-  title="<?= __('Sticky on/off') ?>"
+  title="<?= $wire->_('Sticky on/off') ?>"
   uk-tooltip
   data-toggle="sticky"
   data-persist>
