@@ -48,6 +48,15 @@ if ($user->isLoggedin()) {
 }
 ```
 
+## Custom Tool Files
+
+You can add custom tools to the RockFrontend toolbar by placing your PHP files in one of the following directories:
+
+- `/site/templates/RockFrontendToolbar/`
+- `/site/modules/[your-module-name]/RockFrontendToolbar/`
+
+Each PHP file in these directories will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example!
+
 ## Toggle Tools
 
 The toolbar includes a powerful toggle system that allows you to create interactive tools with on/off states. This system manages state changes, provides visual feedback, and can even persist user preferences.
@@ -115,12 +124,3 @@ Example of a sticky toggle button with persistence:
   data-persist>
 </a>
 ```
-
-## Custom Tool Files
-
-You can add custom tools to the RockFrontend toolbar by placing your PHP files in one of the following directories:
-
-- `/site/templates/RockFrontendToolbar/`
-- `/site/modules/[your-module-name]/RockFrontendToolbar/`
-
-Each PHP file in these directories will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example!
