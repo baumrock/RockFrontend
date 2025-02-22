@@ -21,6 +21,20 @@
     background-color: white;
     &.off {
       opacity: 0.3;
+      .visible-on {
+        display: inline-block;
+      }
+      .visible-off {
+        display: none;
+      }
+    }
+    &.on {
+      .visible-off {
+        display: inline-block;
+      }
+      .visible-on {
+        display: none;
+      }
     }
   }
   svg {

@@ -45,17 +45,55 @@ $dom->filter('a')->addClass('text-white hover:text-secondary hover:bg-white tran
 $toolbar = $dom->outerHtml();
 ```
 
-## Making the Toolbar Sticky
+## Toggle Tools
 
-For better usability, especially on long pages, you can make the toolbar stick to the top of the viewport. Simply add the `sticky` class to the toolbar DOM element:
+The toolbar includes a powerful toggle system that allows you to create interactive tools with on/off states. This system manages state changes, provides visual feedback, and can even persist user preferences.
 
-```php
-// Customize RockFrontend Toolbar
-$dom = rockfrontend()->toolbar()->dom();
-$dom->addClass('bg-secondary text-sm sticky');
+### Basic Usage
+
+To create a toggleable tool, add the `data-toggle` attribute to your toolbar item:
+
+```html
+<a href="#" data-toggle="myfeature">
+  Toggle Feature
+</a>
 ```
 
-## Persisting Toolbar States
+### Toggle States
+
+The toggle system manages three state indicators:
+1. CSS classes on the toolbar item (`on`/`off`)
+2. CSS class on the toolbar root (using the toggle name)
+3. LocalStorage state (when using `data-persist`)
+
+### Showing Different Icons
+
+You can show different icons based on the toggle state. Just add the classes `visible-on` and `visible-off` to your toolbar item:
+
+```html
+<a href="#" data-toggle="myfeature">
+  <i class="visible-on fa fa-eye"></i>
+  <i class="visible-off fa fa-eye-slash"></i>
+</a>
+```
+
+### JavaScript Toggle Callbacks
+
+The toolbar provides a JavaScript API to react to toggle events. Each toggle button (like overlays, grid, etc.) can have multiple callbacks that are executed when the toggle state changes. Here's how it works:
+
+```js
+// Add a callback for the 'overlays' toggle
+RockFrontendToolbar.onToggle('overlays', (type) => {
+  // type will be either 'on' or 'off'
+  if (type === 'off') {
+    document.body.classList.add("no-alfred");
+  } else {
+    document.body.classList.remove("no-alfred");
+  }
+});
+```
+
+### Persisting Toggle States
 
 The toolbar supports persisting toggle states across page reloads using the `data-persist` attribute. This is particularly useful for maintaining user preferences like the sticky toolbar state.
 
@@ -73,22 +111,6 @@ Example of a sticky toggle button with persistence:
   data-toggle="sticky"
   data-persist>
 </a>
-```
-
-## JavaScript Toggle Callbacks
-
-The toolbar provides a JavaScript API to react to toggle events. Each toggle button (like overlays, grid, etc.) can have multiple callbacks that are executed when the toggle state changes. Here's how it works:
-
-```js
-// Add a callback for the 'overlays' toggle
-RockFrontendToolbar.onToggle('overlays', (type) => {
-  // type will be either 'on' or 'off'
-  if (type === 'off') {
-    document.body.classList.add("no-alfred");
-  } else {
-    document.body.classList.remove("no-alfred");
-  }
-});
 ```
 
 ## Custom Tool Files
