@@ -115,6 +115,9 @@ Example of a sticky toggle button with persistence:
 
 ## Custom Tool Files
 
-You can add custom tools to the RockFrontend toolbar by placing your PHP files in the directory `/site/modules/[your-module-name]/RockFrontendToolbar/`
+You can add custom tools to the RockFrontend toolbar by placing your PHP files in one of the following directories:
 
-Each PHP file in this directory will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example!
+- `/site/templates/RockFrontendToolbar/`
+- `/site/modules/[your-module-name]/RockFrontendToolbar/`
+
+Each PHP file in these directories will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example!

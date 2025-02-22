@@ -113,6 +113,7 @@ class Toolbar extends Wire
     $this->loadTools(wire()->config->paths(rockfrontend()) . 'toolbar');
     $dirs = glob(wire()->config->paths->siteModules . '*/RockFrontendToolbar/');
     foreach ($dirs as $dir) $this->loadTools($dir);
+    $this->loadTools(wire()->config->paths->templates . 'RockFrontendToolbar/');
     $this->setOrder('pagetree,edit,sticky');
   }
 }
