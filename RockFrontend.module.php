@@ -2617,9 +2617,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * @return string
    * @throws WireException
    */
-  public function scriptTag($url, $suffix = ''): string
+  public function scriptTag($url, $suffix = '', $versionType = true): string
   {
-    $src = wire()->config->versionUrl($url);
+    $src = wire()->config->versionUrl($url, $versionType);
     return "<script src='$src' $suffix></script>";
   }
 
@@ -2791,9 +2791,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * @return string
    * @throws WireException
    */
-  public function styleTag($url): string
+  public function styleTag($url, $versionType = true): string
   {
-    $href = wire()->config->versionUrl($url);
+    $href = wire()->config->versionUrl($url, $versionType);
     return "<link rel='stylesheet' href='$href' />";
   }
 
