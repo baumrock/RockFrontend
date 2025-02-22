@@ -1,5 +1,5 @@
+<?php if (!$page->editable()) return; ?>
 <a
-  href="<?= $page->editUrl() ?>"
   title="<?= $wire->_('Overlays on/off') ?>"
   uk-tooltip
   data-toggle="overlays"
