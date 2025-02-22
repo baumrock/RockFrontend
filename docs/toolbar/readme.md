@@ -4,13 +4,21 @@ The RockFrontend Toolbar is a powerful administrative interface that seamlessly 
 
 ## Adding the toolbar to your frontend
 
-Either directly:
+Add the toolbar right after the opening `<body>` tag - either directly:
 
 ```html
 <html>
   <head>...</head>
   <body>
     <?= rockfrontend()->toolbar() ?>
+  </body>
+</html>
+
+// latte example
+<html>
+  <head>...</head>
+  <body>
+    {rockfrontend()->toolbar()|noescape}
   </body>
 </html>
 ```
@@ -28,6 +36,8 @@ if ($user->isLoggedin()) {
 // _main.php
 echo $toolbar;
 ```
+
+> Note: The toolbar will only show up for logged in users!
 
 ## Styling the Toolbar
 
