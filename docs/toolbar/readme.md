@@ -19,9 +19,11 @@ Or after customising it in `_init.php` via the dom() method:
 
 ```php
 // _init.php
-$dom = rockfrontend()->toolbar()->dom();
-$dom->addClass('...');
-$toolbar = $dom->outerHtml();
+// Customize RockFrontend Toolbar
+$toolbar = '';
+if ($user->isLoggedin()) {
+  // ...
+}
 
 // _main.php
 echo $toolbar;
@@ -35,14 +37,15 @@ Add this code to `/site/templates/_init.php`:
 
 ```php
 // Customize RockFrontend Toolbar
-$dom = rockfrontend()->toolbar()->dom();
-$dom->addClass('bg-secondary text-sm');
-$dom->filter('#toolbar-tools')->addClass('uk-container uk-container-large');
-$dom->filter('a')->addClass('text-white hover:text-secondary hover:bg-white transition');
-
-// Write new markup to the $toolbar variable that will later
-// be output in the main markup file
-$toolbar = $dom->outerHtml();
+$toolbar = '';
+if ($user->isLoggedin()) {
+  $toolbar = rockfrontend()->toolbar();
+  $dom = $toolbar->dom();
+  $dom->addClass('!bg-secondary text-sm');
+  $dom->filter('#toolbar-tools')->addClass('uk-container uk-container-large');
+  $dom->filter('a')->addClass('!text-secondary hover:!bg-primary-dark hover:!text-white transition');
+  $toolbar = $dom->outerHtml();
+}
 ```
 
 ## Toggle Tools
