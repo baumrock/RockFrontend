@@ -229,7 +229,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       self::permission_alfred,
       "Is allowed to use ALFRED frontend editing"
     );
-    $this->lessToCss($this->path . "Alfred.less");
 
     // hooks
     wire()->addHookAfter("ProcessPageEdit::buildForm",   $this, "hideLayoutField");
@@ -245,16 +244,6 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // others
     $this->checkHealth();
-
-    // development helpers by rockmigrations
-    if ($this->wire->modules->isInstalled('RockMigrations')) {
-      try {
-        $rm = rockmigrations();
-        $rm->minify(__DIR__ . "/Alfred.js");
-      } catch (\Throwable $th) {
-        $this->warning("rockmigrations() not available - please update RockMigrations!");
-      }
-    }
 
     // rockdevtools
     if (wire()->config->rockdevtools) {
@@ -943,8 +932,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->js("rootUrl", wire()->config->urls->root);
     $markup = '';
     $url = wire()->config->urls($this);
-    $markup .= $this->scriptTag($url . 'Alfred.min.js', 'defer');
-    $markup .= $this->styleTag($url . 'Alfred.min.css');
+    $markup .= $this->scriptTag($url . 'dst/Alfred.min.js', 'defer');
+    $markup .= $this->styleTag($url . 'dst/Alfred.min.css');
     // if adminstylerock is installed we add alfred overrides
     if (wire()->modules->isInstalled('AdminStyleRock')) {
       $url = wire()->config->urls->siteModules;
@@ -3256,7 +3245,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->name = 'features';
     $f->label = "Features";
     $f->icon = "star-o";
-    $f->addOption('topbar', 'topbar - Show topbar (sitemap, edit page, toggle mobile preview).');
+    $f->addOption('topbar', 'topbar - DEPRECATED! Use the new toolbar instead.');
     $f->value = (array)$this->features;
     $fs->add($f);
 

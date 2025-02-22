@@ -3,6 +3,7 @@
     constructor() {
       this.items = [];
       this.root = document.querySelector("#rockfrontend-toolbar");
+      this.callbacks = {};
       this.initItems();
     }
 
@@ -10,6 +11,17 @@
       this.root.querySelectorAll("#toolbar-tools a").forEach((el) => {
         this.items.push(new Item(el));
       });
+    }
+
+    onToggle(toggleName, callback) {
+      if (!this.callbacks[toggleName]) this.callbacks[toggleName] = [];
+      this.callbacks[toggleName].push(callback);
+    }
+
+    triggerCallbacks(toggleName, type) {
+      if (!this.callbacks[toggleName]) return;
+      const callbacks = this.callbacks[toggleName];
+      callbacks.forEach((callback) => callback(type));
     }
   }
 
@@ -27,7 +39,8 @@
     }
 
     addClickListener() {
-      this.el.addEventListener("click", () => {
+      this.el.addEventListener("click", (e) => {
+        if (this.toggleName) e.preventDefault();
         this.toggle();
       });
     }
@@ -41,7 +54,8 @@
 
       if (storage === null) {
         // no localstorage entry found --> toggle depending on class
-        this.toolbar.classList.contains(this.toggleName)
+        this.toolbar.classList.contains(this.toggleName) ||
+        this.el.classList.contains("on")
           ? this.on()
           : this.off();
       } else {
@@ -56,6 +70,9 @@
       this.el.classList.add("on");
       this.toolbar.classList.add(this.toggleName);
       if (this.persist) localStorage.setItem(this.key, "1");
+      if (window.RockFrontendToolbar) {
+        window.RockFrontendToolbar.triggerCallbacks(this.toggleName, "on");
+      }
     }
 
     off() {
@@ -63,6 +80,9 @@
       this.el.classList.add("off");
       this.toolbar.classList.remove(this.toggleName);
       if (this.persist) localStorage.setItem(this.key, "0");
+      if (window.RockFrontendToolbar) {
+        window.RockFrontendToolbar.triggerCallbacks(this.toggleName, "off");
+      }
     }
 
     toggle() {

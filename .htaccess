@@ -6,6 +6,15 @@
     # Example to allow access to js/css files in dst folder
     RewriteCond %{REQUEST_FILENAME} !^.*/dst/.*\.(js|css)$
 
+    # allow topbar/topbar(.min).css
+    RewriteCond %{REQUEST_FILENAME} !^.*/topbar/.*\.(css|min\.css)$
+
+    # allow icons/*.svg
+    RewriteCond %{REQUEST_FILENAME} !^.*/icons/.*\.svg$
+
+    # allow /RockFrontend.svg
+    RewriteCond %{REQUEST_FILENAME} !^.*/RockFrontend\.svg$
+
     # 403 forbidden
     RewriteRule ^ - [F,L]
 </IfModule>

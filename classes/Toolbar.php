@@ -6,6 +6,7 @@ use ProcessWire\Paths;
 use ProcessWire\Wire;
 use ProcessWire\WireArray;
 use ProcessWire\WireException;
+use ProcessWire\WirePermissionException;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 
 use function ProcessWire\rockfrontend;
@@ -31,8 +32,7 @@ class Toolbar extends Wire
    */
   public function __construct()
   {
-    $this->tools = new ToolsArray();
-    $this->loadTools(wire()->config->paths(rockfrontend()) . 'toolbar');
+    $this->setupTools();
   }
 
   /**
@@ -83,5 +83,36 @@ class Toolbar extends Wire
     $html = '';
     foreach ($this->tools as $tool) $html .= $tool->render();
     return $html;
+  }
+
+  /**
+   * Set order of tools
+   * Usage: $toolbar->setOrder('pagetree,edit,sticky');
+   */
+  public function setOrder(string $items): void
+  {
+    // split items by , and trim whitespace
+    $items = explode(',', $items);
+    $items = array_map('trim', $items);
+    $tools = new ToolsArray();
+    foreach ($items as $item) {
+      $t = $this->tools->get("name=$item");
+      if ($t instanceof Tool) $tools->add($t);
+      $this->tools->remove("name=$item");
+    }
+    foreach ($this->tools as $t) $tools->add($t);
+    $this->tools = $tools;
+  }
+
+  /**
+   * Initial setup of all tools
+   */
+  public function setupTools(): void
+  {
+    $this->tools = new ToolsArray();
+    $this->loadTools(wire()->config->paths(rockfrontend()) . 'toolbar');
+    $dirs = glob(wire()->config->paths->siteModules . '*/RockFrontendToolbar/');
+    foreach ($dirs as $dir) $this->loadTools($dir);
+    $this->setOrder('pagetree,edit,sticky');
   }
 }

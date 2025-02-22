@@ -305,41 +305,5 @@
       if ($alfred.find("*:not(.alfred) .pw-edited").length) return;
       $alfred.find("> .alfredelements > .icons > a.alfred-edit").click();
     });
-
-    // toggle topbar if CMD key or CTRL key is pressed
-    // do not toggle if multiple keys are pressed at once (cmd+enter)
-    let toggleBar = false;
-    let numKeys = 0;
-    document.addEventListener("keyup", function (event) {
-      numKeys = 0;
-      if (!toggleBar) return;
-      toggleBar = false; // reset
-      let topbar = document.querySelector("#rf-topbar");
-      if (topbar) {
-        if (topbar.classList.contains("hide")) {
-          topbar.click();
-        } else {
-          topbar.querySelector(".rf-topbar-hide").click();
-        }
-      } else {
-        let body = document.querySelector("body");
-        if (localStorage.getItem("rf-topbar-hide") == "0") {
-          body.classList.add("no-alfred");
-          localStorage.setItem("rf-topbar-hide", 1);
-        } else {
-          body.classList.remove("no-alfred");
-          localStorage.setItem("rf-topbar-hide", 0);
-        }
-      }
-    });
-    document.addEventListener("keydown", function (event) {
-      numKeys++;
-      if (numKeys > 1) {
-        toggleBar = false;
-        return;
-      }
-      if (!(event.metaKey || event.ctrlKey)) return;
-      toggleBar = true;
-    });
   });
 })();

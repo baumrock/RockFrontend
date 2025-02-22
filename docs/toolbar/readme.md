@@ -74,3 +74,25 @@ Example of a sticky toggle button with persistence:
   data-persist>
 </a>
 ```
+
+## JavaScript Toggle Callbacks
+
+The toolbar provides a JavaScript API to react to toggle events. Each toggle button (like overlays, grid, etc.) can have multiple callbacks that are executed when the toggle state changes. Here's how it works:
+
+```js
+// Add a callback for the 'overlays' toggle
+RockFrontendToolbar.onToggle('overlays', (type) => {
+  // type will be either 'on' or 'off'
+  if (type === 'off') {
+    document.body.classList.add("no-alfred");
+  } else {
+    document.body.classList.remove("no-alfred");
+  }
+});
+```
+
+## Custom Tool Files
+
+You can add custom tools to the RockFrontend toolbar by placing your PHP files in the directory `/site/modules/[your-module-name]/RockFrontendToolbar/`
+
+Each PHP file in this directory will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example!
