@@ -1,0 +1,28 @@
+// RockFrontend Toolbar
+#rockfrontend-toolbar {
+  background-color: #999;
+  &.sticky {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+  }
+}
+#toolbar-tools {
+  display: flex;
+  position: relative;
+  transform: translateX(-10px);
+  a {
+    padding: 5px 10px;
+    background-color: white;
+    &.off {
+      opacity: 0.3;
+    }
+  }
+  svg {
+    height: 20px;
+  }
+}
+#hide-toolbar {
+  position: absolute;
+  right: 0px;
+}

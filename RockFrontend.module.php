@@ -13,6 +13,7 @@ use RockFrontend\Asset;
 use RockFrontend\Manifest;
 use RockFrontend\Paths;
 use RockFrontend\Seo;
+use RockFrontend\Toolbar;
 use RockPageBuilder\Block;
 use Sabberworm\CSS\OutputFormat;
 use Sabberworm\CSS\Parser;
@@ -151,6 +152,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   private $sitemapCallback;
   private $sitemapOptions;
 
+  /** @var Toolbar */
+  private $toolbar;
+
   /** @var array */
   private $translations = [];
 
@@ -250,6 +254,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       } catch (\Throwable $th) {
         $this->warning("rockmigrations() not available - please update RockMigrations!");
       }
+    }
+
+    // rockdevtools
+    if (wire()->config->rockdevtools) {
+      rockdevtools()->assets()->minify(__DIR__ . '/src', __DIR__ . '/dst');
     }
   }
 
@@ -2864,6 +2873,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     $dom = $this->dom($str)->filter("svg")->first();
     return $dom;
+  }
+
+  public function toolbar(): Toolbar
+  {
+    if (!$this->toolbar) $this->toolbar = new Toolbar();
+    return $this->toolbar;
   }
 
   /**
