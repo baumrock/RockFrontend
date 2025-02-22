@@ -7,8 +7,13 @@
   #toolbar-widthinfo .breakpoints>* {
     display: none;
   }
+
+  #toolbar-widthinfo {
+    display: flex;
+    align-items: center;
+  }
 </style>
-<span id='toolbar-widthinfo' class='flex'>
+<span id='toolbar-widthinfo'>
   <small></small>
   <span class='breakpoints'>
     <small class='!inline-flex xs:w-2'></small>
