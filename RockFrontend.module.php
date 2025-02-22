@@ -246,7 +246,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->checkHealth();
 
     // rockdevtools
-    if (wire()->config->rockdevtools) {
+    if (
+      wire()->config->rockdevtools
+      && wire()->modules->isInstalled('RockDevTools')
+    ) {
       rockdevtools()->assets()->minify(__DIR__ . '/src', __DIR__ . '/dst');
     }
   }
