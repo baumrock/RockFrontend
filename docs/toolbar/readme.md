@@ -54,3 +54,23 @@ For better usability, especially on long pages, you can make the toolbar stick t
 $dom = rockfrontend()->toolbar()->dom();
 $dom->addClass('bg-secondary text-sm sticky');
 ```
+
+## Persisting Toolbar States
+
+The toolbar supports persisting toggle states across page reloads using the `data-persist` attribute. This is particularly useful for maintaining user preferences like the sticky toolbar state.
+
+When you add the `data-persist` attribute to a toggle button:
+- The state (on/off) is automatically saved in the browser's localStorage
+- The state is restored when the page reloads
+- Users' preferences remain consistent as they navigate through different pages
+
+Example of a sticky toggle button with persistence:
+
+```html
+<a
+  title="Sticky on/off"
+  uk-tooltip
+  data-toggle="sticky"
+  data-persist>
+</a>
+```
