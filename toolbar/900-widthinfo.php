@@ -8,9 +8,10 @@
     display: none;
   }
 </style>
-<span id='toolbar-widthinfo' class='flex gap-2'>
+<span id='toolbar-widthinfo' class='flex'>
   <small></small>
   <span class='breakpoints'>
+    <small class='!inline-flex xs:w-2'></small>
     <small class='font-bold xs:!inline-flex sm:!hidden'>xs</small>
     <small class='font-bold sm:!inline-flex md:!hidden'>sm</small>
     <small class='font-bold md:!inline-flex lg:!hidden'>md</small>
