@@ -2608,6 +2608,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->wire->modules->get('RockMigrations');
   }
 
+  public function scripts($name = 'main')
+  {
+    throw new WireException("This feature has been removed with version 5 - please see upgrade guide at baumrock.com/rf-upgrade5");
+  }
+
   /**
    * Return a script tag for a given url
    *
@@ -2782,6 +2787,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $file = $this->wire->config->paths->root . "sitemap.xml";
     if (is_file($file)) wire()->files->unlink($file);
+  }
+
+  public function styles($name = 'main', $cssDir = null)
+  {
+    throw new WireException("This feature has been removed with version 5 - please see upgrade guide at baumrock.com/rf-upgrade5");
   }
 
   /**
