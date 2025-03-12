@@ -2,6 +2,8 @@
 
 The RockFrontend Toolbar is a powerful administrative interface that seamlessly integrates into your frontend. It provides quick access to essential page editing functions, navigation shortcuts, and administrative tools - making content management efficient and intuitive for website administrators.
 
+<img src=https://i.imgur.com/7cZbtXF.png class=blur>
+
 ## Adding the toolbar to your frontend
 
 Add the toolbar right after the opening `<body>` tag - either directly:
