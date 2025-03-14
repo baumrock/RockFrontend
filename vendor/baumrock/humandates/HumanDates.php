@@ -86,15 +86,20 @@ class HumanDates
     // for this request without modifying the default patterns
     $patterns = array_merge($this->patterns, $patterns);
 
+
     // get the pattern for this range (eg for sameDay)
     $pattern = $patterns[$pattern];
     $pieces = array_filter([
       $this->getString($from, $pattern[0]),
-      $this->getString($to, $pattern[2]),
+      $this->getString(
+        $to,
+        count($pattern) === 3 ? $pattern[2] : ''
+      ),
     ]);
 
     // return the final date range string
-    return implode($pattern[1], $pieces);
+    $glue = count($pattern) === 3 ? $pattern[1] : '';
+    return implode($glue, $pieces);
   }
 
   /**
