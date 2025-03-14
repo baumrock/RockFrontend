@@ -1,3 +1,10 @@
+## [5.1.1](https://github.com/baumrock/RockFrontend/compare/v5.1.0...v5.1.1) (2025-03-14)
+
+
+### Bug Fixes
+
+* issue when using range() on single day event ([7b7a7e3](https://github.com/baumrock/RockFrontend/commit/7b7a7e33b3c998e8aa16dd043a3cb9ebdac00e5e))
+
 ## [5.1.0](https://github.com/baumrock/RockFrontend/compare/v5.0.0...v5.1.0) (2025-03-01)
 
 
@@ -57,11 +64,4 @@
 ### Miscellaneous Chores
 
 * make autoPrepend optional by default and only load it if $config->rockfrontendAutoPrepend is set ([fa199cb](https://github.com/baumrock/RockFrontend/commit/fa199cb766d3cc652e4b0654473445c791b0926e))
-
-## [3.24.0](https://github.com/baumrock/RockFrontend/compare/v3.23.2...v3.24.0) (2024-11-30)
-
-
-### Features
-
-* add nette utils ([0f24a57](https://github.com/baumrock/RockFrontend/commit/0f24a579c62b93bbae9942187d31dda0a09dada6))
 
