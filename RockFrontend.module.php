@@ -3241,7 +3241,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f->label = 'Webfonts';
     $f->name = 'webfonts';
     $f->icon = "font";
-    $f->description = "Enter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed."
+    $f->description = "DEPRECATED: Please use [google webfonts helper](https://gwfh.mranftl.com/fonts) instead! This feature will be removed in the future."
+      . "\nEnter url to webfonts ([fonts.google.com](https://fonts.google.com/)). These webfonts will automatically be downloaded to /site/templates/webfonts and a file webfonts.less will be created with the correct paths. The download will only be triggered when the URL changed and it will wipe the fonts folder before download so that unused fonts get removed."
       . "\nExample URL: https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700 (see here: [screenshot](https://i.imgur.com/b8aJPQW.png))";
     $f->value = $this->webfonts;
     $f->notes = $this->showFontFileSize();
