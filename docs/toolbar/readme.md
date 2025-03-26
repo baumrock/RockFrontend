@@ -72,7 +72,7 @@ You can add custom tools to the RockFrontend toolbar by placing your PHP files i
 - `/site/templates/RockFrontendToolbar/`
 - `/site/modules/[your-module-name]/RockFrontendToolbar/`
 
-Each PHP file in these directories will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example!
+Each PHP file in these directories will be automatically loaded as a tool. The file should output the HTML for your tool button. See one of the existing tools as an example: https://github.com/baumrock/RockFrontend/tree/main/toolbar
 
 ## Toggle Tools
 
