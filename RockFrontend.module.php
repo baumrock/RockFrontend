@@ -1903,6 +1903,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $permission and $this->hasAlfred;
   }
 
+  public function livereloadScriptTag()
+  {
+    if (!wire()->config->rockdevtools) return;
+    return $this->html(rockdevtools()->livereload->scriptTag());
+  }
+
   /**
    * @return Engine
    */
