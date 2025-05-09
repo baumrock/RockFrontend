@@ -557,8 +557,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           if (wire()->modules->isInstalled('TracyDebugger')) {
             Debugger::$showBar = false;
           }
-          http_response_code(403);
-          return "Access Denied";
+
+          throw new Wire404Exception("Access Denied");
         }
       );
     }
