@@ -541,6 +541,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       wire()->addHook(
         $url,
         function (HookEvent $event) use ($file, $url) {
+          // do not allow endpoints that start with underscore, eg _init.php
+          if (str_starts_with(basename($file), '_')) {
+            throw new Wire404Exception("Access Denied");
+          }
+
           $isGET = $this->wire->input->requestMethod() === 'GET';
 
           // ajax requests always return the public endpoint
@@ -708,6 +713,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   private function ajaxResponse($endpoint)
   {
+    // load the _init.php file if it exists
+    $initFile = wire()->config->paths->templates . 'ajax/_init.php';
+    if (file_exists($initFile)) include $initFile;
+
     // for superusers we don't catch errors
     if ($this->wire->user->isSuperuser()) {
       return $this->ajaxResult($endpoint);

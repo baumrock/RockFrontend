@@ -75,7 +75,7 @@ $name = wire()->sanitizer->pageName($input->name);
 return ['name' => $name];
 ```
 
-### Access Control
+## Access Control
 
 Always make sure to check if the user is authorized to access the endpoint. For example:
 
@@ -87,6 +87,23 @@ if (!wire()->user->isSuperuser()) {
 }
 
 return ['foo' => 'bar'];
+```
+
+### Global access control
+
+You can set global rules for all ajax endpoints by creating a file `/site/templates/ajax/_init.php` like this:
+
+```php
+<?php
+
+namespace ProcessWire;
+
+// access input variables (if needed)
+$input = $this->ajaxVars();
+
+// only allow ajax endpoints for the "foo" role
+// otherwise throw a 404
+if (!wire()->user->hasRole('foo')) throw new Wire404Exception("Not allowed");
 ```
 
 ## Debugging Endpoints (for Superusers)
