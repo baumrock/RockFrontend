@@ -1,3 +1,18 @@
+## [5.2.0](https://github.com/baumrock/RockFrontend/compare/v5.1.1...v5.2.0) (2025-06-01)
+
+
+### Features
+
+* add _init.php file for global ajax access control ([6bff1a0](https://github.com/baumrock/RockFrontend/commit/6bff1a0f040299817c9d2d8377f5a8ea2cab9ae0))
+* expose variables from _init.php to all ajax files ([b3e85af](https://github.com/baumrock/RockFrontend/commit/b3e85afafc7bb915deae6b96e61ecc5155e54ebc))
+
+
+### Bug Fixes
+
+* add missing livereloadScriptTag method ([efe557e](https://github.com/baumrock/RockFrontend/commit/efe557ead5a76a78ffa7beb7a717402a42e6c861))
+* livereload not working in ajax endpoints ([25fa46d](https://github.com/baumrock/RockFrontend/commit/25fa46d63c4c47bff43b9f821f1e08fbc923e2fa))
+* throw a 404 instead of 403 if no access to ajax endpoint ([38f19a5](https://github.com/baumrock/RockFrontend/commit/38f19a597db74f96da3efdd6f5927f4ea78bdb6a))
+
 ## [5.1.1](https://github.com/baumrock/RockFrontend/compare/v5.1.0...v5.1.1) (2025-03-14)
 
 
@@ -53,15 +68,4 @@
 ### Features
 
 * update latte library to latest version ([d3ac96e](https://github.com/baumrock/RockFrontend/commit/d3ac96e19f902211950715cca629d64402813648))
-
-## [4.0.0](https://github.com/baumrock/RockFrontend/compare/v3.24.0...v4.0.0) (2024-11-30)
-
-
-### ⚠ BREAKING CHANGES
-
-* make autoPrepend optional by default and only load it if $config->rockfrontendAutoPrepend is set
-
-### Miscellaneous Chores
-
-* make autoPrepend optional by default and only load it if $config->rockfrontendAutoPrepend is set ([fa199cb](https://github.com/baumrock/RockFrontend/commit/fa199cb766d3cc652e4b0654473445c791b0926e))
 
