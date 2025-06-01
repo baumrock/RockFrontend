@@ -541,24 +541,39 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       wire()->addHook(
         $url,
         function (HookEvent $event) use ($file, $url) {
+          // do not allow endpoints that start with underscore, eg _init.php
+          if (str_starts_with(basename($file), '_')) {
+            throw new Wire404Exception("Access Denied");
+          }
+
+          // load the _init.php file if it exists
+          $initFile = wire()->config->paths->templates . 'ajax/_init.php';
+          if (file_exists($initFile)) {
+            // expose all pw API vars to the init file
+            extract($this->wire('all')->getArray());
+            include $initFile;
+          }
+          $vars = get_defined_vars();
+          unset($vars['event']);
+
           $isGET = $this->wire->input->requestMethod() === 'GET';
 
           // ajax requests always return the public endpoint
           if ($this->ajax || !$isGET) {
-            return $this->ajaxPublic($file);
+            return $this->ajaxPublic($file, $vars);
           }
 
           // non-ajax request show the debug screen for superusers
           if (wire()->user->isSuperuser()) {
-            return $this->ajaxDebug($file, $url);
+            return $this->ajaxDebug($file, $url, $vars);
           }
 
           // guest and no ajax: no access!
           if (wire()->modules->isInstalled('TracyDebugger')) {
             Debugger::$showBar = false;
           }
-          http_response_code(403);
-          return "Access Denied";
+
+          throw new Wire404Exception("Access Denied");
         }
       );
     }
@@ -576,10 +591,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $this->wire->pages->get(1)->url . ltrim($base, '/');
   }
 
-  private function ajaxDebug($file, $url): string
+  private function ajaxDebug($file, $url, $vars): string
   {
     // dont catch errors when debugging
-    $raw = $this->ajaxResponse($file);
+    $raw = $this->ajaxResponse($file, $vars);
     $response = Dumper::toHtml($raw);
 
     // generate textarea content
@@ -646,11 +661,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $arr;
   }
 
-  private function ajaxFormatted($raw, $endpoint): string
+  private function ajaxFormatted($raw, $endpoint, $vars): string
   {
     $extension = pathinfo($endpoint, PATHINFO_EXTENSION);
     if ($extension === "latte") {
-      $response = $this->render($endpoint);
+      $response = $this->render($endpoint, $vars);
     } else $response = $raw;
 
     // is response already a string?
@@ -683,48 +698,49 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $response;
   }
 
-  private function ajaxPublic($endpoint): string
+  private function ajaxPublic($endpoint, $vars): string
   {
     // return function to keep code DRY
-    $return = function ($endpoint) {
-      $raw = $this->ajaxResponse($endpoint);
-      $response = $this->ajaxFormatted($raw, $endpoint);
+    $return = function ($endpoint, $vars) {
+      $raw = $this->ajaxResponse($endpoint, $vars);
+      $response = $this->ajaxFormatted($raw, $endpoint, $vars);
       header('Content-Type: ' . $this->contenttype);
       return $response;
     };
 
     // for debugging we don't catch errors
-    if (wire()->config->debug) return $return($endpoint);
+    if (wire()->config->debug) return $return($endpoint, $vars);
 
     // public endpoints return a generic error message
     // to avoid leaking information
     try {
-      return $return($endpoint);
+      return $return($endpoint, $vars);
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
       return "Error in AJAX endpoint - error has been logged";
     }
   }
 
-  private function ajaxResponse($endpoint)
+  private function ajaxResponse($endpoint, $vars)
   {
     // for superusers we don't catch errors
     if ($this->wire->user->isSuperuser()) {
-      return $this->ajaxResult($endpoint);
+      return $this->ajaxResult($endpoint, $vars);
     }
     // non superusers - use try catch
     try {
-      return $this->ajaxResult($endpoint);
+      return $this->ajaxResult($endpoint, $vars);
     } catch (\Throwable $th) {
       $this->log($th->getMessage());
       return self::ajax_rendererror;
     }
   }
 
-  private function ajaxResult($endpoint)
+  private function ajaxResult($endpoint, $vars)
   {
     $input = $this->ajaxVars();
-    $result = $this->wire->files->render($endpoint, ['input' => $input]);
+    $vars = array_merge($vars, ['input' => $input]);
+    $result = $this->wire->files->render($endpoint, $vars);
     if (is_string($result)) {
       return $this->addAlfredMarkup(
         $result,
@@ -1901,6 +1917,12 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if ($this->wire->user->isSuperuser()) $permission = true;
     if ($this->wire->user->hasPermission(self::permission_alfred)) $permission = true;
     return $permission and $this->hasAlfred;
+  }
+
+  public function livereloadScriptTag()
+  {
+    if (!wire()->config->rockdevtools) return;
+    return $this->html(rockdevtools()->livereload->scriptTag());
   }
 
   /**
