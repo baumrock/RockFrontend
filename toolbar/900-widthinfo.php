@@ -16,12 +16,11 @@
 <span id='toolbar-widthinfo'>
   <small></small>
   <span class='breakpoints'>
-    <small class='!inline-flex xs:w-2'></small>
-    <small class='font-bold xs:!inline-flex sm:!hidden'>xs</small>
-    <small class='font-bold sm:!inline-flex md:!hidden'>sm</small>
-    <small class='font-bold md:!inline-flex lg:!hidden'>md</small>
-    <small class='font-bold lg:!inline-flex xl:!hidden'>lg</small>
-    <small class='font-bold xl:!inline-flex'>xl</small>
+    <small class='font-bold xs:!inline-flex sm:!hidden'>&nbsp;&nbsp;xs</small>
+    <small class='font-bold sm:!inline-flex md:!hidden'>&nbsp;&nbsp;sm</small>
+    <small class='font-bold md:!inline-flex lg:!hidden'>&nbsp;&nbsp;md</small>
+    <small class='font-bold lg:!inline-flex xl:!hidden'>&nbsp;&nbsp;lg</small>
+    <small class='font-bold xl:!inline-flex'>&nbsp;&nbsp;xl</small>
   </span>
 </span>
 <script>
