@@ -40,6 +40,7 @@ require_once __DIR__ . '/classes/FieldMethod.php';
  *
  * @method string render($filename, array $vars = array(), array $options = array())
  * @method string view(string $file, array|Page $vars = [], Page $page = null)
+ * @method Engine loadLatte()
  */
 class RockFrontend extends WireData implements Module, ConfigurableModule
 {
