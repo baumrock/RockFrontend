@@ -49,7 +49,9 @@ class Toolbar extends Wire
     $js = wire()->config->urls(rockfrontend()) . 'dst/toolbar.min.js';
     return "<section id='rockfrontend-toolbar'>
         <style>$css</style>
-        <div id='toolbar-tools'>$items</div>
+        <div id='toolbar-tools-container'>
+          <div id='toolbar-tools'>$items</div>
+        </div>
         <script src=$js></script>
       </section>";
   }

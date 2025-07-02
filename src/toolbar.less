@@ -11,12 +11,31 @@
     // slightly below pw-modal
     z-index: 980;
   }
+
+  // hidden toolbar
+  &:not(.show) {
+    position: absolute;
+    #toolbar-tools-container {
+      // remove any padding
+      padding: 0 !important;
+    }
+
+    // hide all tools except the "show" tool
+    #toolbar-tools > * {
+      &:not([data-toggle="show"]) {
+        display: none;
+      }
+    }
+  }
 }
 #toolbar-tools {
-  display: flex;
-  gap: 1px;
+  display: inline-flex;
   position: relative;
   overflow-y: auto;
+  gap: 1px;
+  background-color: #d0d0d0;
+  padding-left: 1px;
+  padding-right: 1px;
   > * {
     flex-shrink: 0;
     padding: 5px 10px;
@@ -42,8 +61,4 @@
   svg {
     height: 20px;
   }
-}
-#hide-toolbar {
-  position: absolute;
-  right: 0px;
 }

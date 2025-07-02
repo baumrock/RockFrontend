@@ -40,6 +40,7 @@ require_once __DIR__ . '/classes/FieldMethod.php';
  *
  * @method string render($filename, array $vars = array(), array $options = array())
  * @method string view(string $file, array|Page $vars = [], Page $page = null)
+ * @method Engine loadLatte()
  */
 class RockFrontend extends WireData implements Module, ConfigurableModule
 {
@@ -160,6 +161,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /** @var array */
   private $viewfolders = [];
+
+  // grow feature defaults
+  public $growMin = 375;
+  public $growMax = 1440;
 
   public function __construct()
   {
@@ -1617,6 +1622,40 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   }
 
   /**
+   * Fluid font size grow
+   *
+   * Usage:
+   * <h2 style='
+   *   font-size: <?= $rf->grow(70, 200) ?>;
+   *   margin-top: <?= $rf->shrink(-10, -30) ?>;
+   * '>Grow example</h2>
+   *
+   * @param int $from
+   * @param int $to
+   * @param null|int $min
+   * @param null|int $max
+   * @return string
+   */
+  public function grow(
+    int $from,
+    int $to,
+    ?int $min = null,
+    ?int $max = null
+  ): string {
+    if ($min === null) $min = $this->growMin;
+    if ($max === null) $max = $this->growMax;
+
+    if ($from < $to) {
+      $diff = (int)$to - (int)$from;
+      $percent = "((100vw - {$min}px) / ($max - $min))";
+      $result = "clamp({$from}px, {$from}px + {$diff} * {$percent}, {$to}px)";
+      return $result;
+    } else {
+      return $this->shrink($from, $to, $min, $max);
+    }
+  }
+
+  /**
    * Hide layout field for non-superusers
    * @return void
    */
@@ -2347,6 +2386,31 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     );
     $vars = array_merge((array)$this->wire('all'), $vars);
     return $twig->render($relativePath, $vars);
+  }
+
+  /**
+   * Fluid font size shrink
+   *
+   * See grow() for usage.
+   *
+   * @param int $from
+   * @param int $to
+   * @param null|int $min
+   * @param null|int $max
+   * @return string
+   */
+  public function shrink(
+    int $from,
+    int $to,
+    ?int $min = null,
+    ?int $max = null
+  ): string {
+    if ($min === null) $min = $this->growMin;
+    if ($max === null) $max = $this->growMax;
+    $diff = (int)$to - (int)$from;
+    $percent = "((100vw - {$min}px) / ($max - $min))";
+    $result = "clamp({$to}px, {$from}px + {$diff} * {$percent}, {$from}px)";
+    return $result;
   }
 
   /**
