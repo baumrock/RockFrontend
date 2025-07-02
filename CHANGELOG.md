@@ -1,3 +1,11 @@
+## [5.3.0](https://github.com/baumrock/RockFrontend/compare/v5.2.0...v5.3.0) (2025-07-02)
+
+
+### Features
+
+* add new grow() concept ([3d304b6](https://github.com/baumrock/RockFrontend/commit/3d304b60861704ade89855709d1a06328ae30509))
+* add show/hide toggle for toolbar ([bd4d9df](https://github.com/baumrock/RockFrontend/commit/bd4d9df8fd74902b6ea867e1b748321719274391))
+
 ## [5.2.0](https://github.com/baumrock/RockFrontend/compare/v5.1.1...v5.2.0) (2025-06-01)
 
 
@@ -61,11 +69,4 @@
 * reading tracy editor from env leads to problems ([34c8a79](https://github.com/baumrock/RockFrontend/commit/34c8a7900a2754cd869e567c405031b722b9f77e))
 * remove default defer attribute ([505b462](https://github.com/baumrock/RockFrontend/commit/505b46267eecddd5303a1daa8cc461ab433673fd))
 * remove minify() for RockFrontend.js ([6a1a21b](https://github.com/baumrock/RockFrontend/commit/6a1a21b0c8876ecf45a06240f7ffafc436976b2b))
-
-## [4.1.0](https://github.com/baumrock/RockFrontend/compare/v4.0.0...v4.1.0) (2025-01-19)
-
-
-### Features
-
-* update latte library to latest version ([d3ac96e](https://github.com/baumrock/RockFrontend/commit/d3ac96e19f902211950715cca629d64402813648))
 
