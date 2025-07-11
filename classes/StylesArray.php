@@ -226,7 +226,6 @@ class StylesArray extends AssetsArray
     // prepare variables needed for recompile check
     $cssPath = $this->wire->config->paths->root . ltrim($opt->cssDir, "/");
     $cssFile = $cssPath . $opt->cssName . ".css";
-    $SourcemapFile = $cssPath . $asset->filename . ".map";
     $scssCacheArray = $this->getChangedFiles($scssCache, $scssCurrent);
 
     // we have a scss parser installed and some scss files to parse
@@ -268,7 +267,7 @@ class StylesArray extends AssetsArray
 
       // check if any of the SCSS files contained in the asset folder (recursively) has changed as usually you only load the master scss file
       else {
-        foreach($this->wire->files->find($asset->dir, ['extensions' => ['scss'], 'recursive' => 3]) as $f) {
+        foreach ($this->wire->files->find($asset->dir, ['extensions' => ['scss'], 'recursive' => 3]) as $f) {
           if (filemtime($f) > filemtime($cssFile)) {
             $this->log("$intro: $f changed.");
             $recompile = true;
@@ -287,7 +286,7 @@ class StylesArray extends AssetsArray
 
         $sourcemap = '';
         if ($opt->sourcemaps) {
-          $sourcemap = $SourcemapFile;
+          $sourcemap = $cssPath . $asset->filename . ".map";
         }
 
         $compiler->compileRF($asset->basename, $cssFile, $cssPath, $asset->dir, $style, $sourcemap);
