@@ -667,7 +667,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $arr;
   }
 
-  private function ajaxFormatted($raw, $endpoint, $vars): string
+  private function ajaxFormatted($raw, $endpoint, $vars = []): string
   {
     $extension = pathinfo($endpoint, PATHINFO_EXTENSION);
     if ($extension === "latte") {
