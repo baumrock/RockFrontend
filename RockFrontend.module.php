@@ -9,6 +9,7 @@ use Latte\Runtime\Html;
 use LogicException;
 use MatthiasMullie\Minify\Exceptions\IOException;
 use ProcessWire\Paths as ProcessWirePaths;
+use RockFrontend\AJAX;
 use RockFrontend\Asset;
 use RockFrontend\Manifest;
 use RockFrontend\Paths;
@@ -746,6 +747,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $input = $this->ajaxVars();
     $vars = array_merge($vars, ['input' => $input]);
     $result = $this->wire->files->render($endpoint, $vars);
+
+    // this will automatically set the status code of the request according
+    // to the AJAX constant, eg ROCKFRONTEND-HTTP404 will set the status code
+    // to 404 and will return the message for that code (eg "Not Found")
+    if (AJAX::isStatusCode($result)) {
+      $code = AJAX::getCode($result);
+      http_response_code($code);
+      return AJAX::getMessageForCode($result);
+    }
+
     if (is_string($result)) {
       return $this->addAlfredMarkup(
         $result,
