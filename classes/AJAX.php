@@ -127,6 +127,7 @@ class AJAX extends Wire
 
   public static function isStatusCode($code)
   {
+    if (!is_string($code)) return false;
     return array_key_exists($code, self::$messages);
   }
 
