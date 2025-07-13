@@ -830,9 +830,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return string
    */
-  public function alfred($page = null, $options = [])
-  {
+  public function alfred(
+    $page = null,
+    $options = [],
+    $offset = 0
+  ) {
     if (!$this->alfredAllowed()) return;
+
+    if (is_string($page) && str_starts_with($page, '-')) {
+      $offset = abs((int)$page);
+      $page = null;
+    }
 
     // check if frontend editing is installed
     if (!$this->wire->modules->isInstalled("PageFrontEdit")) {
@@ -873,7 +881,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $opt = $this->wire(new WireData());
     $opt->setArray([
       'fields' => '', // fields to edit
-      'path' => $this->getTplPath(), // path to edit file
+      'path' => $this->getTplPath($offset), // path to edit file
       'edit' => true,
       'blockid' => null,
     ]);
@@ -1536,9 +1544,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Find template file from trace
+   *
+   * Usage of offset:
+   * An offset of 1 means that not the first .latte file is returned but the
+   * next one. This can be helpful when adding alfred() to embeds where we
+   * do not want to open the embed in our IDE but the file that embeds it.
+   *
    * @return string
    */
-  public function getTplPath()
+  public function getTplPath($offset = 0)
   {
     $trace = debug_backtrace();
     $paths = $this->wire->config->paths;
@@ -1555,7 +1569,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $pattern = '/\/\*\* source: (.+?) \*\//s';
         if (preg_match($pattern, $content, $matches)) {
           $sourceFile = $matches[1];
-          return $sourceFile;
+          if (!$offset) return $sourceFile;
+          $offset--;
+          continue;
         }
       }
 
