@@ -3249,6 +3249,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = new InputfieldText();
     $f->name = 'layoutFile';
     $f->label = 'Filename of Autoload-Layout';
+    $f->description = 'If set, this file will be automatically loaded as layout for your latte files. See [latte docs](https://latte.nette.org/en/develop#toc-automatic-layout-lookup)';
     $f->icon = 'file-code-o';
     $f->value = $this->layoutFile ?: self::layoutFile;
     $f->notes = "File relative to $dir";
