@@ -555,9 +555,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // load the _init.php file if it exists
           $initFile = wire()->config->paths->templates . 'ajax/_init.php';
           if (file_exists($initFile)) {
-            // expose all pw API vars to the init file
-            extract($this->wire('all')->getArray());
-            include $initFile;
+            // load the _init.php file and return the result
+            // if this file returns a result we exit early as this means
+            // that we got some AJAX response code from it
+            $result = wire()->files->render(
+              $initFile,
+              $this->wire('all')->getArray()
+            );
+            if ($result) return $this->ajaxProcessResult($result);
           }
           $vars = get_defined_vars();
           unset($vars['event']);
@@ -704,6 +709,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $response;
   }
 
+  private function ajaxProcessResult($result)
+  {
+    // this will automatically set the status code of the request according
+    // to the AJAX constant, eg ROCKFRONTEND-HTTP404 will set the status code
+    // to 404 and will return the message for that code (eg "Not Found")
+    if (AJAX::isStatusCode($result)) {
+      $intCode = AJAX::intCode($result);
+      http_response_code($intCode);
+      return AJAX::getMessageForCode($result);
+    }
+
+    if (is_string($result)) {
+      return $this->addAlfredMarkup(
+        $result,
+        true
+      );
+    } else return $result;
+  }
+
   private function ajaxPublic($endpoint, $vars): string
   {
     // return function to keep code DRY
@@ -747,22 +771,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $input = $this->ajaxVars();
     $vars = array_merge($vars, ['input' => $input]);
     $result = $this->wire->files->render($endpoint, $vars);
-
-    // this will automatically set the status code of the request according
-    // to the AJAX constant, eg ROCKFRONTEND-HTTP404 will set the status code
-    // to 404 and will return the message for that code (eg "Not Found")
-    if (AJAX::isStatusCode($result)) {
-      $code = AJAX::getCode($result);
-      http_response_code($code);
-      return AJAX::getMessageForCode($result);
-    }
-
-    if (is_string($result)) {
-      return $this->addAlfredMarkup(
-        $result,
-        true
-      );
-    } else return $result;
+    return $this->ajaxProcessResult($result);
   }
 
   public function ajaxUrl($base): string

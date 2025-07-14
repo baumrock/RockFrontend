@@ -100,18 +100,16 @@ This can be handy to either add global access control rules (eg allowing ajax on
 
 namespace ProcessWire;
 
+use RockFrontend\AJAX;
+
 // access input variables (if needed)
 $input = $this->ajaxVars();
 
-// only allow ajax endpoints for the "foo" role
-// otherwise throw a 404
-if (!wire()->user->hasRole('foo')) throw new Wire404Exception("Not allowed");
+// only allow ajax requests from logged in users
+if (wire()->user->isGuest()) return AJAX::HTTP403_FORBIDDEN;
 
-// define variables that will be available in your endpoint file:
-$foo = 'FOO!';
-
-// log all defined vars to tracy
-bd(get_defined_vars());
+// to save variables for later use just add them to any PW object:
+$wire->myTemporaryVariable = 'foo!';
 ```
 
 ## Debugging Endpoints (for Superusers)

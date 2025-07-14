@@ -110,14 +110,21 @@ class AJAX extends Wire
     'ROCKFRONTEND-HTTP505' => '505 HTTP Version Not Supported'
   );
 
-  public static function getCode(string $code): int
+  public static function die($code)
   {
-    return substr($code, strlen('ROCKFRONTEND-HTTP'));
+    $intCode = AJAX::intCode($code);
+    http_response_code($intCode);
+    die(AJAX::getMessageForCode($code));
   }
 
   public static function getMessageForCode($code)
   {
     return self::$messages[$code];
+  }
+
+  public static function intCode(string $code): int
+  {
+    return substr($code, strlen('ROCKFRONTEND-HTTP'));
   }
 
   public static function isError($code)
