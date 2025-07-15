@@ -124,7 +124,7 @@ class AJAX extends Wire
 
   public static function intCode(string $code): int
   {
-    return substr($code, strlen('ROCKFRONTEND-HTTP'));
+    return (int) substr($code, strlen('ROCKFRONTEND-HTTP'));
   }
 
   public static function isError($code)
