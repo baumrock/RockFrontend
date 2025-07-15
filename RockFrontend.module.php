@@ -1250,7 +1250,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function field(
     Page $page,
     string $shortname,
-    string $type = null,
+    ?string $type = null,
   ) {
     // default type is formatted
     if (!$type) $type = 'f';
@@ -1383,11 +1383,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       if ($f = $this->getFile("$file.latte", $forcePath)) return $this->realpath($f);
     }
 
-    // if file exists return it
-    // this will also find files relative to /site/templates!
-    // TODO maybe prevent loading of relative paths outside assets?
-    $inRoot = $this->wire->files->fileInPath($file, $this->wire->config->paths->root);
-    if ($inRoot and is_file($file)) return $this->realpath($file);
+    // if file exists in one of the allowed folders return it
+    foreach ($this->folders as $folder) {
+      $allowed = $this->wire->files->fileInPath($file, $folder);
+      if ($allowed and is_file($file)) return $this->realpath($file);
+    }
 
     // look for the file in specified folders
     foreach ($this->folders as $folder) {
@@ -2460,7 +2460,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ___view(
     string $file,
     array|Page $vars = [],
-    Page $page = null,
+    ?Page $page = null,
   ): Html|string {
     if ($vars instanceof Page) {
       $page = $vars;
@@ -2584,7 +2584,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Custom
    * @return string
    */
-  public function renderLayout(Page $page = null, $fallback = [], $noMerge = false)
+  public function renderLayout(?Page $page = null, $fallback = [], $noMerge = false)
   {
     if (!$page) $page = $this->wire->page;
     $defaultFallback = [
