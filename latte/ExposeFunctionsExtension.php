@@ -26,7 +26,7 @@ final class ExposeFunctionsExtension extends Extension
     $currentParams = $paramsProperty->getValue($template);
     $newParams = array_merge(
       $apiVars, // lowest priority
-      rockfrontend()->definedVars,
+      rockfrontend()->definedVars ?? [],
       $currentParams, // highest priority
     );
 
