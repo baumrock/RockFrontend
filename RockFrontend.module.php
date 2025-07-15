@@ -3092,8 +3092,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Ensures that given path is a path within the PW root.
    *
    * Usage:
-   * $rockdevtools->toPath("/site/templates/foo.css");
-   * $rockdevtools->toPath("/var/www/html/site/templates/foo.css");
+   * $rockfrontend->toPath("/site/templates/foo.css");
+   * $rockfrontend->toPath("/var/www/html/site/templates/foo.css");
    * @param string $path
    * @return string
    */
