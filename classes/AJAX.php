@@ -122,9 +122,14 @@ class AJAX extends Wire
     return self::$messages[$code];
   }
 
-  public static function intCode(string $code): int
+  /**
+   * Returns 0 if status is not found
+   * @param string $status
+   * @return int
+   */
+  public static function intCode(string $status): int
   {
-    return (int) substr($code, strlen('ROCKFRONTEND-HTTP'));
+    return (int) substr($status, strlen('ROCKFRONTEND-HTTP'));
   }
 
   public static function isError($code)
