@@ -355,9 +355,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function addAjaxFolder(
     string $url,
     string $folder,
+    bool $onlyNormalizePath = false,
   ): void {
     $url = '/' . trim($url, '/') . '/';
-    $folder = $this->paths()->toPath($folder);
+    // this can be used to add folders outside the pw root
+    // eg when using pw in /public folder
+    if ($onlyNormalizePath) {
+      $folder = ProcessWirePaths::normalizeSeparators($folder);
+    } else {
+      $folder = $this->paths()->toPath($folder);
+    }
     $this->ajaxFolders[$url] = $folder;
   }
 
@@ -770,13 +777,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $input = $this->ajaxVars();
     $vars = array_merge($vars, ['input' => $input]);
-    $result = $this->wire->files->render($endpoint, $vars);
+    $result = wire()->files->render($endpoint, $vars, [
+      'allowedPaths' => $this->getAjaxFolders(),
+    ]);
     return $this->ajaxProcessResult($result);
   }
 
   public function ajaxUrl($base): string
   {
-    return $this->wire->pages->get(1)->url . "ajax/$base";
+    return wire()->pages->get(1)->url . "ajax/$base";
   }
 
   /**
@@ -1352,6 +1361,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function forceRecompile()
   {
     $this->wire->session->set(self::recompile, true);
+  }
+
+  public function getAjaxFolders(): array
+  {
+    return array_values($this->ajaxFolders);
   }
 
   /**
@@ -3913,6 +3927,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'folders' => $this->folders->getArray(),
       'autoloadStyles' => $this->autoloadStyles,
       'autoloadScripts' => $this->autoloadScripts,
+      'ajaxFolders' => $this->ajaxFolders,
       'ajaxEndpoints' => $this->ajaxEndpoints(),
     ];
   }
