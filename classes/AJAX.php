@@ -57,7 +57,7 @@ class AJAX extends Wire
   const HTTP504_GATEWAY_TIMEOUT                 = 'ROCKFRONTEND-HTTP504';
   const HTTP505_VERSION_NOT_SUPPORTED           = 'ROCKFRONTEND-HTTP505';
 
-  private static $messages = array(
+  public const MESSAGES = array(
     // [Informational 1xx]
     'ROCKFRONTEND-HTTP100' => '100 Continue',
     'ROCKFRONTEND-HTTP101' => '101 Switching Protocols',
@@ -119,7 +119,7 @@ class AJAX extends Wire
 
   public static function getMessageForCode($code)
   {
-    return self::$messages[$code];
+    return self::MESSAGES[$code];
   }
 
   /**
@@ -140,7 +140,7 @@ class AJAX extends Wire
   public static function isStatusCode($code)
   {
     if (!is_string($code)) return false;
-    return array_key_exists($code, self::$messages);
+    return array_key_exists($code, self::MESSAGES);
   }
 
   public static function canHaveBody($code)
