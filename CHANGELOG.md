@@ -1,3 +1,26 @@
+## [5.4.0](https://github.com/baumrock/RockFrontend/compare/v5.3.0...v5.4.0) (2025-08-02)
+
+
+### Features
+
+* add AJAX http status codes helper class ([13c0d23](https://github.com/baumrock/RockFrontend/commit/13c0d231461d0d763e473a5663647dee0db00d14))
+* add support for alfred() offset ([6f193a2](https://github.com/baumrock/RockFrontend/commit/6f193a26200ce8917baeafe2c430f8063318b083))
+* add window.noJQuery flag to suppress loading jquery from ALFRED ([9a3ef6f](https://github.com/baumrock/RockFrontend/commit/9a3ef6fc200cf3e2af9f7fe9c29ac26f4a4c540d))
+* allow ajax endpoints outside of pw root ([9df6cc5](https://github.com/baumrock/RockFrontend/commit/9df6cc52de3c6b5b64535bb68d656569fb2e81a4))
+* allow AJAX return codes in ajax _init.php file ([caa4e9e](https://github.com/baumrock/RockFrontend/commit/caa4e9e37d7539d96c13b80b0adfaf7721d3d187))
+* automatically set http response code based on ajax statuscode ([a426ede](https://github.com/baumrock/RockFrontend/commit/a426ede39b22b8847d40b3d8ad0901d2fb6a4674))
+* expose PW API variables to all latte template files ([3c758df](https://github.com/baumrock/RockFrontend/commit/3c758df6347bcac50a6b4e22bfcdc5b49b15cba3))
+
+
+### Bug Fixes
+
+* add is_string check ([69b8759](https://github.com/baumrock/RockFrontend/commit/69b87593020836f8b06395427f5a3d60861f38d6))
+* add missing default value ([bac9499](https://github.com/baumrock/RockFrontend/commit/bac94999c686f81a284344cdb733a2fbea2c5d45))
+* error if definedVars is null ([9cf9c8b](https://github.com/baumrock/RockFrontend/commit/9cf9c8b7b5fffbbd26095089cd0ffe6746756cfc))
+* getFile not checking all allowed folders ([2248591](https://github.com/baumrock/RockFrontend/commit/22485916a233b08fff73144f17c4d95a088c6927))
+* make sure intCode returns int ([6775757](https://github.com/baumrock/RockFrontend/commit/677575787a06dc0c15377aa85a330a5c8dd83b2e))
+* toolbar alfred issue ([7a4a234](https://github.com/baumrock/RockFrontend/commit/7a4a2349ae57bc3c0aad89c6b141006d80608dfd))
+
 ## [5.3.0](https://github.com/baumrock/RockFrontend/compare/v5.2.0...v5.3.0) (2025-07-02)
 
 
@@ -48,25 +71,4 @@
 * improve rockdevtools check ([dc3308a](https://github.com/baumrock/RockFrontend/commit/dc3308a4ceb68159f2e356a02b174fb3fdf15ce8))
 * toolbar throwing error for guest users ([e0c3c2d](https://github.com/baumrock/RockFrontend/commit/e0c3c2dd011f97728917999727beb20cc014c676))
 * use filemtime for scriptTag and styleTag by default ([45df91e](https://github.com/baumrock/RockFrontend/commit/45df91e806798a7566b5c8c0f8e7cdab68083dea))
-
-## [5.0.0](https://github.com/baumrock/RockFrontend/compare/v4.1.0...v5.0.0) (2025-02-02)
-
-
-### ⚠ BREAKING CHANGES
-
-* remove styles() and scripts() features in favor of RockDevTools
-
-### Features
-
-* add assets() method to include assets in frontend ([4efee08](https://github.com/baumrock/RockFrontend/commit/4efee084a17ba32e745b79b9147fedd978c5db25))
-* add scriptTag() and styleTag() ([b4ed1e4](https://github.com/baumrock/RockFrontend/commit/b4ed1e466d94bb19994b57033ce675080fa130da))
-* load alfred overrides from AdminStyleRock ([8c14d7e](https://github.com/baumrock/RockFrontend/commit/8c14d7ee2408eaa7c60e8004c3eb7b5bc5b3e46b))
-* remove styles() and scripts() features in favor of RockDevTools ([6c7ae81](https://github.com/baumrock/RockFrontend/commit/6c7ae81cc10da4c7845f9612fae66b01f05c023c))
-
-
-### Bug Fixes
-
-* reading tracy editor from env leads to problems ([34c8a79](https://github.com/baumrock/RockFrontend/commit/34c8a7900a2754cd869e567c405031b722b9f77e))
-* remove default defer attribute ([505b462](https://github.com/baumrock/RockFrontend/commit/505b46267eecddd5303a1daa8cc461ab433673fd))
-* remove minify() for RockFrontend.js ([6a1a21b](https://github.com/baumrock/RockFrontend/commit/6a1a21b0c8876ecf45a06240f7ffafc436976b2b))
 
