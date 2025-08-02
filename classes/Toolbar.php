@@ -42,17 +42,16 @@ class Toolbar extends Wire
   {
     if (!$this->showToolbar()) return "";
     $items = $this->renderItems();
+    $url = wire()->config->urls(rockfrontend());
+    $css = rockfrontend()->styleTag($url . 'dst/toolbar.min.css');
+    $js = rockfrontend()->scriptTag($url . 'dst/toolbar.min.js');
     // note: we return one root html element for dom() to work properly!
-    $css = wire()->files->render(
-      wire()->config->paths(rockfrontend()) . 'dst/toolbar.min.css'
-    );
-    $js = wire()->config->urls(rockfrontend()) . 'dst/toolbar.min.js';
     return "<section id='rockfrontend-toolbar'>
-        <style>$css</style>
+        $css
         <div id='toolbar-tools-container'>
           <div id='toolbar-tools'>$items</div>
         </div>
-        <script src=$js></script>
+        $js
       </section>";
   }
 

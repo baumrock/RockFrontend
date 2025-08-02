@@ -9,6 +9,7 @@ use Latte\Runtime\Html;
 use LogicException;
 use MatthiasMullie\Minify\Exceptions\IOException;
 use ProcessWire\Paths as ProcessWirePaths;
+use RockFrontend\AJAX;
 use RockFrontend\Asset;
 use RockFrontend\Manifest;
 use RockFrontend\Paths;
@@ -354,9 +355,16 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function addAjaxFolder(
     string $url,
     string $folder,
+    bool $onlyNormalizePath = false,
   ): void {
     $url = '/' . trim($url, '/') . '/';
-    $folder = $this->paths()->toPath($folder);
+    // this can be used to add folders outside the pw root
+    // eg when using pw in /public folder
+    if ($onlyNormalizePath) {
+      $folder = ProcessWirePaths::normalizeSeparators($folder);
+    } else {
+      $folder = $this->paths()->toPath($folder);
+    }
     $this->ajaxFolders[$url] = $folder;
   }
 
@@ -554,9 +562,14 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           // load the _init.php file if it exists
           $initFile = wire()->config->paths->templates . 'ajax/_init.php';
           if (file_exists($initFile)) {
-            // expose all pw API vars to the init file
-            extract($this->wire('all')->getArray());
-            include $initFile;
+            // load the _init.php file and return the result
+            // if this file returns a result we exit early as this means
+            // that we got some AJAX response code from it
+            $result = wire()->files->render(
+              $initFile,
+              $this->wire('all')->getArray()
+            );
+            if ($result) return $this->ajaxProcessResult($result);
           }
           $vars = get_defined_vars();
           unset($vars['event']);
@@ -666,7 +679,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     return $arr;
   }
 
-  private function ajaxFormatted($raw, $endpoint, $vars): string
+  private function ajaxFormatted($raw, $endpoint, $vars = []): string
   {
     $extension = pathinfo($endpoint, PATHINFO_EXTENSION);
     if ($extension === "latte") {
@@ -701,6 +714,25 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     }
 
     return $response;
+  }
+
+  private function ajaxProcessResult($result)
+  {
+    // this will automatically set the status code of the request according
+    // to the AJAX constant, eg ROCKFRONTEND-HTTP404 will set the status code
+    // to 404 and will return the message for that code (eg "Not Found")
+    if (AJAX::isStatusCode($result)) {
+      $intCode = AJAX::intCode($result);
+      http_response_code($intCode);
+      return AJAX::getMessageForCode($result);
+    }
+
+    if (is_string($result)) {
+      return $this->addAlfredMarkup(
+        $result,
+        true
+      );
+    } else return $result;
   }
 
   private function ajaxPublic($endpoint, $vars): string
@@ -745,18 +777,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   {
     $input = $this->ajaxVars();
     $vars = array_merge($vars, ['input' => $input]);
-    $result = $this->wire->files->render($endpoint, $vars);
-    if (is_string($result)) {
-      return $this->addAlfredMarkup(
-        $result,
-        true
-      );
-    } else return $result;
+    $result = wire()->files->render($endpoint, $vars, [
+      'allowedPaths' => $this->getAjaxFolders(),
+    ]);
+    return $this->ajaxProcessResult($result);
   }
 
   public function ajaxUrl($base): string
   {
-    return $this->wire->pages->get(1)->url . "ajax/$base";
+    return wire()->pages->get(1)->url . "ajax/$base";
   }
 
   /**
@@ -819,9 +848,17 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    *
    * @return string
    */
-  public function alfred($page = null, $options = [])
-  {
+  public function alfred(
+    $page = null,
+    $options = [],
+    $offset = 0
+  ) {
     if (!$this->alfredAllowed()) return;
+
+    if (is_string($page) && str_starts_with($page, '-')) {
+      $offset = abs((int)$page);
+      $page = null;
+    }
 
     // check if frontend editing is installed
     if (!$this->wire->modules->isInstalled("PageFrontEdit")) {
@@ -862,7 +899,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $opt = $this->wire(new WireData());
     $opt->setArray([
       'fields' => '', // fields to edit
-      'path' => $this->getTplPath(), // path to edit file
+      'path' => $this->getTplPath($offset), // path to edit file
       'edit' => true,
       'blockid' => null,
     ]);
@@ -1222,7 +1259,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function field(
     Page $page,
     string $shortname,
-    string $type = null,
+    ?string $type = null,
   ) {
     // default type is formatted
     if (!$type) $type = 'f';
@@ -1326,6 +1363,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->wire->session->set(self::recompile, true);
   }
 
+  public function getAjaxFolders(): array
+  {
+    return array_values($this->ajaxFolders);
+  }
+
   /**
    * Get file path of file
    *
@@ -1355,11 +1397,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       if ($f = $this->getFile("$file.latte", $forcePath)) return $this->realpath($f);
     }
 
-    // if file exists return it
-    // this will also find files relative to /site/templates!
-    // TODO maybe prevent loading of relative paths outside assets?
-    $inRoot = $this->wire->files->fileInPath($file, $this->wire->config->paths->root);
-    if ($inRoot and is_file($file)) return $this->realpath($file);
+    // if file exists in one of the allowed folders return it
+    foreach ($this->folders as $folder) {
+      $allowed = $this->wire->files->fileInPath($file, $folder);
+      if ($allowed and is_file($file)) return $this->realpath($file);
+    }
 
     // look for the file in specified folders
     foreach ($this->folders as $folder) {
@@ -1525,9 +1567,15 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
   /**
    * Find template file from trace
+   *
+   * Usage of offset:
+   * An offset of 1 means that not the first .latte file is returned but the
+   * next one. This can be helpful when adding alfred() to embeds where we
+   * do not want to open the embed in our IDE but the file that embeds it.
+   *
    * @return string
    */
-  public function getTplPath()
+  public function getTplPath($offset = 0)
   {
     $trace = debug_backtrace();
     $paths = $this->wire->config->paths;
@@ -1544,7 +1592,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
         $pattern = '/\/\*\* source: (.+?) \*\//s';
         if (preg_match($pattern, $content, $matches)) {
           $sourceFile = $matches[1];
-          return $sourceFile;
+          if (!$offset) return $sourceFile;
+          $offset--;
+          continue;
         }
       }
 
@@ -2424,7 +2474,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   public function ___view(
     string $file,
     array|Page $vars = [],
-    Page $page = null,
+    ?Page $page = null,
   ): Html|string {
     if ($vars instanceof Page) {
       $page = $vars;
@@ -2548,7 +2598,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Custom
    * @return string
    */
-  public function renderLayout(Page $page = null, $fallback = [], $noMerge = false)
+  public function renderLayout(?Page $page = null, $fallback = [], $noMerge = false)
   {
     if (!$page) $page = $this->wire->page;
     $defaultFallback = [
@@ -3056,8 +3106,8 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * Ensures that given path is a path within the PW root.
    *
    * Usage:
-   * $rockdevtools->toPath("/site/templates/foo.css");
-   * $rockdevtools->toPath("/var/www/html/site/templates/foo.css");
+   * $rockfrontend->toPath("/site/templates/foo.css");
+   * $rockfrontend->toPath("/var/www/html/site/templates/foo.css");
    * @param string $path
    * @return string
    */
@@ -3222,6 +3272,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $f = new InputfieldText();
     $f->name = 'layoutFile';
     $f->label = 'Filename of Autoload-Layout';
+    $f->description = 'If set, this file will be automatically loaded as layout for your latte files. See [latte docs](https://latte.nette.org/en/develop#toc-automatic-layout-lookup)';
     $f->icon = 'file-code-o';
     $f->value = $this->layoutFile ?: self::layoutFile;
     $f->notes = "File relative to $dir";
@@ -3876,6 +3927,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'folders' => $this->folders->getArray(),
       'autoloadStyles' => $this->autoloadStyles,
       'autoloadScripts' => $this->autoloadScripts,
+      'ajaxFolders' => $this->ajaxFolders,
       'ajaxEndpoints' => $this->ajaxEndpoints(),
     ];
   }

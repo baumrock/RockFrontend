@@ -142,6 +142,7 @@
       // load jquery
       let tries = 0;
       let load = function () {
+        if (window.noJQuery) return;
         console.log("Loading jQuery...");
         if (typeof jQuery == "undefined") {
           if (++tries <= 20) setTimeout(load, 500);

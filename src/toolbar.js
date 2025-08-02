@@ -4,13 +4,29 @@
       this.items = [];
       this.root = document.querySelector("#rockfrontend-toolbar");
       this.callbacks = {};
-      this.initItems();
+      // init instant items to avoid FOUC
+      this.initItems(true);
+      // init again on dom ready for some tools to be loaded (400-overlays.php)
+      document.addEventListener("DOMContentLoaded", () => {
+        this.initItems();
+      });
     }
 
-    initItems() {
-      this.root.querySelectorAll("#toolbar-tools a").forEach((el) => {
-        this.items.push(new Item(el));
-      });
+    initItems(instant = false) {
+      if (instant) {
+        this.root
+          .querySelectorAll("#toolbar-tools a[data-instant]")
+          .forEach((el) => {
+            this.items.push(new Item(el));
+          });
+        return;
+      } else {
+        this.root
+          .querySelectorAll("#toolbar-tools a:not([data-instant])")
+          .forEach((el) => {
+            this.items.push(new Item(el));
+          });
+      }
     }
 
     onToggle(toggleName, callback) {
@@ -21,7 +37,13 @@
     triggerCallbacks(toggleName, type) {
       if (!this.callbacks[toggleName]) return;
       const callbacks = this.callbacks[toggleName];
-      callbacks.forEach((callback) => callback(type));
+      callbacks.forEach((callback) => {
+        try {
+          callback(type);
+        } catch (error) {
+          console.error(error);
+        }
+      });
     }
   }
 
