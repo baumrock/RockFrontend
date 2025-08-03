@@ -1,4 +1,17 @@
-<?php if (!$page->editable()) return; ?>
+<?php
+
+/**
+ * Edit current page
+ */
+
+use function ProcessWire\rockfrontend;
+use function ProcessWire\wire;
+
+// allow overriding the page to edit via toolbarEditPage property
+$page = rockfrontend()->toolbarEditPage ?? wire()->page;
+
+if (!$page->editable()) return;
+?>
 <a
   href="<?= $page->editUrl() ?>"
   title="<?= $wire->_('Edit this page') ?>"
