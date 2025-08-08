@@ -104,6 +104,21 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
   /** @var WireArray $folders */
   public $folders;
 
+  /**
+   * We use files->render() for ajax endpoints.
+   * If such an enpoint returns an array RockFrontend will automatically
+   * set the content type to application/json.
+   *
+   * The problem is that if the endpoint returns an empty array [] PW
+   * will convert the result of the render() to an empty string ''
+   *
+   * To fix this we can set this property to true in our ajax endpoint:
+   * rockfrontend()->forceAjaxArray = true;
+   *
+   * @var bool
+   */
+  public $forceAjaxArray = false;
+
   public $home;
 
   /** @var bool */
@@ -780,6 +795,9 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $result = wire()->files->render($endpoint, $vars, [
       'allowedPaths' => $this->getAjaxFolders(),
     ]);
+    if ($this->forceAjaxArray && !is_array($result)) {
+      $result = [];
+    }
     return $this->ajaxProcessResult($result);
   }
 
