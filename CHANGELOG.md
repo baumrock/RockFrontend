@@ -1,3 +1,10 @@
+## [5.5.0](https://github.com/baumrock/RockFrontend/compare/v5.4.0...v5.5.0) (2025-09-01)
+
+
+### Features
+
+* allow custom editpage for toolbar ([b511da2](https://github.com/baumrock/RockFrontend/commit/b511da2698bbf26fc1eb5003a95905cdb016b87c))
+
 ## [5.4.0](https://github.com/baumrock/RockFrontend/compare/v5.3.0...v5.4.0) (2025-08-02)
 
 
@@ -50,25 +57,4 @@
 ### Bug Fixes
 
 * issue when using range() on single day event ([7b7a7e3](https://github.com/baumrock/RockFrontend/commit/7b7a7e33b3c998e8aa16dd043a3cb9ebdac00e5e))
-
-## [5.1.0](https://github.com/baumrock/RockFrontend/compare/v5.0.0...v5.1.0) (2025-03-01)
-
-
-### Features
-
-* add new toolbar ([f275716](https://github.com/baumrock/RockFrontend/commit/f275716d53826840846300222a2d8da2b9a3f9f1))
-* add overlay toggle tool ([3fbad0e](https://github.com/baumrock/RockFrontend/commit/3fbad0efbe159ab7d973f7ca471673c04614552a))
-* add persist feature for toolbar ([7be6cb4](https://github.com/baumrock/RockFrontend/commit/7be6cb40ae568a0dfe6eaa306ffe991e063d6dae))
-* add styles() and scripts() with note about migration guide ([cc96871](https://github.com/baumrock/RockFrontend/commit/cc96871fe0ed6859fdd380df56fb93b31169e446))
-* add support for different icons based on toggle state ([bd96e83](https://github.com/baumrock/RockFrontend/commit/bd96e8343eadc21e3f90627d5434c6a1eb60e682))
-* add tailwind width info to toolbar ([e413625](https://github.com/baumrock/RockFrontend/commit/e413625238c563295af1dbd765a9263d6ff4316c))
-* load tools from /site/templates ([b8efd7b](https://github.com/baumrock/RockFrontend/commit/b8efd7b1150ab4a7da86c6123964c7492e035c64))
-* sort toolbar items by name ([a46761c](https://github.com/baumrock/RockFrontend/commit/a46761c85cc95d9b7cecb9c860d8f14bf9c08918))
-
-
-### Bug Fixes
-
-* improve rockdevtools check ([dc3308a](https://github.com/baumrock/RockFrontend/commit/dc3308a4ceb68159f2e356a02b174fb3fdf15ce8))
-* toolbar throwing error for guest users ([e0c3c2d](https://github.com/baumrock/RockFrontend/commit/e0c3c2dd011f97728917999727beb20cc014c676))
-* use filemtime for scriptTag and styleTag by default ([45df91e](https://github.com/baumrock/RockFrontend/commit/45df91e806798a7566b5c8c0f8e7cdab68083dea))
 
