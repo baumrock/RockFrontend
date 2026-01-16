@@ -194,7 +194,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // set ajax flag
     $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
-    $this->ajax = $this->wire->config->ajax || $htmx;
+    // Detect programmatic requests (fetch, curl) via Accept header
+    // Browsers send "text/html,..." while fetch() sends "*/*"
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '*/*';
+    $isProgrammaticRequest = !str_starts_with($accept, 'text/html');
+    $this->ajax = $this->wire->config->ajax || $htmx || $isProgrammaticRequest;
 
     // JS defaults
     // set the remBase either from config setting or use 16 as fallback
@@ -575,23 +579,18 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           unset($vars['event']);
 
           $isGET = $this->wire->input->requestMethod() === 'GET';
-          // Check if this is a browser request (Accept header starts with text/html)
-          // Browsers send "text/html,application/xhtml+xml,..." while fetch() sends "*/*"
-          $accept = $_SERVER['HTTP_ACCEPT'] ?? '*/*';
-          $isBrowserRequest = str_starts_with($accept, 'text/html');
 
-          // API requests: AJAX header, non-GET, or programmatic request (not browser)
-          // This ensures modern fetch() works without X-Requested-With header
-          if ($this->ajax || !$isGET || !$isBrowserRequest) {
+          // ajax requests always return the public endpoint
+          if ($this->ajax || !$isGET) {
             return $this->ajaxPublic($file, $vars);
           }
 
-          // Browser GET request - show debug for superusers only
+          // non-ajax request show the debug screen for superusers
           if (wire()->user->isSuperuser()) {
             return $this->ajaxDebug($file, $url, $vars);
           }
 
-          // Guest browsing to AJAX URL directly in browser - deny access
+          // guest and no ajax: no access!
           if (wire()->modules->isInstalled('TracyDebugger')) {
             Debugger::$showBar = false;
           }
