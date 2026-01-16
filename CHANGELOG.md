@@ -1,3 +1,15 @@
+## [5.6.0](https://github.com/baumrock/RockFrontend/compare/v5.5.0...v5.6.0) (2026-01-16)
+
+
+### Features
+
+* allow attrString on styletag ([edf6e87](https://github.com/baumrock/RockFrontend/commit/edf6e87733df815dd2fb63049561446579013b3f))
+
+
+### Bug Fixes
+
+* missing forcepath param ([a0b3f36](https://github.com/baumrock/RockFrontend/commit/a0b3f36342dea31965a8141bb80c7e0bf518592a))
+
 ## [5.5.0](https://github.com/baumrock/RockFrontend/compare/v5.4.0...v5.5.0) (2025-09-01)
 
 
@@ -50,11 +62,4 @@
 * add missing livereloadScriptTag method ([efe557e](https://github.com/baumrock/RockFrontend/commit/efe557ead5a76a78ffa7beb7a717402a42e6c861))
 * livereload not working in ajax endpoints ([25fa46d](https://github.com/baumrock/RockFrontend/commit/25fa46d63c4c47bff43b9f821f1e08fbc923e2fa))
 * throw a 404 instead of 403 if no access to ajax endpoint ([38f19a5](https://github.com/baumrock/RockFrontend/commit/38f19a597db74f96da3efdd6f5927f4ea78bdb6a))
-
-## [5.1.1](https://github.com/baumrock/RockFrontend/compare/v5.1.0...v5.1.1) (2025-03-14)
-
-
-### Bug Fixes
-
-* issue when using range() on single day event ([7b7a7e3](https://github.com/baumrock/RockFrontend/commit/7b7a7e33b3c998e8aa16dd043a3cb9ebdac00e5e))
 
