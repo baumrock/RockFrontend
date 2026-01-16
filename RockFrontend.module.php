@@ -191,14 +191,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     $this->autoloadScripts = new WireArray();
     $this->autoloadStyles = new WireArray();
     $this->alfredCache = $this->wire(new WireData());
-
-    // set ajax flag
-    $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
-    // Detect programmatic requests (fetch, curl) via Accept header
-    // Browsers send "text/html,..." while fetch() sends "*/*"
-    $accept = $_SERVER['HTTP_ACCEPT'] ?? '*/*';
-    $isProgrammaticRequest = !str_starts_with($accept, 'text/html');
-    $this->ajax = $this->wire->config->ajax || $htmx || $isProgrammaticRequest;
+    $this->ajax = $this->isAjaxRequest();
 
     // JS defaults
     // set the remBase either from config setting or use 16 as fallback
@@ -1916,6 +1909,28 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // either on that page or on one of its descendants
     $active = $page->parents()->add($page);
     return $active->has($menuItem);
+  }
+
+  private function isAjaxRequest(): bool
+  {
+    // if ProcessWire detects an ajax request it is an ajax request
+    if (wire()->config->ajax) return true;
+
+    // htmx sets this header to indicate an ajax request
+    $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
+    if ($htmx) return true;
+
+    // check accept header as suggested by Markus Tiefenbacher
+    // https://github.com/baumrock/RockFrontend/pull/41
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '*/*';
+    $isProgrammaticRequest = !str_starts_with(
+      $accept,
+      'text/html'
+    );
+    if ($isProgrammaticRequest) return true;
+
+    // no ajax request
+    return false;
   }
 
   /**
