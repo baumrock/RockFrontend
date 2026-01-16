@@ -194,7 +194,11 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
 
     // set ajax flag
     $htmx = isset($_SERVER['HTTP_HX_REQUEST']) && $_SERVER['HTTP_HX_REQUEST'];
-    $this->ajax = $this->wire->config->ajax || $htmx;
+    // Detect programmatic requests (fetch, curl) via Accept header
+    // Browsers send "text/html,..." while fetch() sends "*/*"
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '*/*';
+    $isProgrammaticRequest = !str_starts_with($accept, 'text/html');
+    $this->ajax = $this->wire->config->ajax || $htmx || $isProgrammaticRequest;
 
     // JS defaults
     // set the remBase either from config setting or use 16 as fallback
