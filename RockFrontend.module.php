@@ -575,18 +575,23 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
           unset($vars['event']);
 
           $isGET = $this->wire->input->requestMethod() === 'GET';
+          // Check if this is a browser request (Accept header starts with text/html)
+          // Browsers send "text/html,application/xhtml+xml,..." while fetch() sends "*/*"
+          $accept = $_SERVER['HTTP_ACCEPT'] ?? '*/*';
+          $isBrowserRequest = str_starts_with($accept, 'text/html');
 
-          // ajax requests always return the public endpoint
-          if ($this->ajax || !$isGET) {
+          // API requests: AJAX header, non-GET, or programmatic request (not browser)
+          // This ensures modern fetch() works without X-Requested-With header
+          if ($this->ajax || !$isGET || !$isBrowserRequest) {
             return $this->ajaxPublic($file, $vars);
           }
 
-          // non-ajax request show the debug screen for superusers
+          // Browser GET request - show debug for superusers only
           if (wire()->user->isSuperuser()) {
             return $this->ajaxDebug($file, $url, $vars);
           }
 
-          // guest and no ajax: no access!
+          // Guest browsing to AJAX URL directly in browser - deny access
           if (wire()->modules->isInstalled('TracyDebugger')) {
             Debugger::$showBar = false;
           }
