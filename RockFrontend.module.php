@@ -2832,7 +2832,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     // make sure to render the sitemap as seen by the guest user
     // save current user for later
     $user = $this->wire->user;
-    $this->wire->user = $this->wire->users->get('guest');
+    $this->wire->set('user', $this->wire->users->get('guest'));
 
     // create markup
     $out = "<?xml version='1.0' encoding='UTF-8'?>\n";
@@ -2869,7 +2869,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
       'url' => '/sitemap.xml',
     ]);
 
-    $this->wire->user = $user;
+    $this->wire->set('user', $user);
     return $out;
   }
 
