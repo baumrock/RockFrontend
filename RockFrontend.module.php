@@ -1098,7 +1098,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$this->wire->user->isSuperuser()) return;
 
     // get path of less file
-    $lessFile = $this->getFile($lessFile);
+    $lessFile = $this->getFile($lessFile, true);
     if (!is_file($lessFile)) throw new WireException("$lessFile not found");
 
     // get path of css file
@@ -2940,10 +2940,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * @return string
    * @throws WireException
    */
-  public function styleTag($url, $versionType = true): string
+  public function styleTag($url, $versionType = true, $attrString = ''): string
   {
     $href = wire()->config->versionUrl($url, $versionType);
-    return "<link rel='stylesheet' href='$href' />";
+    return "<link rel='stylesheet' href='$href' $attrString />";
   }
 
   /**
