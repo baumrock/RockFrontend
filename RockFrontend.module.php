@@ -1098,7 +1098,7 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
     if (!$this->wire->user->isSuperuser()) return;
 
     // get path of less file
-    $lessFile = $this->getFile($lessFile);
+    $lessFile = $this->getFile($lessFile, true);
     if (!is_file($lessFile)) throw new WireException("$lessFile not found");
 
     // get path of css file
