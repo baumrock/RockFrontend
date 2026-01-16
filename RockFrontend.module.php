@@ -2940,10 +2940,10 @@ class RockFrontend extends WireData implements Module, ConfigurableModule
    * @return string
    * @throws WireException
    */
-  public function styleTag($url, $versionType = true): string
+  public function styleTag($url, $versionType = true, $attrString = ''): string
   {
     $href = wire()->config->versionUrl($url, $versionType);
-    return "<link rel='stylesheet' href='$href' />";
+    return "<link rel='stylesheet' href='$href' $attrString />";
   }
 
   /**
