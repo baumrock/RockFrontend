@@ -1,3 +1,10 @@
+## [5.6.1](https://github.com/baumrock/RockFrontend/compare/v5.6.0...v5.6.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* bump symfony/dom-crawler to v6.4.40 for security advisory ([150167c](https://github.com/baumrock/RockFrontend/commit/150167c042c44a219f3e91dacfd764e272cdbcc0))
+
 ## [5.6.0](https://github.com/baumrock/RockFrontend/compare/v5.5.0...v5.6.0) (2026-01-16)
 
 
@@ -47,19 +54,4 @@
 
 * add new grow() concept ([3d304b6](https://github.com/baumrock/RockFrontend/commit/3d304b60861704ade89855709d1a06328ae30509))
 * add show/hide toggle for toolbar ([bd4d9df](https://github.com/baumrock/RockFrontend/commit/bd4d9df8fd74902b6ea867e1b748321719274391))
-
-## [5.2.0](https://github.com/baumrock/RockFrontend/compare/v5.1.1...v5.2.0) (2025-06-01)
-
-
-### Features
-
-* add _init.php file for global ajax access control ([6bff1a0](https://github.com/baumrock/RockFrontend/commit/6bff1a0f040299817c9d2d8377f5a8ea2cab9ae0))
-* expose variables from _init.php to all ajax files ([b3e85af](https://github.com/baumrock/RockFrontend/commit/b3e85afafc7bb915deae6b96e61ecc5155e54ebc))
-
-
-### Bug Fixes
-
-* add missing livereloadScriptTag method ([efe557e](https://github.com/baumrock/RockFrontend/commit/efe557ead5a76a78ffa7beb7a717402a42e6c861))
-* livereload not working in ajax endpoints ([25fa46d](https://github.com/baumrock/RockFrontend/commit/25fa46d63c4c47bff43b9f821f1e08fbc923e2fa))
-* throw a 404 instead of 403 if no access to ajax endpoint ([38f19a5](https://github.com/baumrock/RockFrontend/commit/38f19a597db74f96da3efdd6f5927f4ea78bdb6a))
 
