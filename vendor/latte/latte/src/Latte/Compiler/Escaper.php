@@ -1,30 +1,29 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
+use Latte;
 use Latte\Compiler\Nodes\Html\ElementNode;
 use Latte\ContentType;
-use Latte\Runtime\Filters;
+use Latte\Runtime\{Helpers, HtmlHelpers};
+use function is_string;
 
 
 /**
  * Context-aware escaping.
  */
-final class Escaper
+class Escaper
 {
 	public const
 		Text = 'text',
 		JavaScript = 'js',
 		Css = 'css',
-		ICal = 'ical',
-		Url = 'url';
+		ICal = 'ical';
 
 	public const
 		HtmlText = 'html',
@@ -36,48 +35,42 @@ final class Escaper
 
 	private const Convertors = [
 		self::Text => [
-			self::HtmlText => 'escapeHtmlText',
-			self::HtmlAttribute => 'escapeHtmlAttr',
-			self::HtmlAttribute . '/' . self::JavaScript => 'escapeHtmlAttr',
-			self::HtmlAttribute . '/' . self::Css => 'escapeHtmlAttr',
-			self::HtmlAttribute . '/' . self::Url => 'escapeHtmlAttr',
-			self::HtmlComment => 'escapeHtmlComment',
-			'xml' => 'escapeXml',
-			'xml/attr' => 'escapeXml',
+			self::HtmlText => 'HtmlHelpers::escapeText',
+			self::HtmlAttribute => 'HtmlHelpers::escapeAttr',
+			self::HtmlAttribute . '/' . self::JavaScript => 'HtmlHelpers::escapeAttr',
+			self::HtmlAttribute . '/' . self::Css => 'HtmlHelpers::escapeAttr',
+			self::HtmlComment => 'HtmlHelpers::escapeComment',
+			'xml' => 'XmlHelpers::escapeText',
+			'xml/attr' => 'XmlHelpers::escapeAttr',
 		],
 		self::JavaScript => [
-			self::HtmlText => 'escapeHtmlText',
-			self::HtmlAttribute => 'escapeHtmlAttr',
-			self::HtmlAttribute . '/' . self::JavaScript => 'escapeHtmlAttr',
-			self::HtmlRawText . '/' . self::JavaScript => 'convertJSToHtmlRawText',
-			self::HtmlComment => 'escapeHtmlComment',
+			self::HtmlText => 'HtmlHelpers::escapeText',
+			self::HtmlAttribute => 'HtmlHelpers::escapeAttr',
+			self::HtmlAttribute . '/' . self::JavaScript => 'HtmlHelpers::escapeAttr',
+			self::HtmlRawText . '/' . self::JavaScript => 'HtmlHelpers::convertJSToRawText',
+			self::HtmlComment => 'HtmlHelpers::escapeComment',
 		],
 		self::Css => [
-			self::HtmlText => 'escapeHtmlText',
-			self::HtmlAttribute => 'escapeHtmlAttr',
-			self::HtmlAttribute . '/' . self::Css => 'escapeHtmlAttr',
-			self::HtmlRawText . '/' . self::Css => 'convertJSToHtmlRawText',
-			self::HtmlComment => 'escapeHtmlComment',
+			self::HtmlText => 'HtmlHelpers::escapeText',
+			self::HtmlAttribute => 'HtmlHelpers::escapeAttr',
+			self::HtmlAttribute . '/' . self::Css => 'HtmlHelpers::escapeAttr',
+			self::HtmlRawText . '/' . self::Css => 'HtmlHelpers::convertJSToRawText',
+			self::HtmlComment => 'HtmlHelpers::escapeComment',
 		],
 		self::HtmlText => [
-			self::HtmlAttribute => 'convertHtmlToHtmlAttr',
-			self::HtmlAttribute . '/' . self::JavaScript => 'convertHtmlToHtmlAttr',
-			self::HtmlAttribute . '/' . self::Css => 'convertHtmlToHtmlAttr',
-			self::HtmlAttribute . '/' . self::Url => 'convertHtmlToHtmlAttr',
-			self::HtmlComment => 'escapeHtmlComment',
-			self::HtmlRawText . '/' . self::HtmlText => 'convertHtmlToHtmlRawText',
+			self::Text => 'HtmlHelpers::convertHtmlToText',
+			self::HtmlAttribute => 'HtmlHelpers::convertHtmlToAttr',
+			self::HtmlAttribute . '/' . self::JavaScript => 'HtmlHelpers::convertHtmlToAttr',
+			self::HtmlAttribute . '/' . self::Css => 'HtmlHelpers::convertHtmlToAttr',
+			self::HtmlComment => 'HtmlHelpers::escapeComment',
+			self::HtmlRawText . '/' . self::HtmlText => 'HtmlHelpers::convertHtmlToRawText',
 		],
 		self::HtmlAttribute => [
-			self::HtmlText => 'convertHtmlToHtmlAttr',
-		],
-		self::HtmlAttribute . '/' . self::Url => [
-			self::HtmlText => 'convertHtmlToHtmlAttr',
-			self::HtmlAttribute => 'nop',
+			self::HtmlText => 'HtmlHelpers::convertAttrToHtml',
 		],
 	];
 
 	private string $state = '';
-	private string $tag = '';
 	private string $subType = '';
 
 
@@ -102,6 +95,9 @@ final class Escaper
 	}
 
 
+	/**
+	 * Returns the current escaping state as a string (e.g. "html/attr/js").
+	 */
 	public function export(): string
 	{
 		return $this->state . ($this->subType ? '/' . $this->subType : '');
@@ -118,18 +114,11 @@ final class Escaper
 	{
 		if ($el->isRawText()) {
 			$this->state = self::HtmlRawText;
-			$this->subType = self::Text;
 			if ($el->is('script')) {
 				$type = $el->getAttribute('type');
-				if ($type === true || $type === null
-					|| is_string($type) && preg_match('#((application|text)/(((x-)?java|ecma|j|live)script|json)|application/.+\+json|text/plain|module|importmap|)$#Ai', $type)
-				) {
-					$this->subType = self::JavaScript;
-
-				} elseif (is_string($type) && preg_match('#text/((x-)?template|html)$#Ai', $type)) {
-					$this->subType = self::HtmlText;
-				}
-
+				$this->subType = is_string($type)
+					? HtmlHelpers::classifyScriptType($type)
+					: self::JavaScript; // missing or dynamic type attribute
 			} elseif ($el->is('style')) {
 				$this->subType = self::Css;
 			}
@@ -144,7 +133,6 @@ final class Escaper
 	public function enterHtmlTag(string $name): void
 	{
 		$this->state = self::HtmlTag;
-		$this->tag = strtolower($name);
 	}
 
 
@@ -166,10 +154,6 @@ final class Escaper
 				$this->subType = self::JavaScript;
 			} elseif ($name === 'style') {
 				$this->subType = self::Css;
-			} elseif ((in_array($name, ['href', 'src', 'action', 'formaction'], true)
-				|| ($name === 'data' && $this->tag === 'object'))
-			) {
-				$this->subType = self::Url;
 			}
 		}
 	}
@@ -191,56 +175,59 @@ final class Escaper
 	{
 		return match ($this->contentType) {
 			ContentType::Html => match ($this->state) {
-				self::HtmlText => 'LR\Filters::escapeHtmlText(' . $str . ')',
-				self::HtmlTag => 'LR\Filters::escapeHtmlTag(' . $str . ')',
+				self::HtmlText => 'LR\HtmlHelpers::escapeText(' . $str . ')',
+				self::HtmlTag => 'LR\HtmlHelpers::escapeTag(' . $str . ')',
 				self::HtmlAttribute => match ($this->subType) {
-					'',
-					self::Url => 'LR\Filters::escapeHtmlAttr(' . $str . ')',
-					self::JavaScript => 'LR\Filters::escapeHtmlAttr(LR\Filters::escapeJs(' . $str . '))',
-					self::Css => 'LR\Filters::escapeHtmlAttr(LR\Filters::escapeCss(' . $str . '))',
+					'' => 'LR\HtmlHelpers::escapeAttr(' . $str . ')',
+					self::JavaScript => 'LR\HtmlHelpers::escapeAttr(LR\Helpers::escapeJs(' . $str . '))',
+					self::Css => 'LR\HtmlHelpers::escapeAttr(LR\Helpers::escapeCss(' . $str . '))',
 				},
-				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
-				self::HtmlBogusTag => 'LR\Filters::escapeHtml(' . $str . ')',
+				self::HtmlComment => 'LR\HtmlHelpers::escapeComment(' . $str . ')',
+				self::HtmlBogusTag => 'LR\HtmlHelpers::escapeTag(' . $str . ')',
 				self::HtmlRawText => match ($this->subType) {
-					self::Text => 'LR\Filters::convertJSToHtmlRawText(' . $str . ')', // sanitization, escaping is not possible
-					self::HtmlText => 'LR\Filters::escapeHtmlRawTextHtml(' . $str . ')',
-					self::JavaScript => 'LR\Filters::escapeJs(' . $str . ')',
-					self::Css => 'LR\Filters::escapeCss(' . $str . ')',
+					self::Text => 'LR\HtmlHelpers::convertJSToRawText(' . $str . ')', // sanitization, escaping is not possible
+					self::HtmlText => 'LR\HtmlHelpers::escapeRawHtml(' . $str . ')',
+					self::JavaScript => 'LR\Helpers::escapeJs(' . $str . ')',
+					self::Css => 'LR\Helpers::escapeCss(' . $str . ')',
+					default => throw new \LogicException("Unknown raw text subtype '$this->subType'."),
 				},
 				default => throw new \LogicException("Unknown context $this->contentType, $this->state."),
 			},
 			ContentType::Xml => match ($this->state) {
-				self::HtmlText,
-				self::HtmlBogusTag => 'LR\Filters::escapeXml(' . $str . ')',
-				self::HtmlAttribute => 'LR\Filters::escapeXml(' . $str . ')',
-				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
-				self::HtmlTag => 'LR\Filters::escapeXmlTag(' . $str . ')',
+				self::HtmlText => 'LR\XmlHelpers::escapeText(' . $str . ')',
+				self::HtmlBogusTag => 'LR\XmlHelpers::escapeTag(' . $str . ')',
+				self::HtmlAttribute => 'LR\XmlHelpers::escapeAttr(' . $str . ')',
+				self::HtmlComment => 'LR\HtmlHelpers::escapeComment(' . $str . ')',
+				self::HtmlTag => 'LR\XmlHelpers::escapeTag(' . $str . ')',
 				default => throw new \LogicException("Unknown context $this->contentType, $this->state."),
 			},
-			ContentType::JavaScript => 'LR\Filters::escapeJs(' . $str . ')',
-			ContentType::Css => 'LR\Filters::escapeCss(' . $str . ')',
-			ContentType::ICal => 'LR\Filters::escapeIcal(' . $str . ')',
+			ContentType::JavaScript => 'LR\Helpers::escapeJs(' . $str . ')',
+			ContentType::Css => 'LR\Helpers::escapeCss(' . $str . ')',
+			ContentType::ICal => 'LR\Helpers::escapeIcal(' . $str . ')',
 			ContentType::Text => '($this->filters->escape)(' . $str . ')',
 			default => throw new \LogicException("Unknown content-type $this->contentType."),
 		};
 	}
 
 
-	public function escapeMandatory(string $str): string
+	/**
+	 * Applies mandatory escaping that cannot be suppressed (e.g. quotes in attributes).
+	 */
+	public function escapeMandatory(string $str, ?Position $position = null): string
 	{
 		return match ($this->contentType) {
 			ContentType::Html => match ($this->state) {
-				self::HtmlAttribute => "LR\\Filters::escapeHtmlQuotes($str)",
+				self::HtmlAttribute => "LR\\HtmlHelpers::escapeQuotes($str)",
 				self::HtmlRawText => match ($this->subType) {
-					self::HtmlText => 'LR\Filters::convertHtmlToHtmlRawText(' . $str . ')',
-					default => "LR\\Filters::convertJSToHtmlRawText($str)",
+					self::HtmlText => 'LR\HtmlHelpers::convertHtmlToRawText(' . $str . ')',
+					default => "LR\\HtmlHelpers::convertJSToRawText($str)",
 				},
-				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
+				self::HtmlComment => throw new Latte\CompileException('Using |noescape is not allowed in this context.', $position),
 				default => $str,
 			},
 			ContentType::Xml => match ($this->state) {
-				self::HtmlAttribute => "LR\\Filters::escapeHtmlQuotes($str)",
-				self::HtmlComment => 'LR\Filters::escapeHtmlComment(' . $str . ')',
+				self::HtmlAttribute => "LR\\HtmlHelpers::escapeQuotes($str)",
+				self::HtmlComment => throw new Latte\CompileException('Using |noescape is not allowed in this context.', $position),
 				default => $str,
 			},
 			default => $str,
@@ -248,20 +235,26 @@ final class Escaper
 	}
 
 
-	public function check(string $str): string
+	/**
+	 * Generates code that converts content between content types at runtime using FilterInfo.
+	 */
+	public function escapeContent(string $str): string
 	{
-		if ($this->state === self::HtmlAttribute && $this->subType === self::Url) {
-			$str = 'LR\Filters::safeUrl(' . $str . ')';
-		}
-		return $str;
+		return 'LR\Helpers::convertTo($ʟ_fi, '
+			. var_export($this->export(), return: true) . ', '
+			. $str
+			. ')';
 	}
 
 
+	/**
+	 * Returns a callable that converts content from $source type to $dest type, or null if unsupported.
+	 */
 	public static function getConvertor(string $source, string $dest): ?callable
 	{
 		return match (true) {
-			$source === $dest => [Filters::class, 'nop'],
-			isset(self::Convertors[$source][$dest]) => [Filters::class, self::Convertors[$source][$dest]],
+			$source === $dest => Helpers::nop(...),
+			isset(self::Convertors[$source][$dest]) => 'Latte\Runtime\\' . self::Convertors[$source][$dest],
 			default => null,
 		};
 	}

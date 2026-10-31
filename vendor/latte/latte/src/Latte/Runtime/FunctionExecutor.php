@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Latte\Runtime;
 
@@ -19,10 +17,10 @@ use Latte\Helpers;
 #[\AllowDynamicProperties]
 class FunctionExecutor
 {
-	/** @var callable[] */
+	/** @var array<string, callable> */
 	private array $_list = [];
 
-	/** @var bool[] */
+	/** @var array<string, bool> */
 	private array $_aware = [];
 
 
@@ -39,7 +37,7 @@ class FunctionExecutor
 
 	/**
 	 * Returns all run-time functions.
-	 * @return callable[]
+	 * @return array<string, callable>
 	 */
 	public function getAll(): array
 	{
@@ -47,6 +45,9 @@ class FunctionExecutor
 	}
 
 
+	/**
+	 * Returns the named function wrapped to accept or skip a Template argument based on its signature.
+	 */
 	public function __get(string $name): callable
 	{
 		$callback = $this->_list[$name] ?? null;

@@ -1,32 +1,23 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
 use Latte\CompileException;
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\Php\Expression;
-use Latte\Compiler\Nodes\Php\ExpressionNode;
+use Latte\Compiler\Nodes\{AreaNode, StatementNode};
+use Latte\Compiler\Nodes\Php\{Expression, ExpressionNode};
 use Latte\Compiler\Nodes\Php\Scalar\StringNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
-use Latte\Compiler\TagParser;
-use Latte\Compiler\TemplateParser;
+use Latte\Compiler\{Position, PrintContext, Tag, TagParser, TemplateParser};
+use function in_array;
 
 
 /**
- * {if $cond} & {elseif $cond} & {else}
- * {if} & {/if $cond}
- * {ifset $var} & {elseifset $var}
- * {ifset block} & {elseifset block}
+ * {if $cond} ... {elseif $cond} ... {else} ... {/if}
+ * {ifset $var} ... {elseifset $var} ... {/ifset}
  */
 class IfNode extends StatementNode
 {
@@ -38,7 +29,7 @@ class IfNode extends StatementNode
 	public bool $ifset = false;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag, TemplateParser $parser): \Generator
 	{
 		$node = $tag->node = new static;
@@ -51,7 +42,9 @@ class IfNode extends StatementNode
 				: $tag->parser->parseExpression();
 		}
 
-		[$node->then, $nextTag] = yield $node->capture ? ['else'] : ['else', 'elseif', 'elseifset'];
+		[$node->then, $nextTag] = yield $node->capture
+			? ['else']
+			: ['else', 'elseif', 'elseifset'];
 
 		if ($nextTag?->name === 'else') {
 			if ($nextTag->parser->stream->is('if')) {
@@ -68,8 +61,14 @@ class IfNode extends StatementNode
 		}
 
 		if ($node->capture) {
+			assert($nextTag !== null);
 			$node->condition = $nextTag->parser->parseExpression();
 		}
+
+		// a nested {elseif} node bypasses the parser's extent stamping
+		$node->end = $node->else instanceof self
+			? $node->else->end
+			: ($nextTag->end ?? $tag->end);
 
 		return $node;
 	}
@@ -83,7 +82,9 @@ class IfNode extends StatementNode
 			$name = $parser->parseUnquotedStringOrExpression();
 			$list[] = $block || $name instanceof StringNode
 				? new Expression\AuxiliaryNode(
-					fn(PrintContext $context, ExpressionNode $name) => '$this->hasBlock(' . $name->print($context) . ')',
+					fn(PrintContext $context, ExpressionNode $name) => '$this->hasBlock('
+						. $context->ensureString($name, 'Block name')
+						. ')',
 					[$name],
 				)
 				: new Expression\IssetNode([$name]);

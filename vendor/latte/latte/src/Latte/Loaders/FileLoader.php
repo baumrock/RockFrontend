@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Latte\Loaders;
 
@@ -13,7 +11,7 @@ use Latte;
 
 
 /**
- * Template loader.
+ * Loads templates from filesystem.
  */
 class FileLoader implements Latte\Loader
 {
@@ -36,21 +34,15 @@ class FileLoader implements Latte\Loader
 			throw new Latte\RuntimeException("Template '$file' is not within the allowed path '{$this->baseDir}'.");
 
 		} elseif (!is_file($file)) {
-			throw new Latte\RuntimeException("Missing template file '$file'.");
-
-		} elseif ($this->isExpired($fileName, time())) {
-			if (@touch($file) === false) {
-				trigger_error("File's modification time is in the future. Cannot update it: " . error_get_last()['message'], E_USER_WARNING);
-			}
+			throw new Latte\TemplateNotFoundException("Missing template file '$file'.");
 		}
 
-		return file_get_contents($file);
-	}
+		$content = file_get_contents($file);
+		if ($content === false) {
+			throw new Latte\RuntimeException("Unable to read file '$file'.");
+		}
 
-
-	public function isExpired(string $file, int $time): bool
-	{
-		return false;
+		return $content;
 	}
 
 
@@ -59,7 +51,7 @@ class FileLoader implements Latte\Loader
 	 */
 	public function getReferredName(string $file, string $referringFile): string
 	{
-		if ($this->baseDir || !preg_match('#/|\\\\|[a-z]:|phar:#iA', $file)) {
+		if ($this->baseDir || !preg_match('#/|\\\|[a-z]:|phar:#iA', $file)) {
 			$file = $this->normalizePath($referringFile . '/../' . $file);
 		}
 
@@ -78,7 +70,7 @@ class FileLoader implements Latte\Loader
 
 	protected static function normalizePath(string $path): string
 	{
-		preg_match('#^([a-z]:|phar://.+?/)?(.*)#i', $path, $m);
+		preg_match('#^([a-z]:|phar://.+?/)?(.*)#i', $path, $m) ?: throw new \LogicException;
 		$res = [];
 		foreach (explode('/', strtr($m[2], '\\', '/')) as $part) {
 			if ($part === '..' && $res && end($res) !== '..' && end($res) !== '') {

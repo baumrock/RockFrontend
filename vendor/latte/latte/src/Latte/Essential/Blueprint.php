@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Latte\Essential;
 
@@ -18,6 +16,7 @@ use Nette\PhpGenerator as Php;
  */
 final class Blueprint
 {
+	/** @param array<string, mixed> $params */
 	public function generateTemplateClass(
 		array $params,
 		?string $name = 'Template',
@@ -139,7 +138,7 @@ final class Blueprint
 				. ($param->isReference() ? '&' : '')
 				. ($variadic ? '...' : '')
 				. '$' . $param->getName()
-				. ($param->hasDefaultValue() && !$variadic ? ' = ' . var_export($param->getDefaultValue(), true) : '');
+				. ($param->hasDefaultValue() && !$variadic ? ' = ' . var_export($param->getDefaultValue(), return: true) : '');
 		}
 
 		return '(' . implode(', ', $params) . ')';
@@ -176,7 +175,7 @@ final class Blueprint
 	}
 
 
-	private function getType($value): string
+	private function getType(mixed $value): string
 	{
 		return $value === null ? 'mixed' : get_debug_type($value);
 	}

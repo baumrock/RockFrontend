@@ -1,30 +1,28 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
+use Latte;
+use Latte\Compiler\{Escaper, PrintContext, Tag};
+use Latte\Compiler\Nodes\{AreaNode, StatementNode};
 use Latte\ContentType;
 
 
 /**
- * {spaceless}
+ * {spaceless} ... {/spaceless}
+ * Removes whitespace between HTML tags.
  */
 class SpacelessNode extends StatementNode
 {
 	public AreaNode $content;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag): \Generator
 	{
 		$node = $tag->node = new static;
@@ -35,20 +33,24 @@ class SpacelessNode extends StatementNode
 
 	public function print(PrintContext $context): string
 	{
+		$escaper = $context->getEscaper();
+		$allowed = [Escaper::HtmlText, Escaper::Text, Escaper::JavaScript, Escaper::Css, Escaper::ICal, ContentType::Xml];
+		if (!in_array($escaper->getState(), $allowed, true)) {
+			throw new Latte\CompileException('{spaceless} cannot be used in this context.', $this->position);
+		}
+
 		return $context->format(
 			<<<'XX'
-				ob_start('Latte\Essential\Filters::%raw', 4096) %line;
+				Latte\Essential\WhitespaceMinifier::start(%dump) %line;
 				try {
 					%node
 				} finally {
-					ob_end_flush();
+					Latte\Essential\WhitespaceMinifier::end();
 				}
 
 
 				XX,
-			$context->getEscaper()->getContentType() === ContentType::Html
-				? 'spacelessHtmlHandler'
-				: 'spacelessText',
+			$escaper->getContentType(),
 			$this->position,
 			$this->content,
 		);

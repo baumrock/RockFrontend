@@ -1,34 +1,41 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Nodes\Php\NameNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, NameNode, OperatorNode};
+use Latte\Compiler\{Position, PrintContext};
 
 
-class InstanceofNode extends ExpressionNode
+/**
+ * instanceof type check.
+ */
+class InstanceofNode extends ExpressionNode implements OperatorNode
 {
 	public function __construct(
 		public ExpressionNode $expr,
 		public NameNode|ExpressionNode $class,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 
 
 	public function print(PrintContext $context): string
 	{
-		return $context->postfixOp($this, $this->expr, ' instanceof ')
+		return $context->parenthesize($this, $this->expr, self::AssocLeft)
+			. ' instanceof '
 			. $context->dereferenceExpr($this->class);
+	}
+
+
+	public function getOperatorPrecedence(): array
+	{
+		return [230, self::AssocNone];
 	}
 
 

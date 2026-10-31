@@ -1,28 +1,29 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, OperatorNode};
+use Latte\Compiler\{Position, PrintContext};
 
 
-class UnaryOpNode extends ExpressionNode
+/**
+ * Unary prefix operation (+, -, ~, @, !).
+ */
+class UnaryOpNode extends ExpressionNode implements OperatorNode
 {
-	private const Ops = ['+' => 1, '-' => 1, '~' => 1];
+	private const Ops = ['+' => 1, '-' => 1, '~' => 1, '@' => 1, '!' => 1];
 
 
 	public function __construct(
 		public ExpressionNode $expr,
-		public /*readonly*/ string $operator,
+		public string $operator,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 		if (!isset(self::Ops[$this->operator])) {
 			throw new \InvalidArgumentException("Unexpected operator '$this->operator'");
@@ -32,9 +33,17 @@ class UnaryOpNode extends ExpressionNode
 
 	public function print(PrintContext $context): string
 	{
-		return $this->expr instanceof self || $this->expr instanceof PreOpNode
-			? $this->operator . '(' . $this->expr->print($context) . ')' // Enforce -(-$expr) instead of --$expr
-			: $context->prefixOp($this, $this->operator, $this->expr);
+		$pos = $this->expr instanceof self || $this->expr instanceof PreOpNode ? self::AssocLeft : self::AssocRight; // Enforce -(-$expr) instead of --$expr
+		return $this->operator . $context->parenthesize($this, $this->expr, $pos);
+	}
+
+
+	public function getOperatorPrecedence(): array
+	{
+		return match ($this->operator) {
+			'+', '-', '~', '@' => [240, self::AssocRight],
+			'!' => [220, self::AssocRight],
+		};
 	}
 
 

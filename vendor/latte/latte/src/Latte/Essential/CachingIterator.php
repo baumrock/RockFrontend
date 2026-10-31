@@ -1,13 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential;
+
+use function is_array, sprintf;
 
 
 /**
@@ -23,6 +23,7 @@ namespace Latte\Essential;
  * @property-read mixed $nextKey
  * @property-read mixed $nextValue
  * @property-read ?self $parent
+ * @extends \CachingIterator<mixed, mixed, \Iterator<mixed, mixed>>
  * @internal
  */
 class CachingIterator extends \CachingIterator implements \Countable
@@ -34,7 +35,7 @@ class CachingIterator extends \CachingIterator implements \Countable
 	public function __construct(mixed $iterator, ?self $parent = null)
 	{
 		if (is_array($iterator) || $iterator instanceof \stdClass) {
-			$iterator = new \ArrayIterator($iterator);
+			$iterator = new \ArrayIterator((array) $iterator);
 
 		} elseif ($iterator instanceof \IteratorAggregate) {
 			do {
@@ -45,7 +46,10 @@ class CachingIterator extends \CachingIterator implements \Countable
 				$iterator = new \IteratorIterator($iterator);
 			}
 		} else {
-			throw new \InvalidArgumentException(sprintf('Invalid argument passed to foreach; array or Traversable expected, %s given.', get_debug_type($iterator)));
+			throw new \InvalidArgumentException(sprintf(
+				'Invalid argument passed to foreach; array or Traversable expected, %s given.',
+				get_debug_type($iterator),
+			));
 		}
 
 		parent::__construct($iterator, 0);
@@ -117,7 +121,7 @@ class CachingIterator extends \CachingIterator implements \Countable
 
 
 	/**
-	 * Decrements counter.
+	 * Decrements the counter (minimum 0) to skip the current iteration in counting.
 	 */
 	public function skipRound(): void
 	{
@@ -125,18 +129,12 @@ class CachingIterator extends \CachingIterator implements \Countable
 	}
 
 
-	/**
-	 * Returns the counter as string
-	 */
 	public function __toString(): string
 	{
 		return (string) $this->counter;
 	}
 
 
-	/**
-	 * Returns the count of elements.
-	 */
 	public function count(): int
 	{
 		$inner = $this->getInnerIterator();
@@ -197,6 +195,16 @@ class CachingIterator extends \CachingIterator implements \Countable
 	public function getParent(): ?self
 	{
 		return $this->parent;
+	}
+
+
+	/**
+	 * Stops \CachingIterator from forwarding unknown methods to the inner iterator, past the sandbox policy.
+	 * @param  mixed[]  $args
+	 */
+	public function __call(string $name, array $args): never
+	{
+		throw new \Error('Call to undefined method ' . static::class . "::$name()");
 	}
 
 

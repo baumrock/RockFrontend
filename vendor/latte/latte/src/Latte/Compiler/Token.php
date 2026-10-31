@@ -1,16 +1,17 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
 
-final class Token
+/**
+ * Token produced by lexers.
+ */
+final readonly class Token
 {
 	public const
 		End = 0,
@@ -58,67 +59,70 @@ final class Token
 		Php_Coalesce = 274,
 		Php_BooleanOr = 275,
 		Php_BooleanAnd = 276,
-		Php_AmpersandNotFollowed = 277,
-		Php_AmpersandFollowed = 278,
-		Php_IsEqual = 279,
-		Php_IsNotEqual = 280,
-		Php_IsIdentical = 281,
-		Php_IsNotIdentical = 282,
-		Php_Spaceship = 283,
-		Php_IsSmallerOrEqual = 284,
-		Php_IsGreaterOrEqual = 285,
-		Php_Sl = 286,
-		Php_Sr = 287,
-		Php_In = 288,
-		Php_Instanceof = 289,
-		Php_Inc = 290,
-		Php_Dec = 291,
-		Php_IntCast = 292,
-		Php_FloatCast = 293,
-		Php_StringCast = 294,
-		Php_ArrayCast = 295,
-		Php_ObjectCast = 296,
-		Php_BoolCast = 297,
-		Php_Pow = 298,
-		Php_New = 299,
-		Php_Clone = 300,
-		Php_Integer = 301,
-		Php_Float = 302,
-		Php_Identifier = 303,
-		Php_StringVarname = 304,
-		Php_Constant = 305,
-		Php_Variable = 306,
-		Php_NumString = 307,
-		Php_EncapsedAndWhitespace = 308,
-		Php_ConstantEncapsedString = 309,
-		Php_Match = 310,
-		Php_Default = 311,
-		Php_Function = 312,
-		Php_Fn = 313,
-		Php_Return = 314,
-		Php_Use = 315,
-		Php_Isset = 316,
-		Php_Empty = 317,
-		Php_ObjectOperator = 318,
-		Php_NullsafeObjectOperator = 319,
-		Php_UndefinedsafeObjectOperator = 320,
-		Php_List = 321,
-		Php_Array = 322,
-		Php_StartHeredoc = 323,
-		Php_EndHeredoc = 324,
-		Php_DollarOpenCurlyBraces = 325,
-		Php_CurlyOpen = 326,
-		Php_PaamayimNekudotayim = 327,
-		Php_NsSeparator = 328,
-		Php_Ellipsis = 329,
-		Php_ExpandCast = 330,
-		Php_NameFullyQualified = 331,
-		Php_NameQualified = 332,
-		Php_Whitespace = 333,
-		Php_Comment = 334,
-		Php_Null = 335,
-		Php_True = 336,
-		Php_False = 337;
+		Php_FilterPipe = 277,
+		Php_NullsafePipe = 278,
+		Php_AmpersandNotFollowed = 279,
+		Php_AmpersandFollowed = 280,
+		Php_IsEqual = 281,
+		Php_IsNotEqual = 282,
+		Php_IsIdentical = 283,
+		Php_IsNotIdentical = 284,
+		Php_Spaceship = 285,
+		Php_IsSmallerOrEqual = 286,
+		Php_IsGreaterOrEqual = 287,
+		Php_Pipe = 288,
+		Php_Sl = 289,
+		Php_Sr = 290,
+		Php_In = 291,
+		Php_Instanceof = 292,
+		Php_Inc = 293,
+		Php_Dec = 294,
+		Php_IntCast = 295,
+		Php_FloatCast = 296,
+		Php_StringCast = 297,
+		Php_ArrayCast = 298,
+		Php_ObjectCast = 299,
+		Php_BoolCast = 300,
+		Php_Pow = 301,
+		Php_New = 302,
+		Php_Clone = 303,
+		Php_Integer = 304,
+		Php_Float = 305,
+		Php_Identifier = 306,
+		Php_StringVarname = 307,
+		Php_Constant = 308,
+		Php_Variable = 309,
+		Php_NumString = 310,
+		Php_EncapsedAndWhitespace = 311,
+		Php_ConstantEncapsedString = 312,
+		Php_Match = 313,
+		Php_Default = 314,
+		Php_Function = 315,
+		Php_Fn = 316,
+		Php_Return = 317,
+		Php_Use = 318,
+		Php_Isset = 319,
+		Php_Empty = 320,
+		Php_ObjectOperator = 321,
+		Php_NullsafeObjectOperator = 322,
+		Php_UndefinedsafeObjectOperator = 323,
+		Php_List = 324,
+		Php_Array = 325,
+		Php_StartHeredoc = 326,
+		Php_EndHeredoc = 327,
+		Php_DollarOpenCurlyBraces = 328,
+		Php_CurlyOpen = 329,
+		Php_PaamayimNekudotayim = 330,
+		Php_NsSeparator = 331,
+		Php_Ellipsis = 332,
+		Php_ExpandCast = 333,
+		Php_NameFullyQualified = 334,
+		Php_NameQualified = 335,
+		Php_Whitespace = 336,
+		Php_Comment = 337,
+		Php_Null = 338,
+		Php_True = 339,
+		Php_False = 340;
 
 	public const Names = [
 		self::End => '[EOF]',
@@ -163,6 +167,8 @@ final class Token
 		self::Php_Coalesce => "'??'",
 		self::Php_BooleanOr => "'||'",
 		self::Php_BooleanAnd => "'&&'",
+		self::Php_FilterPipe => "'|'",
+		self::Php_NullsafePipe => "'?|",
 		self::Php_AmpersandNotFollowed => "'&'",
 		self::Php_AmpersandFollowed => "'&'",
 		self::Php_IsEqual => "'=='",
@@ -172,6 +178,7 @@ final class Token
 		self::Php_Spaceship => "'<=>'",
 		self::Php_IsSmallerOrEqual => "'<='",
 		self::Php_IsGreaterOrEqual => "'>='",
+		self::Php_Pipe => "'|>'",
 		self::Php_Sl => "'<<'",
 		self::Php_Sr => "'>>'",
 		self::Php_In => "'in'",
@@ -226,12 +233,16 @@ final class Token
 		self::Php_False => "'false'",
 	];
 
+	public ?Position $end;
+
 
 	public function __construct(
-		public /*readonly*/ int $type,
-		public /*readonly*/ string $text,
-		public /*readonly*/ ?Position $position = null,
+		public int $type,
+		public string $text,
+		public ?Position $position = null,
+		?Position $end = null,
 	) {
+		$this->end = $position ? $end ?? $position->advance($text) : null;
 	}
 
 
@@ -248,6 +259,9 @@ final class Token
 	}
 
 
+	/**
+	 * Checks whether the token is a PHP expression token (not a structural delimiter).
+	 */
 	public function isPhpKind(): bool
 	{
 		return $this->type > 0 && $this->type < 10000;

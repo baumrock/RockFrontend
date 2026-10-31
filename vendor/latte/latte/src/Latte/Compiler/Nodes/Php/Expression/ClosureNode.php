@@ -1,21 +1,21 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
 use Latte\Compiler\Nodes\Php;
-use Latte\Compiler\Nodes\Php\ClosureUseNode;
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ClosureUseNode, ExpressionNode};
+use Latte\Compiler\{Position, PrintContext};
+use Latte\Helpers;
 
 
+/**
+ * Closure or arrow function (fn($x) => $x or function($x) use ($y) {}).
+ */
 class ClosureNode extends ExpressionNode
 {
 	public function __construct(
@@ -27,6 +27,7 @@ class ClosureNode extends ExpressionNode
 		public Php\IdentifierNode|Php\NameNode|Php\ComplexTypeNode|null $returnType = null,
 		public ?ExpressionNode $expr = null,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 		(function (Php\ParameterNode ...$args) {})(...$params);
 		(function (ClosureUseNode ...$args) {})(...$uses);
@@ -35,12 +36,12 @@ class ClosureNode extends ExpressionNode
 
 	public function print(PrintContext $context): string
 	{
-		$arrow = (bool) $this->expr;
+		$usesByRef = false;
 		foreach ($this->uses as $use) {
-			$arrow = $arrow && !$use->byRef;
+			$usesByRef = $usesByRef || $use->byRef;
 		}
 
-		return $arrow
+		return $this->expr && !$usesByRef
 			? 'fn' . ($this->byRef ? '&' : '')
 				. '(' . $context->implode($this->params) . ')'
 				. ($this->returnType !== null ? ': ' . $this->returnType->print($context) : '')
@@ -59,10 +60,12 @@ class ClosureNode extends ExpressionNode
 		foreach ($this->params as &$item) {
 			yield $item;
 		}
+		Helpers::removeNulls($this->params);
 
 		foreach ($this->uses as &$item) {
 			yield $item;
 		}
+		Helpers::removeNulls($this->uses);
 
 		if ($this->returnType) {
 			yield $this->returnType;

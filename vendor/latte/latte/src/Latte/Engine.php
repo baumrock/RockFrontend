@@ -1,15 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte;
 
 use Latte\Compiler\Nodes\TemplateNode;
+use function extension_loaded;
 
 
 /**
@@ -17,22 +16,31 @@ use Latte\Compiler\Nodes\TemplateNode;
  */
 class Engine
 {
-	public const Version = '3.0.20';
-	public const VersionId = 30020;
+	public const Version = '3.1.7';
+	public const VersionId = 30107;
 
 	/** @deprecated use Engine::Version */
 	public const
 		VERSION = self::Version,
 		VERSION_ID = self::VersionId;
 
-	/** @deprecated use ContentType::* */
-	public const
-		CONTENT_HTML = ContentType::Html,
-		CONTENT_XML = ContentType::Xml,
-		CONTENT_JS = ContentType::JavaScript,
-		CONTENT_CSS = ContentType::Css,
-		CONTENT_ICAL = ContentType::ICal,
-		CONTENT_TEXT = ContentType::Text;
+	#[\Deprecated('use Latte\ContentType::Html')]
+	public const CONTENT_HTML = ContentType::Html;
+
+	#[\Deprecated('use Latte\ContentType::Xml')]
+	public const CONTENT_XML = ContentType::Xml;
+
+	#[\Deprecated('use Latte\ContentType::JavaScript')]
+	public const CONTENT_JS = ContentType::JavaScript;
+
+	#[\Deprecated('use Latte\ContentType::Css')]
+	public const CONTENT_CSS = ContentType::Css;
+
+	#[\Deprecated('use Latte\ContentType::ICal')]
+	public const CONTENT_ICAL = ContentType::ICal;
+
+	#[\Deprecated('use Latte\ContentType::Text')]
+	public const CONTENT_TEXT = ContentType::Text;
 
 	private ?Loader $loader = null;
 	private Runtime\FilterExecutor $filters;
@@ -42,24 +50,28 @@ class Engine
 	/** @var Extension[] */
 	private array $extensions = [];
 	private string $contentType = ContentType::Html;
-	private ?string $tempDirectory = null;
-	private bool $autoRefresh = true;
-	private bool $strictTypes = false;
-	private bool $strictParsing = false;
+	private Runtime\Cache $cache;
+
+	/** @var array<string, bool> */
+	private array $features = [
+		Feature::StrictTypes->name => true,
+	];
+
 	private ?Policy $policy = null;
 	private bool $sandboxed = false;
 	private ?string $phpBinary = null;
-	private ?string $cacheKey;
+	private ?string $configurationHash = null;
 	private ?string $locale = null;
+	private ?string $syntax = null;
 
 
 	public function __construct()
 	{
+		$this->cache = new Runtime\Cache;
 		$this->filters = new Runtime\FilterExecutor;
 		$this->functions = new Runtime\FunctionExecutor;
 		$this->providers = new \stdClass;
-		$this->addExtension(new Essential\CoreExtension);
-		$this->addExtension(new Sandbox\SandboxExtension);
+		$this->addDefaultExtensions();
 	}
 
 
@@ -69,7 +81,7 @@ class Engine
 	 */
 	public function render(string $name, object|array $params = [], ?string $block = null): void
 	{
-		$template = $this->createTemplate($name, $this->processParams($params));
+		$template = $this->createTemplate($name, Helpers::resolveParams($this, $params));
 		$template->global->coreCaptured = false;
 		$template->render($block);
 	}
@@ -81,7 +93,7 @@ class Engine
 	 */
 	public function renderToString(string $name, object|array $params = [], ?string $block = null): string
 	{
-		$template = $this->createTemplate($name, $this->processParams($params));
+		$template = $this->createTemplate($name, Helpers::resolveParams($this, $params));
 		$template->global->coreCaptured = true;
 		return $template->capture(fn() => $template->render($block));
 	}
@@ -91,14 +103,10 @@ class Engine
 	 * Creates template object.
 	 * @param  mixed[]  $params
 	 */
-	public function createTemplate(string $name, array $params = [], $clearCache = true): Runtime\Template
+	public function createTemplate(string $name, array $params = [], bool $clearCache = true): Runtime\Template
 	{
-		$this->cacheKey = $clearCache ? null : $this->cacheKey;
-		$class = $this->getTemplateClass($name);
-		if (!class_exists($class, false)) {
-			$this->loadTemplate($name);
-		}
-
+		$this->configurationHash = $clearCache ? null : $this->configurationHash;
+		$class = $this->loadTemplate($name);
 		$this->providers->fn = $this->functions;
 		return new $class(
 			$this,
@@ -148,7 +156,9 @@ class Engine
 	public function parse(string $template): TemplateNode
 	{
 		$parser = new Compiler\TemplateParser;
-		$parser->strict = $this->strictParsing;
+		$parser->getLexer()->setSyntax($this->syntax);
+		$parser->strict = $this->hasFeature(Feature::StrictParsing);
+		$parser->dedent = $this->hasFeature(Feature::Dedent);
 
 		foreach ($this->extensions as $extension) {
 			$extension->beforeCompile($this);
@@ -163,13 +173,13 @@ class Engine
 
 
 	/**
-	 * Calls node visitors.
+	 * Runs all registered compiler passes over the AST.
 	 */
 	public function applyPasses(TemplateNode &$node): void
 	{
 		$passes = [];
 		foreach ($this->extensions as $extension) {
-			$passes = array_merge($passes, $extension->getPasses());
+			$passes = [...$passes, ...$extension->getPasses()];
 		}
 
 		$passes = Helpers::sortBeforeAfter($passes);
@@ -186,12 +196,8 @@ class Engine
 	public function generate(TemplateNode $node, string $name): string
 	{
 		$generator = new Compiler\TemplateGenerator;
-		return $generator->generate(
-			$node,
-			$this->getTemplateClass($name),
-			$name,
-			$this->strictTypes,
-		);
+		$generator->buildClass($node, $this->features);
+		return $generator->generateCode($this->getTemplateClass($name), $name, $this->hasFeature(Feature::StrictTypes));
 	}
 
 
@@ -201,157 +207,79 @@ class Engine
 	 */
 	public function warmupCache(string $name): void
 	{
-		if (!$this->tempDirectory) {
+		if (!$this->cache->directory) {
 			throw new \LogicException('Path to temporary directory is not set.');
 		}
 
-		$class = $this->getTemplateClass($name);
-		if (!class_exists($class, false)) {
-			$this->loadTemplate($name);
-		}
+		$this->loadTemplate($name);
 	}
 
 
-	private function loadTemplate(string $name): void
+	/** @return class-string<Runtime\Template> */
+	private function loadTemplate(string $name): string
 	{
-		if (!$this->tempDirectory) {
+		$class = $this->getTemplateClass($name);
+		if (class_exists($class, false)) {
+			// nothing
+		} elseif ($this->cache->directory) {
+			$this->cache->loadOrCreate($this, $name);
+		} else {
 			$compiled = $this->compile($name);
-			if (@eval(substr($compiled, 5)) === false) { // @ is escalated to exception, substr removes <?php
-				throw (new CompileException('Error in template: ' . error_get_last()['message']))
+			try {
+				eval(substr($compiled, 5)); // substr removes <?php
+			} catch (\ParseError $e) {
+				throw (new CompileException('Error in template: ' . $e->getMessage(), previous: $e))
 					->setSource($compiled, "$name (compiled)");
 			}
-
-			return;
 		}
-
-		// Solving atomicity to work everywhere is really pain in the ass.
-		// 1) We want to do as little as possible IO calls on production and also directory and file can be not writable
-		// so on Linux we include the file directly without shared lock, therefore, the file must be created atomically by renaming.
-		// 2) On Windows file cannot be renamed-to while is open (ie by include), so we have to acquire a lock.
-		$cacheFile = $this->getCacheFile($name);
-		$cacheKey = $this->autoRefresh
-			? md5(serialize($this->getCacheSignature($name)))
-			: null;
-		$lock = defined('PHP_WINDOWS_VERSION_BUILD') || $this->autoRefresh
-			? $this->acquireLock("$cacheFile.lock", LOCK_SH)
-			: null;
-
-		if (
-			!($this->autoRefresh && $cacheKey !== stream_get_contents($lock))
-			&& (@include $cacheFile) !== false // @ - file may not exist
-		) {
-			return;
-		}
-
-		if ($lock) {
-			flock($lock, LOCK_UN); // release shared lock so we can get exclusive
-			fseek($lock, 0);
-		}
-
-		$lock = $this->acquireLock("$cacheFile.lock", LOCK_EX);
-
-		// while waiting for exclusive lock, someone might have already created the cache
-		if (!is_file($cacheFile) || ($this->autoRefresh && $cacheKey !== stream_get_contents($lock))) {
-			$compiled = $this->compile($name);
-			if (
-				file_put_contents("$cacheFile.tmp", $compiled) !== strlen($compiled)
-				|| !rename("$cacheFile.tmp", $cacheFile)
-			) {
-				@unlink("$cacheFile.tmp"); // @ - file may not exist
-				throw new RuntimeException("Unable to create '$cacheFile'.");
-			}
-
-			fseek($lock, 0);
-			fwrite($lock, $cacheKey ?? md5(serialize($this->getCacheSignature($name))));
-			ftruncate($lock, ftell($lock));
-
-			if (function_exists('opcache_invalidate')) {
-				@opcache_invalidate($cacheFile, true); // @ can be restricted
-			}
-		}
-
-		if ((include $cacheFile) === false) {
-			throw new RuntimeException("Unable to load '$cacheFile'.");
-		}
-
-		flock($lock, LOCK_UN);
+		return $class;
 	}
 
 
 	/**
-	 * @return resource
+	 * Returns the file path where compiled template will be cached.
 	 */
-	private function acquireLock(string $file, int $mode)
-	{
-		$dir = dirname($file);
-		if (!is_dir($dir) && !@mkdir($dir) && !is_dir($dir)) { // @ - dir may already exist
-			throw new RuntimeException("Unable to create directory '$dir'. " . error_get_last()['message']);
-		}
-
-		$handle = @fopen($file, 'c+'); // @ is escalated to exception
-		if (!$handle) {
-			throw new RuntimeException("Unable to create file '$file'. " . error_get_last()['message']);
-		} elseif (!@flock($handle, $mode)) { // @ is escalated to exception
-			throw new RuntimeException('Unable to acquire ' . ($mode & LOCK_EX ? 'exclusive' : 'shared') . " lock on file '$file'. " . error_get_last()['message']);
-		}
-
-		return $handle;
-	}
-
-
 	public function getCacheFile(string $name): string
 	{
-		$base = preg_match('#([/\\\\][\w@.-]{3,35}){1,3}$#D', '/' . $name, $m)
-			? preg_replace('#[^\w@.-]+#', '-', substr($m[0], 1)) . '--'
-			: '';
-		return $this->tempDirectory . '/' . $base . $this->generateCacheHash($name) . '.php';
-	}
-
-
-	public function getTemplateClass(string $name): string
-	{
-		return 'Template_' . $this->generateCacheHash($name);
-	}
-
-
-	private function generateCacheHash(string $name): string
-	{
-		$this->cacheKey ??= md5(serialize($this->getCacheKey()));
-		$hash = $this->cacheKey . $this->getLoader()->getUniqueId($name);
-		return substr(md5($hash), 0, 10);
+		return $this->cache->generateFilePath($this, $name);
 	}
 
 
 	/**
-	 * Values that affect the results of compilation and the name of the cache file.
+	 * Returns the PHP class name for compiled template.
 	 */
-	protected function getCacheKey(): array
+	public function getTemplateClass(string $name): string
+	{
+		return 'Template_' . $this->generateTemplateHash($name);
+	}
+
+
+	/**
+	 * Generates unique hash for template based on current configuration.
+	 * Used to create isolated cache files for different engine configurations.
+	 * @internal
+	 */
+	public function generateTemplateHash(string $name): string
+	{
+		$hash = $this->configurationHash ??= hash('xxh128', serialize($this->generateConfigurationSignature()));
+		$hash .= $this->getLoader()->getUniqueId($name);
+		return substr(hash('xxh128', $hash), 0, 16); // 64 bits, a collision would silently render a different template
+	}
+
+
+	/**
+	 * Returns values that determine isolation for different configurations.
+	 * When any of these values change, a new compiled template is created to avoid conflicts.
+	 * @return list<mixed>
+	 */
+	protected function generateConfigurationSignature(): array
 	{
 		return [
 			$this->contentType,
-			array_keys($this->getFunctions()),
+			$this->features,
+			$this->syntax,
 			array_map(
-				fn($extension) => [
-					get_debug_type($extension),
-					$extension->getCacheKey($this),
-					filemtime((new \ReflectionObject($extension))->getFileName()),
-				],
-				$this->extensions,
-			),
-		];
-	}
-
-
-	/**
-	 * Values that check the expiration of the compiled template.
-	 */
-	protected function getCacheSignature(string $name): array
-	{
-		return [
-			self::Version,
-			$this->getLoader()->getContent($name),
-			array_map(
-				fn($extension) => filemtime((new \ReflectionObject($extension))->getFileName()),
+				fn($extension) => [get_debug_type($extension), $extension->getCacheKey($this)],
 				$this->extensions,
 			),
 		];
@@ -368,15 +296,15 @@ class Engine
 		}
 
 		$this->filters->add($name, $callback);
+		$this->configurationHash = null;
 		return $this;
 	}
 
 
-	/**
-	 * Registers filter loader.
-	 */
+	#[\Deprecated('Use addFilter() instead.')]
 	public function addFilterLoader(callable $loader): static
 	{
+		trigger_error('Filter loader is deprecated, use addFilter() instead.', E_USER_DEPRECATED);
 		$this->filters->add(null, $loader);
 		return $this;
 	}
@@ -384,7 +312,7 @@ class Engine
 
 	/**
 	 * Returns all run-time filters.
-	 * @return callable[]
+	 * @return array<string, callable>
 	 */
 	public function getFilters(): array
 	{
@@ -393,7 +321,7 @@ class Engine
 
 
 	/**
-	 * Call a run-time filter.
+	 * Calls a run-time filter.
 	 * @param  mixed[]  $args
 	 */
 	public function invokeFilter(string $name, array $args): mixed
@@ -419,14 +347,16 @@ class Engine
 		foreach ($extension->getProviders() as $name => $value) {
 			$this->providers->$name = $value;
 		}
+
+		$this->configurationHash = null;
 		return $this;
 	}
 
 
-	/** @return Extension[] */
+	/** @return list<Extension> */
 	public function getExtensions(): array
 	{
-		return $this->extensions;
+		return array_values($this->extensions);
 	}
 
 
@@ -440,12 +370,13 @@ class Engine
 		}
 
 		$this->functions->add($name, $callback);
+		$this->configurationHash = null;
 		return $this;
 	}
 
 
 	/**
-	 * Call a run-time function.
+	 * Calls a run-time function.
 	 * @param  mixed[]  $args
 	 */
 	public function invokeFunction(string $name, array $args): mixed
@@ -455,7 +386,8 @@ class Engine
 
 
 	/**
-	 * @return callable[]
+	 * Returns all run-time functions.
+	 * @return array<string, callable>
 	 */
 	public function getFunctions(): array
 	{
@@ -479,7 +411,7 @@ class Engine
 
 	/**
 	 * Returns all providers.
-	 * @return mixed[]
+	 * @return array<string, mixed>
 	 */
 	public function getProviders(): array
 	{
@@ -490,6 +422,7 @@ class Engine
 	public function setPolicy(?Policy $policy): static
 	{
 		$this->policy = $policy;
+		$this->configurationHash = null;
 		return $this;
 	}
 
@@ -502,9 +435,12 @@ class Engine
 	}
 
 
+	/**
+	 * Sets a handler called when an exception occurs during template rendering.
+	 */
 	public function setExceptionHandler(callable $handler): static
 	{
-		$this->providers->coreExceptionHandler = $handler;
+		$this->providers->coreExceptionHandler = $handler(...);
 		return $this;
 	}
 
@@ -512,6 +448,7 @@ class Engine
 	public function setSandboxMode(bool $state = true): static
 	{
 		$this->sandboxed = $state;
+		$this->configurationHash = null;
 		return $this;
 	}
 
@@ -519,17 +456,25 @@ class Engine
 	public function setContentType(string $type): static
 	{
 		$this->contentType = $type;
+		$this->configurationHash = null;
 		return $this;
 	}
 
 
 	/**
-	 * Sets path to temporary directory.
+	 * Sets path to cache directory.
 	 */
+	public function setCacheDirectory(?string $path): static
+	{
+		$this->cache->directory = $path;
+		return $this;
+	}
+
+
+	/** @deprecated use setCacheDirectory() instead */
 	public function setTempDirectory(?string $path): static
 	{
-		$this->tempDirectory = $path;
-		return $this;
+		return $this->setCacheDirectory($path);
 	}
 
 
@@ -538,31 +483,52 @@ class Engine
 	 */
 	public function setAutoRefresh(bool $state = true): static
 	{
-		$this->autoRefresh = $state;
+		$this->cache->autoRefresh = $state;
 		return $this;
 	}
 
 
 	/**
+	 * Enables or disables an engine feature.
+	 */
+	public function setFeature(Feature $feature, bool $state = true): static
+	{
+		$this->features[$feature->name] = $state;
+		$this->configurationHash = null;
+		return $this;
+	}
+
+
+	/**
+	 * Checks if a feature is enabled.
+	 */
+	public function hasFeature(Feature $feature): bool
+	{
+		return $this->features[$feature->name] ?? false;
+	}
+
+
+	/**
 	 * Enables declare(strict_types=1) in templates.
+	 * @deprecated use setFeature(Feature::StrictTypes, ...) instead
 	 */
 	public function setStrictTypes(bool $state = true): static
 	{
-		$this->strictTypes = $state;
-		return $this;
+		return $this->setFeature(Feature::StrictTypes, $state);
 	}
 
 
+	/** @deprecated use setFeature(Feature::StrictParsing, ...) instead */
 	public function setStrictParsing(bool $state = true): static
 	{
-		$this->strictParsing = $state;
-		return $this;
+		return $this->setFeature(Feature::StrictParsing, $state);
 	}
 
 
+	/** @deprecated use hasFeature(Feature::StrictParsing) instead */
 	public function isStrictParsing(): bool
 	{
-		return $this->strictParsing;
+		return $this->hasFeature(Feature::StrictParsing);
 	}
 
 
@@ -575,6 +541,7 @@ class Engine
 			throw new RuntimeException("Setting a locale requires the 'intl' extension to be installed.");
 		}
 		$this->locale = $locale;
+		$this->configurationHash = null;
 		return $this;
 	}
 
@@ -598,6 +565,9 @@ class Engine
 	}
 
 
+	/**
+	 * Validates compiled PHP code using the given PHP binary. Pass null to disable.
+	 */
 	public function enablePhpLinter(?string $phpBinary): static
 	{
 		$this->phpBinary = $phpBinary;
@@ -606,48 +576,26 @@ class Engine
 
 
 	/**
-	 * @param  object|mixed[]  $params
-	 * @return mixed[]
+	 * Sets default Latte syntax. Available options: 'single', 'double', 'off'
 	 */
-	private function processParams(object|array $params): array
+	public function setSyntax(string $syntax): static
 	{
-		if (is_array($params)) {
-			return $params;
-		}
-
-		$methods = (new \ReflectionClass($params))->getMethods(\ReflectionMethod::IS_PUBLIC);
-		foreach ($methods as $method) {
-			if ($method->getAttributes(Attributes\TemplateFilter::class)) {
-				$this->addFilter($method->name, [$params, $method->name]);
-			}
-
-			if ($method->getAttributes(Attributes\TemplateFunction::class)) {
-				$this->addFunction($method->name, [$params, $method->name]);
-			}
-
-			if (strpos((string) $method->getDocComment(), '@filter')) {
-				trigger_error('Annotation @filter is deprecated, use attribute #[Latte\Attributes\TemplateFilter]', E_USER_DEPRECATED);
-				$this->addFilter($method->name, [$params, $method->name]);
-			}
-
-			if (strpos((string) $method->getDocComment(), '@function')) {
-				trigger_error('Annotation @function is deprecated, use attribute #[Latte\Attributes\TemplateFunction]', E_USER_DEPRECATED);
-				$this->addFunction($method->name, [$params, $method->name]);
-			}
-		}
-
-		return array_filter((array) $params, fn($key) => $key[0] !== "\0", ARRAY_FILTER_USE_KEY);
+		$this->syntax = $syntax;
+		$this->configurationHash = null;
+		return $this;
 	}
 
 
-	public function __get(string $name)
+	/** @deprecated use setFeature(Feature::MigrationWarnings, ...) instead */
+	public function setMigrationWarnings(bool $state = true): static
 	{
-		if ($name === 'onCompile') {
-			$trace = debug_backtrace(0)[0];
-			$loc = isset($trace['file'], $trace['line'])
-				? ' (in ' . $trace['file'] . ' on ' . $trace['line'] . ')'
-				: '';
-			throw new \LogicException('You use Latte 3 together with the code designed for Latte 2' . $loc);
-		}
+		return $this->setFeature(Feature::MigrationWarnings, $state);
+	}
+
+
+	protected function addDefaultExtensions(): void
+	{
+		$this->addExtension(new Essential\CoreExtension);
+		$this->addExtension(new Sandbox\SandboxExtension);
 	}
 }

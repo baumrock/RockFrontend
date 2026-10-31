@@ -1,24 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Sandbox;
 
 use Latte;
-use Latte\Compiler\Node;
-use Latte\Compiler\Nodes\Php;
+use Latte\Compiler\{Node, NodeTraverser, PrintContext};
+use Latte\Compiler\Nodes\{Php, TemplateNode};
 use Latte\Compiler\Nodes\Php\Expression;
-use Latte\Compiler\Nodes\TemplateNode;
-use Latte\Compiler\NodeTraverser;
-use Latte\Compiler\PrintContext;
-use Latte\Engine;
+use Latte\{Engine, SecurityViolationException};
 use Latte\Runtime\Template;
-use Latte\SecurityViolationException;
+use function is_string;
 
 
 /**
@@ -38,7 +33,7 @@ final class SandboxExtension extends Latte\Extension
 	public function getTags(): array
 	{
 		return [
-			'sandbox' => [Nodes\SandboxNode::class, 'create'],
+			'sandbox' => Nodes\SandboxNode::create(...),
 		];
 	}
 
@@ -46,7 +41,7 @@ final class SandboxExtension extends Latte\Extension
 	public function getPasses(): array
 	{
 		return $this->policy
-			? ['sandbox' => self::order([$this, 'processPass'], before: '*')]
+			? ['sandbox' => self::order($this->processPass(...), before: '*')]
 			: [];
 	}
 
@@ -62,18 +57,31 @@ final class SandboxExtension extends Latte\Extension
 
 	public function getCacheKey(Engine $engine): mixed
 	{
-		return (bool) $engine->getPolicy(effective: true);
+		$policy = $engine->getPolicy(effective: true);
+		if (!$policy) {
+			return false;
+		} elseif (method_exists($policy, 'getCacheSignature')) {
+			return [$policy::class, $policy->getCacheSignature()];
+		}
+
+		trigger_error(
+			$policy::class
+			. ' should implement getCacheSignature(), otherwise its instances with different rules share compiled templates.',
+			E_USER_DEPRECATED,
+		);
+		return $policy::class;
 	}
 
 
-	public function processPass(TemplateNode $node): void
+	private function processPass(TemplateNode $node): void
 	{
-		(new NodeTraverser)->traverse($node, leave: \Closure::fromCallable([$this, 'sandboxVisitor']));
+		(new NodeTraverser)->traverse($node, leave: $this->sandboxVisitor(...));
 	}
 
 
 	private function sandboxVisitor(Node $node): Node
 	{
+		assert($this->policy !== null);
 		if ($node instanceof Expression\VariableNode) {
 			if ($node->name === 'this') {
 				throw new SecurityViolationException("Forbidden variable \${$node->name}.", $node->position);
@@ -83,11 +91,16 @@ final class SandboxExtension extends Latte\Extension
 
 			return $node;
 
+		} elseif ($node instanceof Latte\Compiler\Nodes\PrintNode && !$node->modifier->escape) {
+			throw new SecurityViolationException('Filter |noescape is not allowed.', $node->modifier->position);
+
 		} elseif ($node instanceof Expression\NewNode) {
 			throw new SecurityViolationException("Forbidden keyword 'new'", $node->position);
 
-		} elseif ($node instanceof Expression\FunctionCallNode
+		} elseif (
+			$node instanceof Expression\FunctionCallNode
 			&& $node->name instanceof Php\NameNode
+			&& !$node->isPartialApplication()
 		) {
 			if (!$this->policy->isFunctionAllowed((string) $node->name)) {
 				throw new SecurityViolationException("Function $node->name() is not allowed.", $node->position);
@@ -117,17 +130,30 @@ final class SandboxExtension extends Latte\Extension
 
 			return $node;
 
+		} elseif ($node instanceof Expression\CastNode && strtolower($node->type) === 'array') {
+			return new Expression\AuxiliaryNode(
+				fn(PrintContext $context, Node $expr) => '$this->global->sandbox->castToArray(' . $expr->print($context) . ')',
+				[$node->expr],
+			);
+
+		} elseif ($node instanceof Latte\Essential\Nodes\ForeachNode) {
+			$method = $node->byRef && $node->expression->isWritable() ? 'iterableByRef' : 'iterable';
+			$node->expression = new Expression\AuxiliaryNode(
+				fn(PrintContext $context, Node $expr) => '$this->global->sandbox->' . $method . '(' . $expr->print($context) . ')',
+				[$node->expression],
+			);
+			return $node;
+
 		} elseif ($node instanceof Expression\PropertyFetchNode
 			|| $node instanceof Expression\StaticPropertyFetchNode
 			|| $node instanceof Expression\FunctionCallNode
-			|| $node instanceof Expression\FunctionCallableNode
 			|| $node instanceof Expression\MethodCallNode
-			|| $node instanceof Expression\MethodCallableNode
 			|| $node instanceof Expression\StaticMethodCallNode
-			|| $node instanceof Expression\StaticMethodCallableNode
 		) {
 			$class = namespace\Nodes::class . strrchr($node::class, '\\');
-			return new $class($node);
+			$result = new $class($node);
+			assert($result instanceof Node);
+			return $result;
 
 		} else {
 			return $node;

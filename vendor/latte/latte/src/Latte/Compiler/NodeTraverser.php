@@ -1,39 +1,49 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
+use function sprintf;
 
+
+/**
+ * Traverses and transforms AST nodes using visitor pattern.
+ */
 final class NodeTraverser
 {
 	public const DontTraverseChildren = 1;
 	public const StopTraversal = 2;
+	public const RemoveNode = 3;
 
-	/** @var ?callable(Node): (Node|int|null) */
-	private $enter;
+	/** @var ?(\Closure(Node): (Node|int|void|null)) */
+	private ?\Closure $enter = null;
 
-	/** @var ?callable(Node): (Node|int|null) */
-	private $leave;
+	/** @var ?(\Closure(Node): (Node|int|void|null)) */
+	private ?\Closure $leave = null;
 
 	private bool $stop;
 
 
-	public function traverse(Node $node, ?callable $enter = null, ?callable $leave = null): Node
+	/**
+	 * Traverses the AST, calling $enter before and $leave after visiting each node's children.
+	 * The callable may return a replacement Node, or one of the class constants to control traversal.
+	 * @param ?(callable(Node): (Node|int|void|null))  $enter
+	 * @param ?(callable(Node): (Node|int|void|null))  $leave
+	 */
+	public function traverse(Node $node, ?callable $enter = null, ?callable $leave = null): ?Node
 	{
-		$this->enter = $enter;
-		$this->leave = $leave;
+		$this->enter = $enter ? $enter(...) : null;
+		$this->leave = $leave ? $leave(...) : null;
 		$this->stop = false;
 		return $this->traverseNode($node);
 	}
 
 
-	private function traverseNode(Node $node): Node
+	private function traverseNode(Node $node): ?Node
 	{
 		$children = true;
 		if ($this->enter) {
@@ -46,13 +56,27 @@ final class NodeTraverser
 
 			} elseif ($res === self::StopTraversal) {
 				$this->stop = true;
-				$children = false;
+				return $node;
+
+			} elseif ($res === self::RemoveNode) {
+				return null;
 			}
 		}
 
 		if ($children) {
 			foreach ($node as &$subnode) {
-				$subnode = $this->traverseNode($subnode);
+				$res = $this->traverseNode($subnode);
+				if ($res !== $subnode) {
+					try {
+						$subnode = $res;
+					} catch (\TypeError $e) {
+						throw new \LogicException(sprintf(
+							'Cannot %s child node of %s during traversal, its slot does not allow that.',
+							$res === null ? 'remove' : 'replace',
+							$node::class,
+						), 0, $e);
+					}
+				}
 				if ($this->stop) {
 					break;
 				}
@@ -63,8 +87,12 @@ final class NodeTraverser
 			$res = ($this->leave)($node);
 			if ($res instanceof Node) {
 				$node = $res;
+
 			} elseif ($res === self::StopTraversal) {
 				$this->stop = true;
+
+			} elseif ($res === self::RemoveNode) {
+				return null;
 			}
 		}
 

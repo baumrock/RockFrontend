@@ -1,22 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
+use Latte\Compiler\Nodes\{AreaNode, StatementNode};
+use Latte\Compiler\{PrintContext, Tag};
 
 
 /**
- * {try} ... {else}
+ * {try} ... {else} ... {/try}
+ * Discards block output on exception, renders {else} instead.
  */
 class TryNode extends StatementNode
 {
@@ -24,7 +21,7 @@ class TryNode extends StatementNode
 	public ?AreaNode $else = null;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag): \Generator
 	{
 		$node = $tag->node = new static;

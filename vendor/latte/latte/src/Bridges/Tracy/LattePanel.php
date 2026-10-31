@@ -1,18 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Bridges\Tracy;
 
-use Latte\Engine;
-use Latte\Extension;
+use Latte\{Engine, Extension};
 use Latte\Runtime\Template;
 use Tracy;
+use function count;
 
 
 /**
@@ -25,11 +23,19 @@ class LattePanel implements Tracy\IBarPanel
 
 	/** @var Template[] */
 	private array $templates = [];
+
+	/** @var array<int, int|float> spl_object_id => start time from hrtime() */
+	private array $started = [];
+
+	/** @var array<int, float> spl_object_id => elapsed seconds */
+	private array $elapsed = [];
+
+	/** @var \stdClass[] */
 	private array $list;
 	private ?string $name = null;
 
 
-	/** @deprecated use TracyExtension see https://bit.ly/46flfDi */
+	#[\Deprecated('use TracyExtension see https://bit.ly/46flfDi')]
 	public static function initialize(Engine $latte, ?string $name = null, ?Tracy\Bar $bar = null): void
 	{
 		$bar ??= Tracy\Debugger::getBar();
@@ -42,6 +48,7 @@ class LattePanel implements Tracy\IBarPanel
 	{
 		$this->name = $name;
 		if ($latte) {
+			trigger_error('Replace LattePanel with TracyExtension; see https://bit.ly/46flfDi', E_USER_DEPRECATED);
 			$latte->addExtension(
 				new class ($this->templates) extends Extension {
 					public function __construct(
@@ -63,6 +70,20 @@ class LattePanel implements Tracy\IBarPanel
 	public function addTemplate(Template $template): void
 	{
 		$this->templates[] = $template;
+		$this->started[spl_object_id($template)] = hrtime(as_number: true);
+	}
+
+
+	/**
+	 * Records how long the template took to render, including its children.
+	 */
+	public function templateRendered(Template $template): void
+	{
+		$id = spl_object_id($template);
+		if (isset($this->started[$id])) {
+			$this->elapsed[$id] = (hrtime(as_number: true) - $this->started[$id]) / 1e9;
+			unset($this->started[$id]);
+		}
 	}
 
 
@@ -76,8 +97,9 @@ class LattePanel implements Tracy\IBarPanel
 		}
 
 		return Tracy\Helpers::capture(function () {
-			$name = $this->name ?? basename(reset($this->templates)->getName());
-			require __DIR__ . '/templates/LattePanel.tab.phtml';
+			$first = reset($this->templates);
+			$name = $this->name ?? ($first ? basename($first->getName()) : '');
+			require __DIR__ . '/dist/tab.phtml';
 		});
 	}
 
@@ -88,35 +110,59 @@ class LattePanel implements Tracy\IBarPanel
 	public function getPanel(): string
 	{
 		$this->list = [];
-		$this->buildList($this->templates[0]);
+		$children = [];
+		foreach ($this->templates as $t) {
+			if ($parent = $t->getReferringTemplate()) {
+				$children[spl_object_id($parent)][$t->getName()][] = $t;
+			}
+		}
+		$this->buildList($children, $this->templates[0]);
 
 		return Tracy\Helpers::capture(function () {
 			$list = $this->list;
 			$dumpParameters = $this->dumpParameters;
-			require __DIR__ . '/templates/LattePanel.panel.phtml';
+			require __DIR__ . '/dist/panel.phtml';
 		});
 	}
 
 
-	private function buildList(Template $template, int $depth = 0, int $count = 1): void
+	/**
+	 * @param  array<int, array<string, Template[]>>  $children
+	 * @param  Template[]  $instances
+	 */
+	private function buildList(array $children, Template $template, int $depth = 0, array $instances = []): void
 	{
-		$this->list[] = (object) [
-			'template' => $template,
-			'depth' => $depth,
-			'count' => $count,
-			'phpFile' => (new \ReflectionObject($template))->getFileName(),
-		];
-
-		$children = $counter = [];
-		foreach ($this->templates as $t) {
-			if ($t->getReferringTemplate() === $template) {
-				$children[$t->getName()] = $t;
-				@$counter[$t->getName()]++;
+		$instances = $instances ?: [$template];
+		$groups = [];
+		foreach ($instances as $instance) {
+			foreach ($children[spl_object_id($instance)] ?? [] as $name => $templates) {
+				$groups[$name] = [...$groups[$name] ?? [], ...$templates];
 			}
 		}
 
-		foreach ($children as $name => $t) {
-			$this->buildList($t, $depth + 1, $counter[$name]);
+		$time = array_sum(array_map($this->totalTime(...), $instances));
+		$childrenTime = array_sum(array_map($this->totalTime(...), array_merge([], ...array_values($groups))));
+
+		$this->list[] = (object) [
+			'template' => $template,
+			'depth' => $depth,
+			'count' => count($instances),
+			'phpFile' => (new \ReflectionObject($template))->getFileName(),
+			'time' => $time,
+			'selfTime' => max($time - $childrenTime, 0.0),
+		];
+
+		foreach ($groups as $group) {
+			$this->buildList($children, $group[0], $depth + 1, $group);
 		}
+	}
+
+
+	/**
+	 * Returns the rendering time of the instance including nested templates.
+	 */
+	private function totalTime(Template $template): float
+	{
+		return $this->elapsed[spl_object_id($template)] ?? 0.0;
 	}
 }

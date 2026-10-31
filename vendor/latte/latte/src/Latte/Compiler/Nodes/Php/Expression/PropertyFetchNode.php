@@ -1,20 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Nodes\Php\IdentifierNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, IdentifierNode};
+use Latte\Compiler\{Position, PrintContext};
 
 
+/**
+ * Property access with nullsafe support ($obj->prop, $obj?->prop).
+ */
 class PropertyFetchNode extends ExpressionNode
 {
 	public function __construct(
@@ -22,6 +21,7 @@ class PropertyFetchNode extends ExpressionNode
 		public IdentifierNode|ExpressionNode $name,
 		public bool $nullsafe = false,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 

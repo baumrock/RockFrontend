@@ -1,22 +1,25 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
 use Latte\CompileException;
+use function is_int, strlen;
 
 
+/**
+ * Tokenizes Latte template source code.
+ */
 final class TemplateLexer
 {
 	public const
 		StatePlain = 'Plain',
 		StateLatteTag = 'LatteTag',
+		StateLatteContent = 'LatteContent',
 		StateLatteComment = 'LatteComment',
 		StateHtmlText = 'HtmlText',
 		StateHtmlTag = 'HtmlTag',
@@ -33,10 +36,12 @@ final class TemplateLexer
 	public const NPrefix = 'n:';
 
 	/** HTML attribute name/value (\p{C} means \x00-\x1F except space) */
-	private const ReAttrName = '[^\p{C} "\'<>=`/]';
+	public const ReAttrName = '[^\p{C} "\'<>=`/]';
 
 	private string $openDelimiter = '';
 	private string $closeDelimiter = '';
+
+	/** @var array{string, string}[] */
 	private array $delimiters = [];
 	private TagLexer $tagLexer;
 
@@ -76,6 +81,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function statePlain(): array
 	{
 		return $this->match('~
@@ -90,13 +96,23 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateLatteTag(): array
 	{
 		$tokens[] = $this->match('~
 			(?<Slash>/)?
-			(?<Latte_Name> = | _(?!_) | [a-z]\w*+(?:[.:-]\w+)*+(?!::|\(|\\\\))?   # name, /name, but not function( or class:: or namespace\
+			(?<Latte_Name> = | _(?!_) | [a-z]\w*+(?:[.:-]\w+)*+(?!::|\(|\\\))?   # name, /name, but not function( or class:: or namespace\
 		~xsiAu');
 
+		$tokens[] = $this->stateLatteContent();
+
+		return array_merge(...$tokens);
+	}
+
+
+	/** @return Token[] */
+	private function stateLatteContent(): array
+	{
 		$tokens[] = $this->tagLexer->tokenizePartially($this->input, $this->position);
 
 		$tokens[] = $this->match('~
@@ -109,6 +125,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateLatteComment(): array
 	{
 		return $this->match('~
@@ -121,6 +138,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlText(): array
 	{
 		return $this->match('~(?J)
@@ -137,6 +155,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlTag(): array
 	{
 		return $this->match('~(?J)
@@ -154,6 +173,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlQuotedValue(string $quote): array
 	{
 		return $this->match('~
@@ -168,6 +188,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlQuotedNAttrValue(string $quote): array
 	{
 		return $this->match('~
@@ -180,6 +201,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlRawText(string $tagName): array
 	{
 		return $this->match('~
@@ -195,6 +217,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlComment(): array
 	{
 		return $this->match('~(?J)
@@ -209,6 +232,7 @@ final class TemplateLexer
 	}
 
 
+	/** @return Token[] */
 	private function stateHtmlBogus(): array
 	{
 		return $this->match('~
@@ -236,9 +260,10 @@ final class TemplateLexer
 
 		$tokens = [];
 		foreach ($matches as $k => $v) {
-			if ($v !== null && !\is_int($k)) {
-				$tokens[] = new Token(\constant(Token::class . '::' . $k), $v, $this->position);
-				$this->position = $this->position->advance($v);
+			if ($v !== null && !is_int($k)) {
+				$end = $this->position->advance($v);
+				$tokens[] = new Token(constant(Token::class . '::' . $k), $v, $this->position, $end);
+				$this->position = $end;
 			}
 		}
 
@@ -246,15 +271,15 @@ final class TemplateLexer
 	}
 
 
-	public function setState(string $state, ...$args): void
+	public function setState(string $state, mixed ...$args): void
 	{
 		$this->states[0] = ['name' => $state, 'args' => $args];
 	}
 
 
-	public function pushState(string $state, ...$args): void
+	public function pushState(string $state, mixed ...$args): void
 	{
-		array_unshift($this->states, null);
+		array_unshift($this->states, ['name' => '', 'args' => []]);
 		$this->setState($state, ...$args);
 	}
 
@@ -281,7 +306,7 @@ final class TemplateLexer
 
 		$this->delimiters[] = [$this->openDelimiter, $this->closeDelimiter];
 		[$this->openDelimiter, $this->closeDelimiter] = match ($type) {
-			null => [$left, '\}'], // {...}
+			null, 'single' => [$left, '\}'], // {...}
 			'off' => [$endTag ? '(?=' . $end . ')\{' : '(?!x)x', '\}'],
 			'double' => $endTag // {{...}}
 				? ['(?:\{' . $left . '|(?=' . $end . ')\{)', '\}(?:\}|(?<=' . $end . '))']
@@ -294,7 +319,7 @@ final class TemplateLexer
 
 	public function popSyntax(): void
 	{
-		[$this->openDelimiter, $this->closeDelimiter] = array_pop($this->delimiters);
+		[$this->openDelimiter, $this->closeDelimiter] = array_pop($this->delimiters) ?? throw new \LogicException;
 	}
 
 

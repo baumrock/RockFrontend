@@ -1,29 +1,27 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
 use Latte;
 use Latte\CompileException;
 use Latte\Compiler\Nodes\Php as Node;
-use Latte\Compiler\Nodes\Php\Expression;
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Nodes\Php\NameNode;
-use Latte\Compiler\Nodes\Php\Scalar;
+use Latte\Compiler\Nodes\Php\{Expression, ExpressionNode, NameNode, Scalar};
+use function count, strlen;
 
 
 /**
  * Parser for PHP-like expression language used in tags.
  * Based on works by Nikita Popov, Moriyoshi Koizumi and Masato Bito.
  */
-final class TagParser extends TagParserData
+final class TagParser
 {
+	use TagParserData;
+
 	private const
 		SchemaExpression = 'e',
 		SchemaArguments = 'a',
@@ -32,17 +30,18 @@ final class TagParser extends TagParserData
 
 	private const SymbolNone = -1;
 
-	public TokenStream /*readonly*/ $stream;
+	public readonly TokenStream $stream;
 	public string $text;
 
-	/** @var \SplObjectStorage<Expression\ArrayNode> */
+	/** @var \SplObjectStorage<Expression\ArrayNode, null> */
 	protected \SplObjectStorage $shortArrays;
-	private int /*readonly*/ $offsetDelta;
+	private readonly int $offsetDelta;
 
 
+	/** @param array<int, mixed>  $tokens */
 	public function __construct(array $tokens)
 	{
-		$this->offsetDelta = $tokens[0]->position->offset ?? 0;
+		$this->offsetDelta = $tokens[0]->position->offset;
 		$tokens = $this->filterTokens($tokens);
 		$this->stream = new TokenStream(new \ArrayIterator($tokens));
 	}
@@ -107,8 +106,9 @@ final class TagParser extends TagParserData
 	{
 		$kind = [
 			Token::Php_Identifier, Token::Php_Constant, Token::Php_Ellipsis, Token::Php_Array, Token::Php_Integer,
-			Token::Php_NameFullyQualified, Token::Php_NameQualified, Token::Php_Null, Token::Php_False,
+			Token::Php_NameFullyQualified, Token::Php_NameQualified, Token::Php_Null, Token::Php_False, Token::Php_FilterPipe,
 			'(', ')', '<', '>', '[', ']', '|', '&', '{', '}', ':', ',', '=', '?',
+			Token::Php_Sr, // >> in nested generics like array<int, array<string, mixed>>
 		];
 		$res = null;
 		while ($token = $this->stream->tryConsume(...$kind)) {
@@ -121,6 +121,7 @@ final class TagParser extends TagParserData
 
 	/**
 	 * Parses variables used in foreach.
+	 * @return array{?Nodes\Php\ExpressionNode, Nodes\Php\ExpressionNode|Nodes\Php\ListNode, bool}
 	 * @internal
 	 */
 	public function parseForeach(): array
@@ -136,15 +137,16 @@ final class TagParser extends TagParserData
 	{
 		$token = $this->stream->peek();
 		return $token->is(...$kind) // is followed by whitespace
-			&& $this->stream->peek(1)->position->offset > $token->position->offset + strlen($token->text)
+			&& $this->stream->peek(1)->position->offset > $token->end->offset
 			? $this->stream->consume()
 			: null;
 	}
 
 
-	/** @deprecated use tryConsumeTokenBeforeUnquotedString() */
+	#[\Deprecated('use tryConsumeTokenBeforeUnquotedString()')]
 	public function tryConsumeModifier(string ...$kind): ?Token
 	{
+		trigger_error(__METHOD__ . '() was renamed to tryConsumeTokenBeforeUnquotedString()', E_USER_DEPRECATED);
 		return $this->tryConsumeTokenBeforeUnquotedString(...$kind);
 	}
 
@@ -155,11 +157,29 @@ final class TagParser extends TagParserData
 	}
 
 
+	/**
+	 * Consumes the comma separating the tag name from its arguments.
+	 * When $strict is false, a missing comma only triggers E_USER_DEPRECATED,
+	 * which allows tags to phase in the required comma without breaking BC.
+	 */
+	public function consumeCommaBeforeArguments(bool $strict = true): void
+	{
+		if ($this->isEnd() || $this->stream->is(Token::Php_FilterPipe)) {
+			return;
+		} elseif ($strict) {
+			$this->stream->consume(',');
+		} elseif (!$this->stream->tryConsume(',')) {
+			trigger_error("Missing comma before tag arguments {$this->stream->peek()->position}.", E_USER_DEPRECATED);
+		}
+	}
+
+
 	/** @throws Latte\CompileException */
 	private function parse(string $schema, bool $recovery = false): mixed
 	{
 		$symbol = self::SymbolNone; // We start off with no lookahead-token
 		$this->startTokenStack = []; // Keep stack of start token
+		$this->endTokenStack = []; // Keep stack of end token
 		$token = null;
 		$state = 0; // Start off in the initial state and keep a stack of previous states
 		$stateStack = [$state];
@@ -173,7 +193,10 @@ final class TagParser extends TagParserData
 			} else {
 				if ($symbol === self::SymbolNone) {
 					$recovery = $recovery
-						? [$this->stream->getIndex(), $state, $stateStack, $stackPos, $this->semValue, $this->semStack, $this->startTokenStack]
+						? [
+							$this->stream->getIndex(), $state, $stateStack, $stackPos, $this->semValue,
+							$this->semStack, $this->startTokenStack, $this->endTokenStack,
+						]
 						: null;
 
 
@@ -200,16 +223,18 @@ final class TagParser extends TagParserData
 					= -YYUNEXPECTED: error
 					*/
 					if ($action > 0) { // shift
-						++$stackPos;
+						$stackPos++;
 						$stateStack[$stackPos] = $state = $action;
 						$this->semStack[$stackPos] = $token->text;
 						$this->startTokenStack[$stackPos] = $token;
+						$this->endTokenStack[$stackPos] = $token;
 						$symbol = self::SymbolNone;
 						if ($action < self::NumNonLeafStates) {
 							continue;
 						}
 
 						$rule = $action - self::NumNonLeafStates; // shift-and-reduce
+
 					} else {
 						$rule = -$action;
 					}
@@ -224,6 +249,7 @@ final class TagParser extends TagParserData
 					return $this->semValue;
 
 				} elseif ($rule !== self::UnexpectedTokenRule) { // reduce
+					$lastEndToken = $this->endTokenStack[$stackPos] ?? $token;
 					$this->reduce($rule, $stackPos);
 
 					// Goto - shift nonterminal
@@ -231,21 +257,22 @@ final class TagParser extends TagParserData
 					$stackPos -= $ruleLength;
 					$nonTerminal = self::RuleToNonTerminal[$rule];
 					$idx = self::GotoBase[$nonTerminal] + $stateStack[$stackPos];
-					if ($idx >= 0 && $idx < count(self::Goto) && self::GotoCheck[$idx] === $nonTerminal) {
-						$state = self::Goto[$idx];
-					} else {
-						$state = self::GotoDefault[$nonTerminal];
-					}
+					$state = $idx >= 0 && $idx < count(self::Goto) && self::GotoCheck[$idx] === $nonTerminal
+						? self::Goto[$idx]
+						: self::GotoDefault[$nonTerminal];
 
-					++$stackPos;
+					$stackPos++;
 					$stateStack[$stackPos] = $state;
 					$this->semStack[$stackPos] = $this->semValue;
+					$this->endTokenStack[$stackPos] = $lastEndToken;
 					if ($ruleLength === 0) {
 						$this->startTokenStack[$stackPos] = $token;
 					}
 
 				} elseif ($recovery && $this->isExpectedEof($state)) { // recoverable error
-					[, $state, $stateStack, $stackPos, $this->semValue, $this->semStack, $this->startTokenStack] = $recovery;
+					[
+						, $state, $stateStack, $stackPos, $this->semValue, $this->semStack, $this->startTokenStack, $this->endTokenStack,
+					] = $recovery;
 					$this->stream->seek($recovery[0]);
 					$token = new Token(Token::End, '');
 					goto recovery;
@@ -265,37 +292,40 @@ final class TagParser extends TagParserData
 
 
 	/**
-	 * Can EOF be the next token?
+	 * Can EOF be the next token? Its symbol number is 0.
 	 */
 	private function isExpectedEof(int $state): bool
 	{
-		foreach (self::SymbolToName as $symbol => $name) {
-			$idx = self::ActionBase[$state] + $symbol;
-			if (($idx >= 0 && $idx < count(self::Action) && self::ActionCheck[$idx] === $symbol
-					|| $state < self::Yy2Tblstate
-					&& ($idx = self::ActionBase[$state + self::NumNonLeafStates] + $symbol) >= 0
-					&& $idx < count(self::Action) && self::ActionCheck[$idx] === $symbol)
-				&& self::Action[$idx] !== self::UnexpectedTokenRule
-				&& self::Action[$idx] !== self::DefaultAction
-				&& $symbol === 0
-			) {
-				return true;
-			}
-		}
-
-		return false;
+		$idx = self::ActionBase[$state];
+		return (($idx >= 0 && $idx < count(self::Action) && self::ActionCheck[$idx] === 0)
+			|| ($state < self::Yy2Tblstate
+				&& ($idx = self::ActionBase[$state + self::NumNonLeafStates]) >= 0
+				&& $idx < count(self::Action) && self::ActionCheck[$idx] === 0))
+			&& self::Action[$idx] !== self::UnexpectedTokenRule
+			&& self::Action[$idx] !== self::DefaultAction;
 	}
 
 
-	public function throwReservedKeywordException(Token $token)
+	private function startPos(int $pos): ?Position
+	{
+		return $this->startTokenStack[$pos]->position;
+	}
+
+
+	private function endPos(int $pos): ?Position
+	{
+		// the end token may be a synthetic one without a position; fall back to the start token
+		return $this->endTokenStack[$pos]->end ?? $this->startTokenStack[$pos]->end;
+	}
+
+
+	public function throwReservedKeywordException(Token $token): never
 	{
 		throw new Latte\CompileException("Keyword '$token->text' cannot be used in Latte.", $token->position);
 	}
 
 
-	protected function checkFunctionName(
-		Expression\FunctionCallNode|Expression\FunctionCallableNode $func,
-	): ExpressionNode
+	private function checkFunctionName(Expression\FunctionCallNode $func): Expression\FunctionCallNode
 	{
 		if ($func->name instanceof NameNode && $func->name->isKeyword()) {
 			$this->throwReservedKeywordException(new Token(0, (string) $func->name, $func->name->position));
@@ -304,7 +334,19 @@ final class TagParser extends TagParserData
 	}
 
 
-	protected static function handleBuiltinTypes(NameNode $name): NameNode|Node\IdentifierNode
+	private function warnUnqualifiedConstant(NameNode $name): NameNode
+	{
+		if ($name->kind === NameNode::KindNormal && !str_contains($name->name, '\\') && !str_starts_with($name->name, '__')) {
+			trigger_error(
+				"Using unqualified constant '$name->name' is deprecated. Use '\\$name->name' with a leading backslash $name->position",
+				E_USER_DEPRECATED,
+			);
+		}
+		return $name;
+	}
+
+
+	private static function handleBuiltinTypes(NameNode $name): NameNode|Node\IdentifierNode
 	{
 		$builtinTypes = [
 			'bool' => true, 'int' => true, 'float' => true, 'string' => true, 'iterable' => true, 'void' => true,
@@ -318,14 +360,14 @@ final class TagParser extends TagParserData
 	}
 
 
-	protected static function parseOffset(string $str, Position $position): Scalar\StringNode|Scalar\IntegerNode
+	private static function parseOffset(string $str, Position $position): Scalar\StringNode|Scalar\IntegerNode
 	{
 		if (!preg_match('/^(?:0|-?[1-9][0-9]*)$/', $str)) {
 			return new Scalar\StringNode($str, $position);
 		}
 
-		$num = +$str;
-		if (!is_int($num)) {
+		$num = (int) $str;
+		if ((string) $num !== $str) { // value overflows the integer range
 			return new Scalar\StringNode($str, $position);
 		}
 
@@ -333,23 +375,24 @@ final class TagParser extends TagParserData
 	}
 
 
-	/** @param ExpressionNode[] $parts */
-	protected function parseDocString(
+	/** @param ExpressionNode[]  $parts */
+	private function parseDocString(
 		string $startToken,
 		array $parts,
 		string $endToken,
 		Position $startPos,
 		Position $endPos,
+		Position $errorPos,
 	): Scalar\StringNode|Scalar\InterpolatedStringNode
 	{
 		$hereDoc = !str_contains($startToken, "'");
 		preg_match('/\A[ \t]*/', $endToken, $matches);
 		$indentation = $matches[0];
 		if (str_contains($indentation, ' ') && str_contains($indentation, "\t")) {
-			throw new CompileException('Invalid indentation - tabs and spaces cannot be mixed', $endPos);
+			throw new CompileException('Invalid indentation - tabs and spaces cannot be mixed', $errorPos);
 
 		} elseif (!$parts) {
-			return new Scalar\StringNode('', $startPos);
+			return new Scalar\StringNode('', $startPos, $endPos);
 
 		} elseif (!$parts[0] instanceof Node\InterpolatedStringPartNode) {
 			// If there is no leading encapsed string part, pretend there is an empty one
@@ -359,7 +402,7 @@ final class TagParser extends TagParserData
 		$newParts = [];
 		foreach ($parts as $i => $part) {
 			if ($part instanceof Node\InterpolatedStringPartNode) {
-				$isLast = $i === \count($parts) - 1;
+				$isLast = $i === count($parts) - 1;
 				$part->value = $this->stripIndentation(
 					$part->value,
 					$indentation,
@@ -374,7 +417,7 @@ final class TagParser extends TagParserData
 					$part->value = PhpHelpers::decodeEscapeSequences($part->value, null);
 				}
 				if ($i === 0 && $isLast) {
-					return new Scalar\StringNode($part->value, $startPos);
+					return new Scalar\StringNode($part->value, $startPos, $endPos);
 				}
 				if ($part->value === '') {
 					continue;
@@ -383,7 +426,7 @@ final class TagParser extends TagParserData
 			$newParts[] = $part;
 		}
 
-		return new Scalar\InterpolatedStringNode($newParts, $startPos);
+		return new Scalar\InterpolatedStringNode($newParts, $startPos, $endPos);
 	}
 
 
@@ -404,14 +447,14 @@ final class TagParser extends TagParserData
 		return preg_replace_callback(
 			$regex,
 			function ($matches) use ($indentation, $position) {
-				$indentLen = \strlen($indentation);
+				$indentLen = strlen($indentation);
 				$prefix = substr($matches[1], 0, $indentLen);
 				if (str_contains($prefix, $indentation[0] === ' ' ? "\t" : ' ')) {
 					throw new CompileException('Invalid indentation - tabs and spaces cannot be mixed', $position);
 				} elseif (strlen($prefix) < $indentLen && !isset($matches[2])) {
 					throw new CompileException(
-						'Invalid body indentation level ' .
-						'(expecting an indentation level of at least ' . $indentLen . ')',
+						'Invalid body indentation level '
+						. '(expecting an indentation level of at least ' . $indentLen . ')',
 						$position,
 					);
 				}
@@ -424,7 +467,7 @@ final class TagParser extends TagParserData
 
 	public function convertArrayToList(Expression\ArrayNode $array): Node\ListNode
 	{
-		$this->shortArrays->detach($array);
+		unset($this->shortArrays[$array]);
 		$items = [];
 		foreach ($array->items as $item) {
 			$value = $item->value;
@@ -433,7 +476,7 @@ final class TagParser extends TagParserData
 			}
 			$value = match (true) {
 				$value instanceof Expression\TemporaryNode => $value->value,
-				$value instanceof Expression\ArrayNode && $this->shortArrays->contains($value) => $this->convertArrayToList($value),
+				$value instanceof Expression\ArrayNode && isset($this->shortArrays[$value]) => $this->convertArrayToList($value),
 				default => $value,
 			};
 			$items[] = $value
@@ -456,7 +499,10 @@ final class TagParser extends TagParserData
 	}
 
 
-	/** @param  Token[]  $tokens */
+	/**
+	 * @param  Token[]  $tokens
+	 * @return Token[]
+	 */
 	private function filterTokens(array $tokens): array
 	{
 		$this->text = '';

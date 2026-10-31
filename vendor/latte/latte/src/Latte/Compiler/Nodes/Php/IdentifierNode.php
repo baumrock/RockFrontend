@@ -1,24 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Node, Position, PrintContext};
 
 
+/**
+ * Simple identifier (unqualified name).
+ */
 class IdentifierNode extends Node
 {
 	public function __construct(
 		public string $name,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 

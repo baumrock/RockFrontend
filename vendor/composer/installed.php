@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => '__root__',
-        'pretty_version' => 'dev-main',
-        'version' => 'dev-main',
-        'reference' => '19a674d9219a66607e4beb0bf2595095dff08fa6',
+        'pretty_version' => '1.0.0+no-version-set',
+        'version' => '1.0.0.0',
+        'reference' => null,
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         '__root__' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => '19a674d9219a66607e4beb0bf2595095dff08fa6',
+            'pretty_version' => '1.0.0+no-version-set',
+            'version' => '1.0.0.0',
+            'reference' => null,
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -29,9 +29,9 @@
             'dev_requirement' => false,
         ),
         'latte/latte' => array(
-            'pretty_version' => 'v3.0.20',
-            'version' => '3.0.20.0',
-            'reference' => '4db7a5502f8cef02fffa84fc9c34a635d9c79d4d',
+            'pretty_version' => 'v3.1.7',
+            'version' => '3.1.7.0',
+            'reference' => 'c169e1346947deceb699c5976d6307829c68c4c8',
             'type' => 'library',
             'install_path' => __DIR__ . '/../latte/latte',
             'aliases' => array(),

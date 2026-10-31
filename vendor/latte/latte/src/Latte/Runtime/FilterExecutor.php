@@ -1,17 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Runtime;
 
 use Latte;
-use Latte\ContentType;
-use Latte\Helpers;
+use Latte\{ContentType, Helpers};
 
 
 /**
@@ -21,7 +18,7 @@ use Latte\Helpers;
 #[\AllowDynamicProperties]
 class FilterExecutor
 {
-	/** @var callable[] */
+	/** @var array<callable> */
 	private array $_dynamic = [];
 
 	/** @var array<string, array{callable, ?bool}> */
@@ -46,7 +43,7 @@ class FilterExecutor
 
 	/**
 	 * Returns all run-time filters.
-	 * @return callable[]
+	 * @return array<string, callable>
 	 */
 	public function getAll(): array
 	{
@@ -55,7 +52,7 @@ class FilterExecutor
 
 
 	/**
-	 * Returns filter for classic calling.
+	 * Returns the named filter as a simple callable (without FilterInfo context argument).
 	 */
 	public function __get(string $name): callable
 	{
@@ -117,7 +114,7 @@ class FilterExecutor
 		$hint = ($t = Helpers::getSuggestion(array_keys($this->_static), $name))
 			? ", did you mean '$t'?"
 			: '.';
-		throw new \LogicException("Filter '$name' is not defined$hint");
+		throw new \LogicException("Filter '$name' is not defined or not allowed here$hint");
 	}
 
 

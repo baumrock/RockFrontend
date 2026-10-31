@@ -1,23 +1,21 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Sandbox\Nodes;
 
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
 use Latte\Compiler\Nodes\Php\ExpressionNode;
 use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
+use Latte\Compiler\{PrintContext, Tag};
 
 
 /**
- * {sandbox "file" [,] [params]}
+ * {sandbox 'file.latte'}
+ * Isolated template rendering with sandbox policy.
  */
 class SandboxNode extends StatementNode
 {
@@ -43,7 +41,7 @@ class SandboxNode extends StatementNode
 			<<<'XX'
 				ob_start(fn() => '');
 				try {
-					$this->createTemplate(%node, %node, 'sandbox')->renderToContentType(%dump) %line;
+					$this->createTemplate(%raw, %node, 'sandbox')->renderToContentType(%dump) %line;
 				} catch (\Throwable $ʟ_e) {
 					if (isset($this->global->coreExceptionHandler)) {
 						ob_clean();
@@ -57,7 +55,7 @@ class SandboxNode extends StatementNode
 
 
 				XX,
-			$this->file,
+			$context->ensureString($this->file, 'Template name'),
 			$this->args,
 			$context->getEscaper()->export(),
 			$this->position,

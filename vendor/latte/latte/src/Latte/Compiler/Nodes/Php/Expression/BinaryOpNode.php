@@ -1,30 +1,32 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, OperatorNode};
+use Latte\Compiler\{Position, PrintContext};
+use function count;
 
 
-class BinaryOpNode extends ExpressionNode
+/**
+ * Binary operation: arithmetic, logical, bitwise, comparison, null-coalescing, or pipe.
+ */
+class BinaryOpNode extends ExpressionNode implements OperatorNode
 {
-	private const Ops = ['||', '&&', 'or', 'and', 'xor', '&', '^', '.', '+', '-', '*', '/', '%', '<<', '>>', '**',
-		'==', '!=', '===', '!==', '<=>', '<', '<=', '>', '>=', '??', ];
+	private const Ops = ['||', '&&', 'or', 'and', 'xor', '|', '&', '^', '.', '+', '-', '*', '/', '%', '<<', '>>', '**',
+		'==', '!=', '===', '!==', '<=>', '<', '<=', '>', '>=', '??', '|>'];
 
 
 	public function __construct(
 		public ExpressionNode $left,
-		public /*readonly*/ string $operator,
+		public string $operator,
 		public ExpressionNode $right,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 		if (!in_array(strtolower($this->operator), self::Ops, true)) {
 			throw new \InvalidArgumentException("Unexpected operator '$this->operator'");
@@ -53,7 +55,33 @@ class BinaryOpNode extends ExpressionNode
 
 	public function print(PrintContext $context): string
 	{
-		return $context->infixOp($this, $this->left, ' ' . $this->operator . ' ', $this->right);
+		return $context->parenthesize($this, $this->left, self::AssocLeft)
+			. ' ' . $this->operator . ' '
+			. $context->parenthesize($this, $this->right, self::AssocRight);
+	}
+
+
+	public function getOperatorPrecedence(): array
+	{
+		return match (strtolower($this->operator)) {
+			'**' => [250, self::AssocRight],
+			'*', '/', '%' => [210, self::AssocLeft],
+			'+', '-' => [200, self::AssocLeft],
+			'<<', '>>' => [190, self::AssocLeft],
+			'.' => [185, self::AssocLeft],
+			'|>' => [183, self::AssocLeft],
+			'<', '<=', '>', '>=', '<=>' => [180, self::AssocNone],
+			'==', '!=', '===', '!==' => [170, self::AssocNone],
+			'&' => [160, self::AssocLeft],
+			'^' => [150, self::AssocLeft],
+			'|' => [140, self::AssocLeft],
+			'&&' => [130, self::AssocLeft],
+			'||' => [120, self::AssocLeft],
+			'??' => [110, self::AssocRight],
+			'and' => [50, self::AssocLeft],
+			'xor' => [40, self::AssocLeft],
+			'or' => [30, self::AssocLeft],
+		};
 	}
 
 

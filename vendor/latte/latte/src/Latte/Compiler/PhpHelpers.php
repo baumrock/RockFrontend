@@ -1,15 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
 use Latte\CompileException;
+use function count, is_array, is_resource, strlen;
 
 
 /**
@@ -51,7 +50,7 @@ final class PhpHelpers
 						$token = ' ';
 					} elseif ($prev === '{' || $prev === '}' || $prev === ';' || $lines) {
 						$token = str_repeat("\n", max(1, $lines)) . str_repeat("\t", $level); // indent last line
-					} elseif ($prev[0] === T_OPEN_TAG) {
+					} elseif (is_array($prev) && $prev[0] === T_OPEN_TAG) {
 						$token = '';
 					}
 
@@ -62,7 +61,7 @@ final class PhpHelpers
 					$res .= $token;
 
 				} elseif ($name === T_OPEN_TAG) {
-					$res .= "<?php\n";
+					$res .= $next[0] === T_DECLARE ? '<?php ' : "<?php\n";
 
 				} elseif ($name === T_CLOSE_TAG) {
 					throw new \LogicException('Unexpected token');
@@ -98,10 +97,13 @@ final class PhpHelpers
 	}
 
 
+	/**
+	 * Exports value to PHP code representation.
+	 */
 	public static function dump(mixed $value, bool $multiline = false): string
 	{
 		if (is_array($value)) {
-			$indexed = $value && array_keys($value) === range(0, count($value) - 1);
+			$indexed = array_is_list($value);
 			$s = '';
 			foreach ($value as $k => $v) {
 				$s .= $multiline
@@ -110,36 +112,41 @@ final class PhpHelpers
 			}
 
 			return '[' . $s . ']';
+
 		} elseif ($value === null) {
 			return 'null';
 		} else {
-			return var_export($value, true);
+			return var_export($value, return: true);
 		}
 	}
 
 
+	/**
+	 * Optimizes consecutive echo statements into single call.
+	 */
 	public static function optimizeEcho(string $source): string
 	{
 		$res = '';
 		$tokens = token_get_all($source);
 		$start = null;
+		$str = '';
 
-		for ($i = 0; $i < \count($tokens); $i++) {
+		for ($i = 0; $i < count($tokens); $i++) {
 			$token = $tokens[$i];
 			if ($token[0] === T_ECHO) {
-				if (!$start) {
+				if ($start === null) {
 					$str = '';
 					$start = strlen($res);
 				}
 
-			} elseif ($start && $token[0] === T_CONSTANT_ENCAPSED_STRING && $token[1][0] === "'") {
+			} elseif ($start !== null && $token[0] === T_CONSTANT_ENCAPSED_STRING && $token[1][0] === "'") {
 				$str .= stripslashes(substr($token[1], 1, -1));
 
-			} elseif ($start && $token === ';') {
+			} elseif ($start !== null && $token === ';') {
 				if ($str !== '') {
 					$res = substr_replace(
 						$res,
-						'echo ' . ($str === "\n" ? '"\n"' : var_export($str, true)),
+						'echo ' . ($str === "\n" ? '"\n"' : var_export($str, return: true)),
 						$start,
 						strlen($res) - $start,
 					);
@@ -156,7 +163,10 @@ final class PhpHelpers
 	}
 
 
-	public static function decodeNumber(string $str, &$base = null): int|float|null
+	/**
+	 * Decodes number string to int or float value.
+	 */
+	public static function decodeNumber(string $str, ?int &$base = null): int|float|null
 	{
 		$str = str_replace('_', '', $str);
 
@@ -165,19 +175,23 @@ final class PhpHelpers
 			return $str + 0;
 		} elseif ($str[1] === 'x' || $str[1] === 'X') {
 			$base = 16;
-			return hexdec($str);
+			return @hexdec($str); // @ a number above PHP_INT_MAX triggers a notice in PHP 8.6
 		} elseif ($str[1] === 'b' || $str[1] === 'B') {
 			$base = 2;
-			return bindec($str);
+			return @bindec($str); // @ a number above PHP_INT_MAX triggers a notice in PHP 8.6
 		} elseif (strpbrk($str, '89')) {
 			return null;
 		} else {
 			$base = 8;
-			return octdec($str);
+			return @octdec($str); // @ a number above PHP_INT_MAX triggers a notice in PHP 8.6
 		}
 	}
 
 
+	/**
+	 * Decodes PHP string escape sequences (e.g. \n, \x1B, \u{1F600}).
+	 * Pass $quote to also unescape the given quote character.
+	 */
 	public static function decodeEscapeSequences(string $str, ?string $quote): string
 	{
 		if ($quote !== null) {
@@ -185,7 +199,7 @@ final class PhpHelpers
 		}
 
 		return preg_replace_callback(
-			'~\\\\([\\\\$nrtfve]|[xX][0-9a-fA-F]{1,2}|[0-7]{1,3}|u\{([0-9a-fA-F]+)\})~',
+			'~\\\([\\\$nrtfve]|[xX][0-9a-fA-F]{1,2}|[0-7]{1,3}|u\{[0-9a-fA-F]+\})~',
 			function ($matches) {
 				$ch = $matches[1];
 				$replacements = [
@@ -201,11 +215,15 @@ final class PhpHelpers
 				if (isset($replacements[$ch])) {
 					return $replacements[$ch];
 				} elseif ($ch[0] === 'x' || $ch[0] === 'X') {
-					return chr(hexdec(substr($ch, 1)));
+					return chr((int) hexdec(substr($ch, 1)));
 				} elseif ($ch[0] === 'u') {
-					return self::codePointToUtf8(hexdec($matches[2]));
+					return self::codePointToUtf8((int) hexdec(substr($ch, 2, -1)));
 				} else {
-					return chr(octdec($ch));
+					$num = (int) octdec($ch);
+					if ($num > 255) {
+						throw new CompileException("Octal escape sequence \\$ch is greater than \\377");
+					}
+					return chr($num);
 				}
 			},
 			$str,
@@ -226,10 +244,14 @@ final class PhpHelpers
 	}
 
 
+	/**
+	 * Validates the generated PHP code using the given PHP binary as a linter.
+	 * Throws CompileException if the code contains syntax errors.
+	 */
 	public static function checkCode(string $phpBinary, string $code, string $name): void
 	{
 		$process = proc_open(
-			$phpBinary . ' -l -n',
+			[$phpBinary, '-l', '-n'],
 			[['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']],
 			$pipes,
 			null,

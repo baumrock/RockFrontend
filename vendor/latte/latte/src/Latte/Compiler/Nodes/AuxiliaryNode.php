@@ -1,22 +1,22 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Node, PrintContext};
 
 
+/**
+ * Code generator hidden from compiler passes. Pass child nodes for traversal.
+ */
 class AuxiliaryNode extends AreaNode
 {
 	public function __construct(
-		public /*readonly*/ \Closure $print,
+		public readonly \Closure $print,
 		/** @var (?Node)[] */
 		public array $nodes = [],
 	) {

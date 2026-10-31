@@ -1,28 +1,22 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
-use Latte\Compiler\NodeHelpers;
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\NopNode;
-use Latte\Compiler\Nodes\Php;
+use Latte\Compiler\{NodeHelpers, PrintContext, Tag};
+use Latte\Compiler\Nodes\{AreaNode, NopNode, Php, StatementNode, TextNode};
 use Latte\Compiler\Nodes\Php\ModifierNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\Nodes\TextNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
 use Latte\Essential\TranslatorExtension;
+use function is_array, is_string;
 
 
 /**
  * {translate} ... {/translate}
+ * Translates block content.
  */
 class TranslateNode extends StatementNode
 {
@@ -30,7 +24,7 @@ class TranslateNode extends StatementNode
 	public ModifierNode $modifier;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static|NopNode> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static|NopNode> */
 	public static function create(Tag $tag, ?callable $translator): \Generator
 	{
 		$tag->outputMode = $tag::OutputKeepIndentation;
@@ -38,7 +32,7 @@ class TranslateNode extends StatementNode
 		$node = $tag->node = new static;
 		$args = $tag->parser->parseArguments();
 		$node->modifier = $tag->parser->parseModifier();
-		$node->modifier->escape = true;
+		$node->modifier->escape = !$node->modifier->removeFilter('noescape');
 		if ($tag->void) {
 			return new NopNode;
 		}
@@ -64,8 +58,8 @@ class TranslateNode extends StatementNode
 
 	public function print(PrintContext $context): string
 	{
-		if ($this->content instanceof TextNode) {
-			return $context->format(
+		return $this->content instanceof TextNode
+			? $context->format(
 				<<<'XX'
 					$ʟ_fi = new LR\FilterInfo(%dump);
 					echo %modifyContent(%dump) %line;
@@ -74,10 +68,8 @@ class TranslateNode extends StatementNode
 				$this->modifier,
 				$this->content->content,
 				$this->position,
-			);
-
-		} else {
-			return $context->format(
+			)
+			: $context->format(
 				<<<'XX'
 					ob_start(fn() => ''); try {
 						%node
@@ -92,7 +84,6 @@ class TranslateNode extends StatementNode
 				$this->modifier,
 				$this->position,
 			);
-		}
 	}
 
 

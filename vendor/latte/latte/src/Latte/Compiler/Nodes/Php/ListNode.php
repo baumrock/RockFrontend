@@ -1,26 +1,26 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php;
 
 use Latte\CompileException;
-use Latte\Compiler\Node;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Node, Position, PrintContext};
 
 
+/**
+ * Array destructuring ([$a, $b] = $arr).
+ */
 class ListNode extends Node
 {
 	public function __construct(
 		/** @var array<ListItemNode|null> */
 		public array $items = [],
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 		$this->validate();
 	}
@@ -39,7 +39,10 @@ class ListNode extends Node
 			if ($item !== null && !$item instanceof ListItemNode) {
 				throw new \TypeError('Item must be null or ListItemNode, ' . get_debug_type($item) . ' given.');
 			} elseif ($item?->value instanceof ExpressionNode && !$item->value->isWritable()) {
-				throw new CompileException('Cannot write to the expression: ' . $item->value->print(new PrintContext), $item->value->position);
+				throw new CompileException(
+					'Cannot write to the expression: ' . $item->value->print(new PrintContext),
+					$item->value->position,
+				);
 			}
 		}
 	}

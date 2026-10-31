@@ -16,4 +16,5 @@ return array(
     'MatthiasMullie\\PathConverter\\' => array($vendorDir . '/matthiasmullie/path-converter/src'),
     'MatthiasMullie\\Minify\\' => array($vendorDir . '/matthiasmullie/minify/src'),
     'Masterminds\\' => array($vendorDir . '/masterminds/html5/src'),
+    'Latte\\' => array($vendorDir . '/latte/latte/src/Latte'),
 );

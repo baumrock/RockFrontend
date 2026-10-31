@@ -1,28 +1,23 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
 use Latte\CompileException;
-use Latte\Compiler\Nodes\FragmentNode;
+use Latte\Compiler\{Block, PrintContext, Tag, TemplateParser, Token};
+use Latte\Compiler\Nodes\{FragmentNode, StatementNode, TextNode};
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
-use Latte\Compiler\Nodes\Php\ExpressionNode;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, ModifierNode};
 use Latte\Compiler\Nodes\Php\Scalar\StringNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\Nodes\TextNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
-use Latte\Compiler\TemplateParser;
+use function count;
 
 
 /**
- * {embed [block|file] name [,] [params]}
+ * {embed 'file.latte'|#block} ... {/embed}
  */
 class EmbedNode extends StatementNode
 {
@@ -33,7 +28,7 @@ class EmbedNode extends StatementNode
 	public int|string|null $layer;
 
 
-	/** @return \Generator<int, ?array, array{FragmentNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{FragmentNode, ?Tag}, static> */
 	public static function create(Tag $tag, TemplateParser $parser): \Generator
 	{
 		if ($tag->isNAttribute()) {
@@ -51,17 +46,62 @@ class EmbedNode extends StatementNode
 		$node->args = $tag->parser->parseArguments();
 
 		$prevIndex = $parser->blockLayer;
-		$parser->blockLayer = $node->layer = count($parser->blocks);
+		$layer = $parser->blockLayer = $node->layer = count($parser->blocks);
 		$parser->blocks[$parser->blockLayer] = [];
-		[$node->blocks] = yield;
 
+		// push the implicit {block default} onto the tag stack so {include parent/this} in loose content resolve to it
+		// tag name 'block' is load-bearing: TemplateGenerator uses it to give the block access to the caller's variables
+		$blockTag = new Tag('block', [new Token(Token::End, '', $tag->position)], $tag->position, $tag->end, prefix: $tag->prefix);
+		$block = new Block(new StringNode('default'), $layer, $blockTag);
+		$defaultBlock = $node->createDefaultBlock($block);
+		$parser->pushTag($block->tag);
+		[$node->blocks] = yield;
+		$parser->popTag();
+
+		// Content not wrapped in a {block} becomes the implicit {block default} block.
+		$kept = $loose = [];
 		foreach ($node->blocks->children as $child) {
-			if (!$child instanceof ImportNode && !$child instanceof BlockNode && !$child instanceof TextNode) {
-				throw new CompileException('Unexpected content inside {embed} tags.', $child->position);
+			$child instanceof ImportNode || $child instanceof BlockNode
+				? $kept[] = $child
+				: $loose[] = $child;
+		}
+
+		// ignore whitespace-only text surrounding the blocks, but keep it in between
+		while ($loose && $loose[0] instanceof TextNode && $loose[0]->isWhitespace()) {
+			array_shift($loose);
+		}
+		while ($loose && ($last = end($loose)) instanceof TextNode && $last->isWhitespace()) {
+			array_pop($loose);
+		}
+
+		if ($loose) {
+			if (isset($parser->blocks[$layer]['default'])) {
+				throw new CompileException(
+					'Cannot combine loose content with an explicit {block default} inside {embed}; both define the default block.',
+					$loose[0]->position ?? $tag->position,
+				);
 			}
+
+			$parser->blocks[$layer]['default'] = $block;
+			$defaultBlock->content = new FragmentNode($loose);
+			$kept[] = $defaultBlock;
+			$node->blocks->children = $kept;
 		}
 
 		$parser->blockLayer = $prevIndex;
+		return $node;
+	}
+
+
+	/**
+	 * Creates the implicit {block default} that wraps loose content.
+	 */
+	private function createDefaultBlock(Block $block): BlockNode
+	{
+		$node = $block->tag->node = new BlockNode;
+		$node->block = $block;
+		$node->modifier = new ModifierNode([], position: $block->tag->position);
+		$node->position = $block->tag->position;
 		return $node;
 	}
 
@@ -82,7 +122,7 @@ class EmbedNode extends StatementNode
 				<<<'XX'
 					$this->enterBlockLayer(%dump, get_defined_vars()) %line; %raw
 					try {
-						$this->createTemplate(%node, %node, "embed")->renderToContentType(%dump) %1.line;
+						$this->createTemplate(%raw, %node, "embed")->renderToContentType(%dump) %1.line;
 					} finally {
 						$this->leaveBlockLayer();
 					}
@@ -91,7 +131,7 @@ class EmbedNode extends StatementNode
 				$this->layer,
 				$this->position,
 				$imports,
-				$this->name,
+				$context->ensureString($this->name, 'Template name'),
 				$this->args,
 				$context->getEscaper()->export(),
 			)
@@ -100,7 +140,7 @@ class EmbedNode extends StatementNode
 					$this->enterBlockLayer(%dump, get_defined_vars()) %line; %raw
 					$this->copyBlockLayer();
 					try {
-						$this->renderBlock(%node, %node, %dump) %1.line;
+						$this->renderBlock(%raw, %node, %dump) %1.line;
 					} finally {
 						$this->leaveBlockLayer();
 					}
@@ -109,7 +149,7 @@ class EmbedNode extends StatementNode
 				$this->layer,
 				$this->position,
 				$imports,
-				$this->name,
+				$context->ensureString($this->name, 'Block name'),
 				$this->args,
 				$context->getEscaper()->export(),
 			);

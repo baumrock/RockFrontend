@@ -1,66 +1,58 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Html;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\NodeHelpers;
-use Latte\Compiler\Nodes;
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\AuxiliaryNode;
-use Latte\Compiler\Nodes\FragmentNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
+use Latte\Compiler\{Node, NodeHelpers, Nodes, Position, PrintContext, Tag};
+use Latte\Compiler\Nodes\{AreaNode, FragmentNode};
 use Latte\ContentType;
 
 
 /**
- * HTML element node.
+ * HTML/XML element with attributes, content, and n:attribute support.
  */
 class ElementNode extends AreaNode
 {
-	public ?Nodes\Php\ExpressionNode $variableName = null;
-	public ?FragmentNode $attributes = null;
+	public FragmentNode $attributes;
 	public bool $selfClosing = false;
 	public ?AreaNode $content = null;
 
 	/** @var Tag[] */
 	public array $nAttributes = [];
-
-	/** n:tag & n:tag- support */
-	public AreaNode $tagNode;
-	public bool $captureTagName = false;
+	public ?AreaNode $dynamicTag = null;
 	public bool $breakable = false;
-	private ?string $endTagVar;
 
 
 	public function __construct(
-		public /*readonly*/ string $name,
+		public readonly string $name,
 		public ?Position $position = null,
-		public /*readonly*/ ?self $parent = null,
-		public ?\stdClass $data = null,
+		public ?Position $end = null,
+		public readonly ?self $parent = null,
 		public string $contentType = ContentType::Html,
 	) {
-		$this->data ??= new \stdClass;
-		$this->tagNode = new AuxiliaryNode(\Closure::fromCallable([$this, 'printStartTag']));
+		$this->attributes = new FragmentNode;
 	}
 
 
+	/**
+	 * Returns the attribute value: plain string if static, Node if dynamic, true if it is a boolean or n:attribute, null if not found.
+	 */
 	public function getAttribute(string $name): string|Node|bool|null
 	{
-		foreach ($this->attributes?->children as $child) {
+		foreach ($this->attributes->children as $child) {
 			if ($child instanceof AttributeNode
 				&& $child->name instanceof Nodes\TextNode
-				&& strcasecmp($name, $child->name->content) === 0
+				&& $this->matchesIdentifier($name, $child->name->content)
 			) {
 				return NodeHelpers::toText($child->value) ?? $child->value ?? true;
+			} elseif ($child instanceof ExpressionAttributeNode
+				&& $this->matchesIdentifier($name, $child->name)
+			) {
+				return true;
 			}
 		}
 
@@ -68,14 +60,26 @@ class ElementNode extends AreaNode
 	}
 
 
+	/**
+	 * Checks whether the element has the given tag name (case-insensitive in HTML, case-sensitive in XML).
+	 */
 	public function is(string $name): bool
 	{
-		return $this->contentType === ContentType::Html
-			? strcasecmp($this->name, $name) === 0
-			: $this->name === $name;
+		return $this->matchesIdentifier($this->name, $name);
 	}
 
 
+	private function matchesIdentifier(string $a, string $b): bool
+	{
+		return $this->contentType === ContentType::Html
+			? strcasecmp($a, $b) === 0
+			: $a === $b;
+	}
+
+
+	/**
+	 * Checks whether the element contains raw text (i.e., is a <script> or <style> element).
+	 */
 	public function isRawText(): bool
 	{
 		return $this->contentType === ContentType::Html
@@ -85,66 +89,36 @@ class ElementNode extends AreaNode
 
 	public function print(PrintContext $context): string
 	{
-		$res = $this->endTagVar = null;
-		if ($this->captureTagName || $this->variableName) {
-			$endTag = $this->endTagVar = '$ʟ_tag[' . $context->generateId() . ']';
-			$res = "$this->endTagVar = '';";
-		} else {
-			$endTag = var_export('</' . $this->name . '>', true);
-		}
+		$res = $this->dynamicTag
+			? $this->dynamicTag->print($context)
+			: (new TagNode($this))->print($context, captureEnd: false);
 
-		$res .= $this->tagNode->print($context); // calls $this->printStartTag()
+		if ($innerContent = $this->content) {
+			if ($this->dynamicTag) {
+				$endTag = '$ʟ_tags[' . ($context->generateId()) . ']';
+				$res = "\$ʟ_tag = ''; $res $endTag = \$ʟ_tag;";
+			} else {
+				$endTag = var_export('</' . $this->name . '>', return: true);
+			}
 
-		if ($this->content) {
 			$context->beginEscape()->enterHtmlText($this);
-			$content = $this->content->print($context);
+			$content = $innerContent->print($context);
 			$context->restoreEscape();
 			$res .= $this->breakable
 				? 'try { ' . $content . ' } finally { echo ' . $endTag . '; } '
-				: $content . 'echo ' . $endTag . ';';
+				: $content . ' echo ' . $endTag . ';';
 		}
 
-		return $res;
-	}
-
-
-	private function printStartTag(PrintContext $context): string
-	{
-		$context->beginEscape()->enterHtmlTag($this->name);
-		$res = "echo '<';";
-
-		if ($this->endTagVar) {
-			$expr = $this->variableName
-				? 'LR\Filters::safeTag('
-					. $this->variableName->print($context)
-					. ($this->contentType === ContentType::Xml ? ', true' : '')
-					. ')'
-				: var_export($this->name, true);
-			$res .= "echo \$ʟ_tmp = $expr /* line {$this->position->line} */;"
-				. "{$this->endTagVar} = '</' . \$ʟ_tmp . '>' . {$this->endTagVar};";
-		} else {
-			$res .= 'echo ' . var_export($this->name, true) . ';';
-		}
-
-		foreach ($this->attributes?->children ?? [] as $attr) {
-			$res .= $attr->print($context);
-		}
-
-		$res .= "echo '" . ($this->selfClosing ? '/>' : '>') . "';";
-		$context->restoreEscape();
 		return $res;
 	}
 
 
 	public function &getIterator(): \Generator
 	{
-		yield $this->tagNode;
-		if ($this->variableName) {
-			yield $this->variableName;
+		if ($this->dynamicTag) {
+			yield $this->dynamicTag;
 		}
-		if ($this->attributes) {
-			yield $this->attributes;
-		}
+		yield $this->attributes;
 		if ($this->content) {
 			yield $this->content;
 		}
