@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Nette\Utils;
 
@@ -13,7 +11,7 @@ namespace Nette\Utils;
 /**
  * Type of image file.
  */
-/*enum*/ final class ImageType
+/* enum */ final class ImageType
 {
 	public const
 		JPEG = IMAGETYPE_JPEG,

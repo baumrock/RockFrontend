@@ -1,15 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Nette\Utils;
 
 use Nette;
+use function is_int;
+use const JSON_HEX_AMP, JSON_HEX_APOS, JSON_HEX_QUOT, JSON_HEX_TAG, JSON_PRESERVE_ZERO_FRACTION, JSON_UNESCAPED_SLASHES;
 
 
 /**
@@ -30,8 +30,8 @@ final class Json
 
 
 	/**
-	 * Converts value to JSON format. Use $pretty for easier reading and clarity, $asciiSafe for ASCII output
-	 * and $htmlSafe for HTML escaping, $forceObjects enforces the encoding of non-associateve arrays as objects.
+	 * Converts value to JSON format. Use $pretty for formatted output, $asciiSafe for ASCII-only output,
+	 * $htmlSafe for HTML-safe output, and $forceObjects to encode non-associative arrays as objects.
 	 * @throws JsonException
 	 */
 	public static function encode(
@@ -42,17 +42,14 @@ final class Json
 		bool $forceObjects = false,
 	): string
 	{
-		if (is_int($pretty)) { // back compatibility
-			$flags = ($pretty & self::ESCAPE_UNICODE ? 0 : JSON_UNESCAPED_UNICODE) | ($pretty & ~self::ESCAPE_UNICODE);
-		} else {
-			$flags = ($asciiSafe ? 0 : JSON_UNESCAPED_UNICODE)
+		$flags = is_int($pretty) // back compatibility
+			? ($pretty & self::ESCAPE_UNICODE ? 0 : JSON_UNESCAPED_UNICODE) | ($pretty & ~self::ESCAPE_UNICODE) // dresscode:ignore upgrading.declarations.deprecatedMember
+			: ($asciiSafe ? 0 : JSON_UNESCAPED_UNICODE)
 				| ($pretty ? JSON_PRETTY_PRINT : 0)
 				| ($forceObjects ? JSON_FORCE_OBJECT : 0)
 				| ($htmlSafe ? JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG : 0);
-		}
 
-		$flags |= JSON_UNESCAPED_SLASHES
-			| (defined('JSON_PRESERVE_ZERO_FRACTION') ? JSON_PRESERVE_ZERO_FRACTION : 0); // since PHP 5.6.6 & PECL JSON-C 1.3.7
+		$flags |= JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 
 		$json = json_encode($value, $flags);
 		if ($error = json_last_error()) {
@@ -64,7 +61,7 @@ final class Json
 
 
 	/**
-	 * Parses JSON to PHP value. The $forceArrays enforces the decoding of objects as arrays.
+	 * Decodes a JSON string to a PHP value. Use $forceArrays to decode objects as arrays.
 	 * @throws JsonException
 	 */
 	public static function decode(string $json, bool|int $forceArrays = false): mixed
