@@ -1,3 +1,11 @@
+## [5.6.2](https://github.com/baumrock/RockFrontend/compare/v5.6.1...v5.6.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* remove deprecated setAccessible() call ([19a674d](https://github.com/baumrock/RockFrontend/commit/19a674d9219a66607e4beb0bf2595095dff08fa6))
+* upgrade Latte to 3.1.7 for PHP 8.5 SplObjectStorage deprecation ([60b5925](https://github.com/baumrock/RockFrontend/commit/60b5925c59f8c3c7701e465910d1b5743bd9e58d))
+
 ## [5.6.1](https://github.com/baumrock/RockFrontend/compare/v5.6.0...v5.6.1) (2026-06-18)
 
 
@@ -46,12 +54,4 @@
 * getFile not checking all allowed folders ([2248591](https://github.com/baumrock/RockFrontend/commit/22485916a233b08fff73144f17c4d95a088c6927))
 * make sure intCode returns int ([6775757](https://github.com/baumrock/RockFrontend/commit/677575787a06dc0c15377aa85a330a5c8dd83b2e))
 * toolbar alfred issue ([7a4a234](https://github.com/baumrock/RockFrontend/commit/7a4a2349ae57bc3c0aad89c6b141006d80608dfd))
-
-## [5.3.0](https://github.com/baumrock/RockFrontend/compare/v5.2.0...v5.3.0) (2025-07-02)
-
-
-### Features
-
-* add new grow() concept ([3d304b6](https://github.com/baumrock/RockFrontend/commit/3d304b60861704ade89855709d1a06328ae30509))
-* add show/hide toggle for toolbar ([bd4d9df](https://github.com/baumrock/RockFrontend/commit/bd4d9df8fd74902b6ea867e1b748321719274391))
 
