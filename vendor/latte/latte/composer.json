@@ -1,30 +1,28 @@
 {
 	"name": "latte/latte",
-	"description": "☕ Latte: the intuitive and fast template engine for those who want the most secure PHP sites. Introduces context-sensitive escaping.",
-	"keywords": ["template", "nette", "security", "engine", "html", "twig", "context-sensitive", "escaping"],
+	"description": "☕ Latte: the safest template engine for PHP. Context-sensitive escaping stops XSS, tags speak PHP, and n:attributes keep the HTML clean.",
+	"keywords": ["latte", "nette", "template engine", "templating", "xss", "escaping", "context-sensitive", "twig", "blade"],
 	"homepage": "https://latte.nette.org",
 	"license": ["BSD-3-Clause", "GPL-2.0-only", "GPL-3.0-only"],
 	"authors": [
 		{
 			"name": "David Grudl",
 			"homepage": "https://davidgrudl.com"
-		},
-		{
-			"name": "Nette Community",
-			"homepage": "https://nette.org/contributors"
 		}
 	],
 	"require": {
-		"php": "8.0 - 8.4",
+		"php": "8.2 - 8.6",
 		"ext-json": "*",
 		"ext-tokenizer": "*"
 	},
 	"require-dev": {
-		"nette/tester": "^2.5",
+		"nette/tester": "^2.6",
 		"tracy/tracy": "^2.10",
 		"nette/utils": "^4.0",
-		"phpstan/phpstan": "^1",
-		"nette/php-generator": "^4.0"
+		"nette/php-generator": "^4.0",
+		"phpstan/phpstan": "^2.1@stable",
+		"phpstan/extension-installer": "^1.4@stable",
+		"nette/phpstan-rules": "^1.0"
 	},
 	"suggest": {
 		"ext-iconv": "to use filters |reverse, |substring",
@@ -39,7 +37,10 @@
 		"nette/caching": "<3.1.4"
 	},
 	"autoload": {
-		"classmap": ["src/"]
+		"classmap": ["src/"],
+		"psr-4": {
+			"Latte\\": "src/Latte"
+		}
 	},
 	"minimum-stability": "dev",
 	"bin": ["bin/latte-lint"],
@@ -49,7 +50,12 @@
 	},
 	"extra": {
 		"branch-alias": {
-			"dev-master": "3.0-dev"
+			"dev-master": "3.1-dev"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"phpstan/extension-installer": true
 		}
 	}
 }

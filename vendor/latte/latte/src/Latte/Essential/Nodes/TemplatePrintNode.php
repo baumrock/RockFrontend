@@ -1,25 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\Nodes;
+use Latte\Compiler\{Node, Nodes, NodeTraverser, PrintContext, Tag, Token};
 use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\NodeTraverser;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
-use Latte\Compiler\Token;
 
 
 /**
- * {templatePrint [ParentClass]}
+ * {templatePrint [ClassName]}
+ * Suggests parameter class for {templateType}.
  */
 class TemplatePrintNode extends StatementNode
 {
@@ -29,7 +23,11 @@ class TemplatePrintNode extends StatementNode
 	public static function create(Tag $tag): static
 	{
 		$node = new static;
-		$node->template = $tag->parser->stream->tryConsume(Token::Php_Identifier, Token::Php_NameFullyQualified, Token::Php_NameQualified)?->text;
+		$node->template = $tag->parser->stream->tryConsume(
+			Token::Php_Identifier,
+			Token::Php_NameFullyQualified,
+			Token::Php_NameQualified,
+		)?->text;
 		return $node;
 	}
 

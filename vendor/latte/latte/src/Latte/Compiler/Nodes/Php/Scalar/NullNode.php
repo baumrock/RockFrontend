@@ -1,23 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Scalar;
 
 use Latte\Compiler\Nodes\Php\ScalarNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Position, PrintContext};
 
 
+/**
+ * Null literal.
+ */
 class NullNode extends ScalarNode
 {
 	public function __construct(
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 

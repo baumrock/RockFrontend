@@ -1,27 +1,32 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\{CompileException, Helpers};
+use Latte\Compiler\{Node, Position, PrintContext};
 
 
+/**
+ * Single filter with name, arguments, and nullsafe flag (|name:arg).
+ */
 class FilterNode extends Node
 {
 	public function __construct(
 		public IdentifierNode $name,
 		/** @var ArgumentNode[] */
 		public array $args = [],
+		public bool $nullsafe = false,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
+		if ($name->name === 'escape') {
+			throw new CompileException("Filter 'escape' is not allowed.", $position);
+		}
 		(function (ArgumentNode ...$args) {})(...$args);
 	}
 
@@ -32,17 +37,34 @@ class FilterNode extends Node
 	}
 
 
-	public function printSimple(PrintContext $context, string $expr): string
+	/** @param  self[]  $filters */
+	public static function printSimple(PrintContext $context, array $filters, string $expr): string
 	{
-		return '($this->filters->' . $context->objectProperty($this->name) . ')('
-			. $expr
-			. ($this->args ? ', ' . $context->implode($this->args) : '')
-			. ')';
+		$nullsafe = false;
+		$chain = $expr;
+		$tmp = '$ʟ_tmp';
+		foreach ($filters as $filter) {
+			if ($filter->nullsafe) {
+				$expr = $nullsafe ? "(($tmp = $expr) === null ? null : $chain)" : $chain;
+				$chain = $tmp;
+				$nullsafe = true;
+			}
+
+			$chain = '($this->filters->' . $context->objectProperty($filter->name) . ')('
+				. $chain
+				. ($filter->args ? ', ' . $context->implode($filter->args) : '')
+				. ')';
+		}
+
+		return $nullsafe ? "(($tmp = $expr) === null ? null : $chain)" : $chain;
 	}
 
 
 	public function printContentAware(PrintContext $context, string $expr): string
 	{
+		if ($this->nullsafe) {
+			throw new CompileException('Content-aware filter cannot be nullsafe.', $this->position);
+		}
 		return '$this->filters->filterContent('
 			. $context->encodeString($this->name->name)
 			. ', $ʟ_fi, '
@@ -58,5 +80,6 @@ class FilterNode extends Node
 		foreach ($this->args as &$item) {
 			yield $item;
 		}
+		Helpers::removeNulls($this->args);
 	}
 }

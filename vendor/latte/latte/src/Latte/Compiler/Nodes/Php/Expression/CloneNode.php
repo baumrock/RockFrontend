@@ -1,24 +1,25 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, OperatorNode};
+use Latte\Compiler\{Position, PrintContext};
 
 
-class CloneNode extends ExpressionNode
+/**
+ * Object cloning (clone $obj).
+ */
+class CloneNode extends ExpressionNode implements OperatorNode
 {
 	public function __construct(
 		public ExpressionNode $expr,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 
@@ -26,6 +27,12 @@ class CloneNode extends ExpressionNode
 	public function print(PrintContext $context): string
 	{
 		return 'clone ' . $this->expr->print($context);
+	}
+
+
+	public function getOperatorPrecedence(): array
+	{
+		return [270, self::AssocNone];
 	}
 
 

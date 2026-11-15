@@ -1,26 +1,20 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
-use Latte\Compiler\Nodes\AreaNode;
+use Latte\Compiler\{Node, NodeTraverser, PrintContext, Tag};
+use Latte\Compiler\Nodes\{AreaNode, StatementNode, TemplateNode};
 use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
 
 
 /**
- * {first [$width]}
- * {last [$width]}
- * {sep [$width]}
+ * {first} ... {/first}, {last} ... {/last}, {sep} ... {/sep}
+ * Loop iteration helpers inside {foreach}.
  */
 class FirstLastSepNode extends StatementNode
 {
@@ -28,10 +22,9 @@ class FirstLastSepNode extends StatementNode
 	public ?ExpressionNode $width;
 	public AreaNode $then;
 	public ?AreaNode $else = null;
-	public ?Position $elseLine = null;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag): \Generator
 	{
 		$node = $tag->node = new static;
@@ -40,7 +33,6 @@ class FirstLastSepNode extends StatementNode
 
 		[$node->then, $nextTag] = yield ['else'];
 		if ($nextTag?->name === 'else') {
-			$node->elseLine = $nextTag->position;
 			[$node->else] = yield;
 		}
 
@@ -62,7 +54,7 @@ class FirstLastSepNode extends StatementNode
 			$this->width,
 			$this->position,
 			$this->then,
-			$this->elseLine,
+			$this->tagRanges[1] ?? null,
 			$this->else,
 		);
 	}
@@ -77,5 +69,20 @@ class FirstLastSepNode extends StatementNode
 		if ($this->else) {
 			yield $this->else;
 		}
+	}
+
+
+	/**
+	 * Warns when {first}, {last} or {sep} is used outside {foreach}. Becomes an error in Latte 3.2.
+	 */
+	public static function outsideForeachPass(TemplateNode $node): void
+	{
+		(new NodeTraverser)->traverse($node, function (Node $node) {
+			if ($node instanceof ForeachNode) { // everything below is inside a loop
+				return NodeTraverser::DontTraverseChildren;
+			} elseif ($node instanceof self) {
+				trigger_error("Tag {{$node->name}} outside {foreach} is deprecated ($node->position)", E_USER_DEPRECATED);
+			}
+		});
 	}
 }

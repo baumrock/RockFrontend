@@ -1,20 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php;
 
 use Latte\CompileException;
-use Latte\Compiler\Node;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Node, Position, PrintContext};
 
 
+/**
+ * Function parameter with type, default value, and variadic support.
+ */
 class ParameterNode extends Node
 {
 	public function __construct(
@@ -24,6 +23,7 @@ class ParameterNode extends Node
 		public bool $byRef = false,
 		public bool $variadic = false,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 		if ($variadic && $default !== null) {
 			throw new CompileException('Variadic parameter cannot have a default value', $position);

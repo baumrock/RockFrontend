@@ -20,7 +20,6 @@ final class ExposeFunctionsExtension extends Extension
     // Use reflection to access the protected $params property
     $reflection = new \ReflectionClass($template);
     $paramsProperty = $reflection->getProperty('params');
-    $paramsProperty->setAccessible(true);
 
     // Get current parameters and merge with API variables
     $currentParams = $paramsProperty->getValue($template);

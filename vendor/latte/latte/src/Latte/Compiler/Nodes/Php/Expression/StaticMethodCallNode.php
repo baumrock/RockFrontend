@@ -1,32 +1,38 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
 use Latte\Compiler\Nodes\Php;
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Nodes\Php\IdentifierNode;
-use Latte\Compiler\Nodes\Php\NameNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, IdentifierNode, NameNode};
+use Latte\Compiler\{Position, PrintContext};
+use Latte\Helpers;
 
 
+/**
+ * Static method call with partial application or first-class callable support.
+ */
 class StaticMethodCallNode extends ExpressionNode
 {
 	public function __construct(
 		public NameNode|ExpressionNode $class,
 		public IdentifierNode|ExpressionNode $name,
-		/** @var array<Php\ArgumentNode> */
+		/** @var array<Php\ArgumentNode|Php\VariadicPlaceholderNode> */
 		public array $args = [],
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
-		(function (Php\ArgumentNode ...$args) {})(...$args);
+		(function (Php\ArgumentNode|Php\VariadicPlaceholderNode ...$args) {})(...$args);
+	}
+
+
+	public function isPartialApplication(): bool
+	{
+		return ($this->args[0] ?? null) instanceof Php\VariadicPlaceholderNode;
 	}
 
 
@@ -51,15 +57,6 @@ class StaticMethodCallNode extends ExpressionNode
 		foreach ($this->args as &$item) {
 			yield $item;
 		}
-	}
-}
-
-
-class_alias(StaticMethodCallNode::class, StaticCallNode::class);
-
-if (false) {
-	/** @deprecated use Latte\Compiler\Nodes\Php\Expression\StaticMethodCallNode */
-	class StaticCallNode
-	{
+		Helpers::removeNulls($this->args);
 	}
 }

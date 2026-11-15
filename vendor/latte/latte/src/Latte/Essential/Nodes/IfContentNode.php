@@ -1,26 +1,21 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
 use Latte\CompileException;
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\AuxiliaryNode;
+use Latte\Compiler\Nodes\{AreaNode, AuxiliaryNode, StatementNode};
 use Latte\Compiler\Nodes\Html\ElementNode;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
-use Latte\Compiler\TemplateParser;
+use Latte\Compiler\{PrintContext, Tag, TemplateParser};
 
 
 /**
- * n:ifcontent
+ * <div n:ifcontent> ... </div>
+ * Omits element if content is empty or whitespace only.
  */
 class IfContentNode extends StatementNode
 {
@@ -30,12 +25,13 @@ class IfContentNode extends StatementNode
 	public ?AreaNode $else = null;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag, TemplateParser $parser): \Generator
 	{
 		$node = $tag->node = new static;
 		$node->id = $parser->generateId();
 		[$node->content] = yield;
+		assert($tag->htmlElement !== null);
 		$node->htmlElement = $tag->htmlElement;
 		if (!$node->htmlElement->content) {
 			throw new CompileException("Unnecessary n:ifcontent on empty element <{$node->htmlElement->name}>", $tag->position);
@@ -46,8 +42,9 @@ class IfContentNode extends StatementNode
 
 	public function print(PrintContext $context): string
 	{
+		$saved = $this->htmlElement->content;
+		assert($saved !== null);
 		try {
-			$saved = $this->htmlElement->content;
 			$else = $this->else ?? new AuxiliaryNode(fn() => '');
 			$this->htmlElement->content = new AuxiliaryNode(fn() => <<<XX
 				ob_start();

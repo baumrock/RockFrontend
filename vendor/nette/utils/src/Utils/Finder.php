@@ -1,19 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Nette\Utils;
 
 use Nette;
+use function count, func_get_args, func_num_args, is_array, sprintf;
+use const DIRECTORY_SEPARATOR, GLOB_NOESCAPE, GLOB_NOSORT, GLOB_ONLYDIR;
 
 
 /**
- * Finder allows searching through directory trees using iterator.
+ * Searches for files and directories in directory trees.
  *
  * Finder::findFiles('*.php')
  *     ->size('> 10kB')
@@ -24,42 +24,44 @@ use Nette;
  */
 class Finder implements \IteratorAggregate
 {
-	use Nette\SmartObject;
-
 	/** @var array<array{string, string}> */
 	private array $find = [];
 
 	/** @var string[] */
 	private array $in = [];
 
-	/** @var \Closure[] */
+	/** @var array<\Closure(FileInfo): bool> */
 	private array $filters = [];
 
-	/** @var \Closure[] */
+	/** @var array<\Closure(FileInfo): bool> */
 	private array $descentFilters = [];
 
 	/** @var array<string|self> */
 	private array $appends = [];
 	private bool $childFirst = false;
 
-	/** @var ?callable */
-	private $sort;
+	/** @var ?(\Closure(FileInfo, FileInfo): int) */
+	private ?\Closure $sort = null;
 	private int $maxDepth = -1;
 	private bool $ignoreUnreadableDirs = true;
 
 
 	/**
-	 * Begins search for files and directories matching mask.
+	 * Begins search for files and directories matching mask. The ** wildcard searches recursively;
+	 * a trailing slash limits the mask to directories.
+	 * @param  string|list<string>  $masks
 	 */
 	public static function find(string|array $masks = ['*']): static
 	{
 		$masks = is_array($masks) ? $masks : func_get_args(); // compatibility with variadic
-		return (new static)->addMask($masks, 'dir')->addMask($masks, 'file');
+		$files = array_filter($masks, fn(string $mask): bool => !self::hasTrailingSeparator($mask)); // trailing slash means directories only
+		return (new static)->addMask($masks, 'dir')->addMask(array_values($files), 'file');
 	}
 
 
 	/**
-	 * Begins search for files matching mask.
+	 * Begins search for files matching mask. The ** wildcard searches recursively.
+	 * @param  string|list<string>  $masks
 	 */
 	public static function findFiles(string|array $masks = ['*']): static
 	{
@@ -69,7 +71,8 @@ class Finder implements \IteratorAggregate
 
 
 	/**
-	 * Begins search for directories matching mask.
+	 * Begins search for directories matching mask. The ** wildcard searches recursively.
+	 * @param  string|list<string>  $masks
 	 */
 	public static function findDirectories(string|array $masks = ['*']): static
 	{
@@ -80,6 +83,7 @@ class Finder implements \IteratorAggregate
 
 	/**
 	 * Finds files matching the specified masks.
+	 * @param  string|list<string>  $masks
 	 */
 	public function files(string|array $masks = ['*']): static
 	{
@@ -89,6 +93,7 @@ class Finder implements \IteratorAggregate
 
 	/**
 	 * Finds directories matching the specified masks.
+	 * @param  string|list<string>  $masks
 	 */
 	public function directories(string|array $masks = ['*']): static
 	{
@@ -96,27 +101,39 @@ class Finder implements \IteratorAggregate
 	}
 
 
+	/** @param  list<string>  $masks */
 	private function addMask(array $masks, string $mode): static
 	{
 		foreach ($masks as $mask) {
-			$mask = FileSystem::unixSlashes($mask);
+			$orig = $mask;
 			if ($mode === 'dir') {
-				$mask = rtrim($mask, '/');
+				$mask = rtrim($mask, '/\\');
 			}
-			if ($mask === '' || ($mode === 'file' && str_ends_with($mask, '/'))) {
-				throw new Nette\InvalidArgumentException("Invalid mask '$mask'");
+			if ($mask === '' || ($mode === 'file' && self::hasTrailingSeparator($mask))) {
+				throw new Nette\InvalidArgumentException("Invalid mask '$orig'");
 			}
-			if (str_starts_with($mask, '**/')) {
-				$mask = substr($mask, 3);
-			}
-			$this->find[] = [$mask, $mode];
+			$this->find[] = [self::expandGlobStar($mask), $mode];
 		}
 		return $this;
 	}
 
 
+	private static function hasTrailingSeparator(string $mask): bool
+	{
+		return ($last = substr($mask, -1)) === '/' || $last === '\\';
+	}
+
+
+	// Expands a ** that is not followed by a slash into **/*, so that e.g. "test/**" and "**.c" search recursively.
+	private static function expandGlobStar(string $mask): string
+	{
+		return preg_replace('~(?<=^|[/\\\])\*\*(?![/\\\])~', '**/*', $mask);
+	}
+
+
 	/**
-	 * Searches in the given directories. Wildcards are allowed.
+	 * Searches in the given directories. Wildcards * and ? are allowed; unlike in masks, [ and ] are taken literally.
+	 * @param  string|list<string>  $paths
 	 */
 	public function in(string|array $paths): static
 	{
@@ -127,23 +144,25 @@ class Finder implements \IteratorAggregate
 
 
 	/**
-	 * Searches recursively from the given directories. Wildcards are allowed.
+	 * Searches recursively from the given directories. Wildcards * and ? are allowed; unlike in masks, [ and ] are taken literally.
+	 * @param  string|list<string>  $paths
 	 */
 	public function from(string|array $paths): static
 	{
 		$paths = is_array($paths) ? $paths : func_get_args(); // compatibility with variadic
-		$this->addLocation($paths, '/**');
+		$this->addLocation($paths, DIRECTORY_SEPARATOR . '**');
 		return $this;
 	}
 
 
+	/** @param  list<string>  $paths */
 	private function addLocation(array $paths, string $ext): void
 	{
 		foreach ($paths as $path) {
 			if ($path === '') {
 				throw new Nette\InvalidArgumentException("Invalid directory '$path'");
 			}
-			$path = rtrim(FileSystem::unixSlashes($path), '/');
+			$path = rtrim($path, '/\\');
 			$this->in[] = $path . $ext;
 		}
 	}
@@ -170,12 +189,12 @@ class Finder implements \IteratorAggregate
 
 
 	/**
-	 * Set a compare function for sorting directory entries. The function will be called to sort entries from the same directory.
+	 * Sets a comparison function for sorting entries within each directory.
 	 * @param  callable(FileInfo, FileInfo): int  $callback
 	 */
 	public function sortBy(callable $callback): static
 	{
-		$this->sort = $callback;
+		$this->sort = $callback(...);
 		return $this;
 	}
 
@@ -191,7 +210,8 @@ class Finder implements \IteratorAggregate
 
 
 	/**
-	 * Adds the specified paths or appends a new finder that returns.
+	 * Appends the specified file paths to results. Passing null creates and returns a new sub-finder whose results are appended.
+	 * @param  string|list<string>|null  $paths
 	 */
 	public function append(string|array|null $paths = null): static
 	{
@@ -199,7 +219,7 @@ class Finder implements \IteratorAggregate
 			return $this->appends[] = new static;
 		}
 
-		$this->appends = array_merge($this->appends, (array) $paths);
+		$this->appends = [...$this->appends, ...(array) $paths];
 		return $this;
 	}
 
@@ -208,23 +228,32 @@ class Finder implements \IteratorAggregate
 
 
 	/**
-	 * Skips entries that matches the given masks relative to the ones defined with the in() or from() methods.
+	 * Skips entries that match the given masks, using the same grammar as find() masks, relative to the directories from in() or from().
+	 * A trailing slash excludes directories only; a trailing /* or /** excludes the contents while keeping the directory itself.
+	 * @param  string|list<string>  $masks
 	 */
 	public function exclude(string|array $masks): static
 	{
 		$masks = is_array($masks) ? $masks : func_get_args(); // compatibility with variadic
 		foreach ($masks as $mask) {
+			$orig = $mask;
 			$mask = FileSystem::unixSlashes($mask);
-			if (!preg_match('~^/?(\*\*/)?(.+)(/\*\*|/\*|/|)$~D', $mask, $m)) {
-				throw new Nette\InvalidArgumentException("Invalid mask '$mask'");
+			if (FileSystem::isAbsolute($mask) || $mask === '..' || str_starts_with($mask, '../')) {
+				trigger_error(
+					"Absolute or ../ mask '$orig' in exclude() is deprecated and will change meaning, use a mask relative to the searched directory.",
+					E_USER_DEPRECATED,
+				);
+			}
+			if (!preg_match('~^/?(\*\*/)?(.+?)(/\*\*|/\*|/|)$~D', $mask, $m)) {
+				throw new Nette\InvalidArgumentException("Invalid mask '$orig'");
 			}
 			$end = $m[3];
-			$re = $this->buildPattern($m[2]);
+			$re = $this->buildPattern(self::expandGlobStar($m[2]));
 			$filter = fn(FileInfo $file): bool => ($end && !$file->isDir())
 				|| !preg_match($re, FileSystem::unixSlashes($file->getRelativePathname()));
 
 			$this->descentFilter($filter);
-			if ($end !== '/*') {
+			if ($end === '' || $end === '/') {
 				$this->filter($filter);
 			}
 		}
@@ -239,7 +268,7 @@ class Finder implements \IteratorAggregate
 	 */
 	public function filter(callable $callback): static
 	{
-		$this->filters[] = \Closure::fromCallable($callback);
+		$this->filters[] = $callback(...);
 		return $this;
 	}
 
@@ -250,7 +279,7 @@ class Finder implements \IteratorAggregate
 	 */
 	public function descentFilter(callable $callback): static
 	{
-		$this->descentFilters[] = \Closure::fromCallable($callback);
+		$this->descentFilters[] = $callback(...);
 		return $this;
 	}
 
@@ -267,6 +296,7 @@ class Finder implements \IteratorAggregate
 
 	/**
 	 * Restricts the search by size. $operator accepts "[operator] [size] [unit]" example: >=10kB
+	 * @param  '>'|'>='|'<'|'<='|'='|'=='|'==='|'!='|'!=='|'<>'  $operator  or predicate string
 	 */
 	public function size(string $operator, ?int $size = null): static
 	{
@@ -277,7 +307,7 @@ class Finder implements \IteratorAggregate
 
 			[, $operator, $size, $unit] = $matches;
 			$units = ['' => 1, 'k' => 1e3, 'm' => 1e6, 'g' => 1e9];
-			$size *= $units[strtolower($unit)];
+			$size = (float) $size * $units[strtolower($unit)];
 			$operator = $operator ?: '=';
 		}
 
@@ -287,6 +317,7 @@ class Finder implements \IteratorAggregate
 
 	/**
 	 * Restricts the search by modified time. $operator accepts "[operator] [date]" example: >1978-01-23
+	 * @param  '>'|'>='|'<'|'<='|'='|'=='|'==='|'!='|'!=='|'<>'  $operator  or predicate string
 	 */
 	public function date(string $operator, string|int|\DateTimeInterface|null $date = null): static
 	{
@@ -299,7 +330,7 @@ class Finder implements \IteratorAggregate
 			$operator = $operator ?: '=';
 		}
 
-		$date = DateTime::from($date)->format('U');
+		$date = DateTime::from($date)->getTimestamp();
 		return $this->filter(fn(FileInfo $file): bool => !$file->isFile() || Helpers::compare($file->getMTime(), $operator, $date));
 	}
 
@@ -329,7 +360,6 @@ class Finder implements \IteratorAggregate
 			if ($item instanceof self) {
 				yield from $item->getIterator();
 			} else {
-				$item = FileSystem::platformSlashes($item);
 				yield $item => new FileInfo($item);
 			}
 		}
@@ -350,7 +380,10 @@ class Finder implements \IteratorAggregate
 		}
 
 		try {
-			$pathNames = new \FilesystemIterator($dir, \FilesystemIterator::FOLLOW_SYMLINKS | \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::CURRENT_AS_PATHNAME | \FilesystemIterator::UNIX_PATHS);
+			$pathNames = new \FilesystemIterator(
+				$dir,
+				\FilesystemIterator::FOLLOW_SYMLINKS | \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::CURRENT_AS_PATHNAME,
+			);
 		} catch (\UnexpectedValueException $e) {
 			if ($this->ignoreUnreadableDirs) {
 				return;
@@ -359,7 +392,7 @@ class Finder implements \IteratorAggregate
 			}
 		}
 
-		$files = $this->convertToFiles($pathNames, implode('/', $subdirs), FileSystem::isAbsolute($dir));
+		$files = $this->convertToFiles($pathNames, implode(DIRECTORY_SEPARATOR, $subdirs), FileSystem::isAbsolute($dir));
 
 		if ($this->sort) {
 			$files = iterator_to_array($files);
@@ -379,13 +412,13 @@ class Finder implements \IteratorAggregate
 			}
 
 			if ($this->childFirst && $subSearch) {
-				yield from $this->traverseDir($pathName, $subSearch, array_merge($subdirs, [$file->getBasename()]));
+				yield from $this->traverseDir($pathName, $subSearch, [...$subdirs, $file->getBasename()]);
 			}
 
 			$relativePathname = FileSystem::unixSlashes($file->getRelativePathname());
 			foreach ($searches as $search) {
 				if (
-					$file->{'is' . $search->mode}()
+					"is_$search->mode"(Helpers::IsWindows && $file->isLink() ? $file->getLinkTarget() : $file->getPathname())
 					&& preg_match($search->pattern, $relativePathname)
 					&& $this->proveFilters($this->filters, $file, $cache)
 				) {
@@ -395,24 +428,28 @@ class Finder implements \IteratorAggregate
 			}
 
 			if (!$this->childFirst && $subSearch) {
-				yield from $this->traverseDir($pathName, $subSearch, array_merge($subdirs, [$file->getBasename()]));
+				yield from $this->traverseDir($pathName, $subSearch, [...$subdirs, $file->getBasename()]);
 			}
 		}
 	}
 
 
+	/** @param  iterable<string>  $pathNames */
 	private function convertToFiles(iterable $pathNames, string $relativePath, bool $absolute): \Generator
 	{
 		foreach ($pathNames as $pathName) {
 			if (!$absolute) {
-				$pathName = preg_replace('~\.?/~A', '', $pathName);
+				$pathName = preg_replace('~\.?[\\\/]~A', '', $pathName);
 			}
-			$pathName = FileSystem::platformSlashes($pathName);
 			yield new FileInfo($pathName, $relativePath);
 		}
 	}
 
 
+	/**
+	 * @param  (\Closure(FileInfo): bool)[]  $filters
+	 * @param  array<int, bool>  $cache
+	 */
 	private function proveFilters(array $filters, FileInfo $file, array &$cache): bool
 	{
 		foreach ($filters as $filter) {
@@ -441,7 +478,7 @@ class Finder implements \IteratorAggregate
 			} else {
 				foreach ($this->in ?: ['.'] as $in) {
 					$in = strtr($in, ['[' => '[[]', ']' => '[]]']); // in path, do not treat [ and ] as a pattern by glob()
-					$splits[] = self::splitRecursivePart($in . '/' . $mask);
+					$splits[] = self::splitRecursivePart($in . DIRECTORY_SEPARATOR . $mask);
 				}
 			}
 
@@ -468,14 +505,17 @@ class Finder implements \IteratorAggregate
 
 	/**
 	 * Since glob() does not know ** wildcard, we divide the path into a part for glob and a part for manual traversal.
+	 * @return array{string, string, bool}
 	 */
 	private static function splitRecursivePart(string $path): array
 	{
-		$a = strrpos($path, '/');
-		$parts = preg_split('~(?<=^|/)\*\*($|/)~', substr($path, 0, $a + 1), 2);
+		$pos = strrpos(strtr($path, '\\', '/'), '/');
+		$dir = $pos === false ? '' : substr($path, 0, $pos + 1);
+		$file = $pos === false ? $path : substr($path, $pos + 1);
+		$parts = preg_split('~(?<=^|[\\\/])\*\*($|[\\\/])~', $dir, 2);
 		return isset($parts[1])
-			? [$parts[0], $parts[1] . substr($path, $a + 1), true]
-			: [$parts[0], substr($path, $a + 1), false];
+			? [$parts[0], $parts[1] . $file, true]
+			: [$parts[0], $file, false];
 	}
 
 
@@ -484,6 +524,7 @@ class Finder implements \IteratorAggregate
 	 */
 	private function buildPattern(string $mask): string
 	{
+		$mask = FileSystem::unixSlashes($mask);
 		if ($mask === '*') {
 			return '##';
 		} elseif (str_starts_with($mask, './')) {
@@ -505,6 +546,6 @@ class Finder implements \IteratorAggregate
 				'\-' => '-',
 			],
 		);
-		return '#' . $anchor . $pattern . '$#D' . (defined('PHP_WINDOWS_VERSION_BUILD') ? 'i' : '');
+		return '#' . $anchor . $pattern . '$#D' . (Helpers::IsWindows ? 'i' : '');
 	}
 }

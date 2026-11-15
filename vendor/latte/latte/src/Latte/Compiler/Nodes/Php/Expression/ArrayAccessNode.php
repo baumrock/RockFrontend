@@ -1,25 +1,26 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Expression;
 
 use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Position, PrintContext};
 
 
+/**
+ * Array or string element access ($arr[$key]).
+ */
 class ArrayAccessNode extends ExpressionNode
 {
 	public function __construct(
 		public ExpressionNode $expr,
 		public ?ExpressionNode $index = null,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 

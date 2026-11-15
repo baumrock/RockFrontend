@@ -1,19 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Node, Position, PrintContext};
 
 
+/**
+ * Array item with optional key, reference, and spread operator.
+ */
 class ArrayItemNode extends Node
 {
 	public function __construct(
@@ -22,6 +21,7 @@ class ArrayItemNode extends Node
 		public bool $byRef = false,
 		public bool $unpack = false,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 
@@ -58,17 +58,5 @@ class ArrayItemNode extends Node
 			yield $this->key;
 		}
 		yield $this->value;
-	}
-}
-
-
-class_alias(ArrayItemNode::class, Expression\ArrayItemNode::class);
-
-namespace Latte\Compiler\Nodes\Php\Expression;
-
-if (false) {
-	/** @deprecated use Latte\Compiler\Nodes\Php\ArrayItemNode */
-	class ArrayItemNode
-	{
 	}
 }

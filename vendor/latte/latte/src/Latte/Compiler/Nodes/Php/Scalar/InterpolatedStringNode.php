@@ -1,34 +1,33 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Scalar;
 
-use Latte\Compiler\Nodes\Php\ExpressionNode;
-use Latte\Compiler\Nodes\Php\InterpolatedStringPartNode;
-use Latte\Compiler\Nodes\Php\ScalarNode;
-use Latte\Compiler\PhpHelpers;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\Nodes\Php\{ExpressionNode, InterpolatedStringPartNode, ScalarNode};
+use Latte\Compiler\{PhpHelpers, Position, PrintContext};
+use Latte\Helpers;
 
 
+/**
+ * Double-quoted string with embedded expressions ("Hello $name").
+ */
 class InterpolatedStringNode extends ScalarNode
 {
 	public function __construct(
 		/** @var array<ExpressionNode|InterpolatedStringPartNode> */
 		public array $parts,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 
 
-	/** @param array<ExpressionNode|InterpolatedStringPartNode> $parts */
-	public static function parse(array $parts, Position $position): static
+	/** @param array<ExpressionNode|InterpolatedStringPartNode>  $parts */
+	public static function parse(array $parts, ?Position $start, ?Position $end = null): static
 	{
 		foreach ($parts as $part) {
 			if ($part instanceof InterpolatedStringPartNode) {
@@ -36,7 +35,7 @@ class InterpolatedStringNode extends ScalarNode
 			}
 		}
 
-		return new static($parts, $position);
+		return new static($parts, $start, $end);
 	}
 
 
@@ -70,5 +69,6 @@ class InterpolatedStringNode extends ScalarNode
 		foreach ($this->parts as &$item) {
 			yield $item;
 		}
+		Helpers::removeNulls($this->parts);
 	}
 }

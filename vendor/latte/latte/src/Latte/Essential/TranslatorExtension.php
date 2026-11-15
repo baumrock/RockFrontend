@@ -1,21 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential;
 
 use Latte;
-use Latte\Compiler\NodeHelpers;
-use Latte\Compiler\Nodes\Php;
+use Latte\Compiler\Nodes\{Php, PrintNode};
+use Latte\Compiler\Nodes\Php\ExpressionNode;
 use Latte\Compiler\Tag;
 use Latte\Engine;
-use Latte\Essential\Nodes\PrintNode;
 use Nette\Localization\Translator;
+use function is_array, is_string;
 
 
 /**
@@ -23,25 +21,25 @@ use Nette\Localization\Translator;
  */
 final class TranslatorExtension extends Latte\Extension
 {
-	/** @var callable|Translator|null */
-	private $translator;
+	private readonly ?\Closure $translator;
 
 
 	public function __construct(
 		callable|Translator|null $translator,
-		private ?string $key = null,
+		private readonly ?string $key = null,
 	) {
-		$this->translator = $translator;
-		if ($translator instanceof Translator) {
-			$this->translator = [$translator, 'translate'];
-		}
+		$this->translator = match (true) {
+			$translator === null => null,
+			$translator instanceof Translator => $translator->translate(...),
+			default => $translator(...),
+		};
 	}
 
 
 	public function getTags(): array
 	{
 		return [
-			'_' => [$this, 'parseTranslate'],
+			'_' => $this->parseTranslate(...),
 			'translate' => fn(Tag $tag) => yield from Nodes\TranslateNode::create($tag, $this->key ? $this->translator : null),
 		];
 	}
@@ -66,7 +64,7 @@ final class TranslatorExtension extends Latte\Extension
 	/**
 	 * {_ ...}
 	 */
-	public function parseTranslate(Tag $tag): PrintNode
+	private function parseTranslate(Tag $tag): PrintNode
 	{
 		$tag->outputMode = $tag::OutputKeepIndentation;
 		$tag->expectArguments();
@@ -78,7 +76,7 @@ final class TranslatorExtension extends Latte\Extension
 		}
 
 		$node->modifier = $tag->parser->parseModifier();
-		$node->modifier->escape = true;
+		$node->modifier->escape = !$node->modifier->removeFilter('noescape');
 
 		if ($this->translator
 			&& $this->key
@@ -95,12 +93,8 @@ final class TranslatorExtension extends Latte\Extension
 	}
 
 
-	public static function toValue($args): mixed
+	public static function toValue(ExpressionNode $args): mixed
 	{
-		try {
-			return NodeHelpers::toValue($args, constants: true);
-		} catch (\InvalidArgumentException) {
-			return null;
-		}
+		return $args->hasValue(constants: true) ? $args->toValue(constants: true) : null;
 	}
 }

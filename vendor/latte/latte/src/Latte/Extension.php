@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Latte;
 
@@ -16,7 +14,7 @@ namespace Latte;
 abstract class Extension
 {
 	/**
-	 * Initializes before template is compiler.
+	 * Initializes before template is compiled.
 	 */
 	public function beforeCompile(Engine $engine): void
 	{
@@ -34,7 +32,7 @@ abstract class Extension
 
 
 	/**
-	 * Returns a list of parsers for Latte tags.
+	 * Returns a list of compiler passes.
 	 * @return array<string, callable(Compiler\Nodes\TemplateNode): void|\stdClass>
 	 */
 	public function getPasses(): array
@@ -65,7 +63,7 @@ abstract class Extension
 
 	/**
 	 * Returns a list of providers.
-	 * @return array<mixed>
+	 * @return array<string, mixed>
 	 */
 	public function getProviders(): array
 	{
@@ -74,7 +72,7 @@ abstract class Extension
 
 
 	/**
-	 * Returns a value to distinguish multiple versions of the template.
+	 * Returns a value that invalidates the template cache when the extension configuration changes.
 	 */
 	public function getCacheKey(Engine $engine): mixed
 	{
@@ -90,8 +88,23 @@ abstract class Extension
 	}
 
 
+	/**
+	 * Cleans up after template is rendered. Called even when rendering ends early via {exitIf}
+	 * or is interrupted by an exception.
+	 */
+	public function afterRender(Runtime\Template $template): void
+	{
+	}
+
+
+	/**
+	 * Wraps callable with ordering metadata for tags and passes.
+	 * @param  array<string>|string  $before
+	 * @param  array<string>|string  $after
+	 */
 	public static function order(callable $subject, array|string $before = [], array|string $after = []): \stdClass
 	{
+		$subject = $subject(...);
 		return (object) get_defined_vars();
 	}
 }

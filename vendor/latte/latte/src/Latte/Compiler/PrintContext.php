@@ -1,83 +1,40 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
 use Latte\Compiler\Nodes\Php as Nodes;
-use Latte\Compiler\Nodes\Php\Expression;
-use Latte\Compiler\Nodes\Php\Scalar;
-use Latte\ContentType;
+use Latte\Compiler\Nodes\Php\{Expression, OperatorNode, Scalar};
+use Latte\{ContentType, Feature};
 
 
 /**
- * PHP printing helpers and context.
- * The parts are based on great nikic/PHP-Parser project by Nikita Popov.
+ * Context for PHP code generation with escaping management.
  */
 final class PrintContext
 {
+	/** @var Nodes\ParameterNode[] */
 	public array $paramsExtraction = [];
+
+	/** @var array<string, Block> */
 	public array $blocks = [];
-
-	private array $exprPrecedenceMap = [
-		// [precedence, associativity] (-1 is %left, 0 is %nonassoc and 1 is %right)
-		Expression\PreOpNode::class              => [10,  1],
-		Expression\PostOpNode::class             => [10, -1],
-		Expression\UnaryOpNode::class            => [10,  1],
-		Expression\CastNode::class               => [10,  1],
-		Expression\ErrorSuppressNode::class      => [10,  1],
-		Expression\InstanceofNode::class         => [20,  0],
-		Expression\NotNode::class                => [30,  1],
-		Expression\TernaryNode::class            => [150,  0],
-		// parser uses %left for assignments, but they really behave as %right
-		Expression\AssignNode::class             => [160,  1],
-		Expression\AssignOpNode::class           => [160,  1],
-	];
-
-	private array $binaryPrecedenceMap = [
-		// [precedence, associativity] (-1 is %left, 0 is %nonassoc and 1 is %right)
-		'**'  => [0, 1],
-		'*'   => [40, -1],
-		'/'   => [40, -1],
-		'%'   => [40, -1],
-		'+'   => [50, -1],
-		'-'   => [50, -1],
-		'.'   => [50, -1],
-		'<<'  => [60, -1],
-		'>>'  => [60, -1],
-		'<'   => [70, 0],
-		'<='  => [70, 0],
-		'>'   => [70, 0],
-		'>='  => [70, 0],
-		'=='  => [80, 0],
-		'!='  => [80, 0],
-		'===' => [80, 0],
-		'!==' => [80, 0],
-		'<=>' => [80, 0],
-		'&'   => [90, -1],
-		'^'   => [100, -1],
-		'|'   => [110, -1],
-		'&&'  => [120, -1],
-		'||'  => [130, -1],
-		'??'  => [140, 1],
-		'and' => [170, -1],
-		'xor' => [180, -1],
-		'or'  => [190, -1],
-	];
 	private int $counter = 0;
 
 	/** @var Escaper[] */
 	private array $escaperStack = [];
 
 
-	public function __construct(string $contentType = ContentType::Html)
-	{
-		$this->escaperStack[] = new Escaper($contentType);
+	public function __construct(
+		string $contentType = ContentType::Html,
+		/** @var array<string, bool> */
+		private readonly array $features = [],
+		?Escaper $escaper = null,
+	) {
+		$this->escaperStack[] = $escaper ?? new Escaper($contentType);
 	}
 
 
@@ -102,12 +59,15 @@ final class PrintContext
 			function ($m) use ($args) {
 				[, $pos, $fn, $var] = $m;
 				$var = substr($var, 1, -1);
-				/** @var Nodes\ModifierNode[] $args */
-				return match ($fn) {
-					'modify' => $args[$pos]->printSimple($this, $var),
-					'modifyContent' => $args[$pos]->printContentAware($this, $var),
-					'escape' => end($this->escaperStack)->escape($var),
-				};
+				if ($fn === 'escape') {
+					return $this->getEscaper()->escape($var);
+				}
+
+				$arg = $args[$pos];
+				assert($arg instanceof Nodes\ModifierNode);
+				return $fn === 'modify'
+					? $arg->printSimple($this, $var)
+					: $arg->printContentAware($this, $var);
 			},
 			$mask,
 		);
@@ -115,45 +75,63 @@ final class PrintContext
 		return preg_replace_callback(
 			'#([,+]?\s*)? % (\d+) \. ([a-z]{3,}) (\?)? (\s*\+\s*)? ()#xi',
 			function ($m) use ($args) {
-				[, $l, $pos, $format, $cond, $r] = $m;
+				[, $left, $pos, $format, $cond, $right] = $m;
 				$arg = $args[$pos];
 
 				$code = match ($format) {
 					'dump' => PhpHelpers::dump($arg),
-					'node' => $arg ? $arg->print($this) : '',
+					'node' => match (true) {
+						!$arg => '',
+						$arg instanceof OperatorNode && $arg->getOperatorPrecedence() < Expression\AssignNode::Precedence => '('
+							. $arg->print($this) . ')',
+						default => $arg->print($this),
+					},
 					'raw' => (string) $arg,
 					'args' => $this->implode($arg instanceof Expression\ArrayNode ? $arg->toArguments() : $arg),
-					'line' => $arg?->line ? "/* line $arg->line */" : '',
+					'line' => ($pos = $arg instanceof Range ? $arg->start : $arg)?->line
+						? "/* pos $pos->line" . ($pos->column ? ":$pos->column" : '') . ' */'
+						: '',
 				};
 
-				if ($cond && ($code === '[]' || $code === '')) {
-					return $r ? $l : $r;
+				if ($cond && ($code === '[]' || $code === '' || $code === 'null')) {
+					return $right ? $left : $right;
 				}
 
 				return $code === ''
-					? trim($l) . $r
-					: $l . $code . $r;
+					? trim($left) . $right
+					: $left . $code . $right;
 			},
 			$mask,
 		);
 	}
 
 
+	/**
+	 * Saves the current escaping context and returns it. Call restoreEscape() to revert.
+	 */
 	public function beginEscape(): Escaper
 	{
 		return $this->escaperStack[] = $this->getEscaper();
 	}
 
 
+	/**
+	 * Restores the escaping context saved by beginEscape().
+	 */
 	public function restoreEscape(): void
 	{
 		array_pop($this->escaperStack);
 	}
 
 
+	/**
+	 * Returns a clone of the current escaping context.
+	 */
 	public function getEscaper(): Escaper
 	{
-		return clone end($this->escaperStack);
+		$escaper = end($this->escaperStack);
+		assert($escaper instanceof Escaper);
+		return clone $escaper;
 	}
 
 
@@ -173,15 +151,27 @@ final class PrintContext
 	}
 
 
+	/**
+	 * Generates unique ID for temporary variables.
+	 */
 	public function generateId(): int
 	{
 		return $this->counter++;
 	}
 
 
+	public function hasFeature(Feature $feature): bool
+	{
+		return $this->features[$feature->name] ?? false;
+	}
+
+
 	// PHP helpers
 
 
+	/**
+	 * Encodes a string as a PHP string literal using single or double quotes.
+	 */
 	public function encodeString(string $str, string $quote = "'"): string
 	{
 		return $quote === "'"
@@ -190,83 +180,60 @@ final class PrintContext
 	}
 
 
-	/**
-	 * Prints an infix operation while taking precedence into account.
-	 */
+	#[\Deprecated]
 	public function infixOp(Node $node, Node $leftNode, string $operatorString, Node $rightNode): string
 	{
-		[$precedence, $associativity] = $this->getPrecedence($node);
-		return $this->prec($leftNode, $precedence, $associativity, -1)
+		return $this->parenthesize($node, $leftNode, OperatorNode::AssocLeft)
 			. $operatorString
-			. $this->prec($rightNode, $precedence, $associativity, 1);
+			. $this->parenthesize($node, $rightNode, OperatorNode::AssocRight);
 	}
 
 
-	/**
-	 * Prints a prefix operation while taking precedence into account.
-	 */
+	#[\Deprecated]
 	public function prefixOp(Node $node, string $operatorString, Node $expr): string
 	{
-		[$precedence, $associativity] = $this->getPrecedence($node);
-		return $operatorString . $this->prec($expr, $precedence, $associativity, 1);
+		return $operatorString . $this->parenthesize($node, $expr, OperatorNode::AssocRight);
 	}
 
 
-	/**
-	 * Prints a postfix operation while taking precedence into account.
-	 */
+	#[\Deprecated]
 	public function postfixOp(Node $node, Node $var, string $operatorString): string
 	{
-		[$precedence, $associativity] = $this->getPrecedence($node);
-		return $this->prec($var, $precedence, $associativity, -1) . $operatorString;
+		return $this->parenthesize($node, $var, OperatorNode::AssocLeft) . $operatorString;
 	}
 
 
 	/**
 	 * Prints an expression node with the least amount of parentheses necessary to preserve the meaning.
 	 */
-	private function prec(Node $node, int $parentPrecedence, int $parentAssociativity, int $childPosition): string
+	public function parenthesize(OperatorNode $parentNode, Node $childNode, int $childPosition): string
 	{
-		$precedence = $this->getPrecedence($node);
-		if ($precedence) {
-			$childPrecedence = $precedence[0];
-			if ($childPrecedence > $parentPrecedence
-				|| ($parentPrecedence === $childPrecedence && $parentAssociativity !== $childPosition)
-			) {
-				return '(' . $node->print($this) . ')';
-			}
-		}
-
-		return $node->print($this);
-	}
-
-
-	private function getPrecedence(Node $node): ?array
-	{
-		return $node instanceof Expression\BinaryOpNode
-			? $this->binaryPrecedenceMap[$node->operator]
-			: $this->exprPrecedenceMap[$node::class] ?? null;
+		[$parentPrec, $parentAssoc] = $parentNode->getOperatorPrecedence();
+		[$childPrec] = $childNode instanceof OperatorNode ? $childNode->getOperatorPrecedence() : [null];
+		return $childPrec && ($childPrec < $parentPrec || ($parentPrec === $childPrec && $parentAssoc !== $childPosition))
+			? '(' . $childNode->print($this) . ')'
+			: $childNode->print($this);
 	}
 
 
 	/**
 	 * Prints an array of nodes and implodes the printed values with $glue
+	 * @param  (?Node)[]  $nodes
 	 */
 	public function implode(array $nodes, string $glue = ', '): string
 	{
 		$pNodes = [];
 		foreach ($nodes as $node) {
-			if ($node === null) {
-				$pNodes[] = '';
-			} else {
-				$pNodes[] = $node->print($this);
-			}
+			$pNodes[] = $node === null ? '' : $node->print($this);
 		}
 
 		return implode($glue, $pNodes);
 	}
 
 
+	/**
+	 * Prints a property or method name as a PHP identifier or a dynamic expression in braces.
+	 */
 	public function objectProperty(Node $node): string
 	{
 		return $node instanceof Nodes\NameNode || $node instanceof Nodes\IdentifierNode
@@ -275,6 +242,9 @@ final class PrintContext
 	}
 
 
+	/**
+	 * Prints a property or method name as a quoted PHP string or a dynamic expression.
+	 */
 	public function memberAsString(Node $node): string
 	{
 		return $node instanceof Nodes\NameNode || $node instanceof Nodes\IdentifierNode
@@ -292,11 +262,8 @@ final class PrintContext
 			|| $expr instanceof Expression\VariableNode
 			|| $expr instanceof Expression\ArrayAccessNode
 			|| $expr instanceof Expression\FunctionCallNode
-			|| $expr instanceof Expression\FunctionCallableNode
 			|| $expr instanceof Expression\MethodCallNode
-			|| $expr instanceof Expression\MethodCallableNode
 			|| $expr instanceof Expression\StaticMethodCallNode
-			|| $expr instanceof Expression\StaticMethodCallableNode
 			|| $expr instanceof Expression\ArrayNode
 			? $expr->print($this)
 			: '(' . $expr->print($this) . ')';
@@ -314,11 +281,8 @@ final class PrintContext
 			|| $expr instanceof Expression\PropertyFetchNode
 			|| $expr instanceof Expression\StaticPropertyFetchNode
 			|| $expr instanceof Expression\FunctionCallNode
-			|| $expr instanceof Expression\FunctionCallableNode
 			|| $expr instanceof Expression\MethodCallNode
-			|| $expr instanceof Expression\MethodCallableNode
 			|| $expr instanceof Expression\StaticMethodCallNode
-			|| $expr instanceof Expression\StaticMethodCallableNode
 			|| $expr instanceof Expression\ArrayNode
 			|| $expr instanceof Scalar\StringNode
 			|| $expr instanceof Scalar\BooleanNode
@@ -331,11 +295,27 @@ final class PrintContext
 
 
 	/**
+	 * Converts a list of argument nodes to a PHP array literal string.
 	 * @param  Nodes\ArgumentNode[]  $args
 	 */
 	public function argumentsAsArray(array $args): string
 	{
 		$items = array_map(fn(Nodes\ArgumentNode $arg) => $arg->toArrayItem(), $args);
 		return '[' . $this->implode($items) . ']';
+	}
+
+
+	/**
+	 * Ensures that expression evaluates to string or throws exception.
+	 */
+	public function ensureString(Nodes\ExpressionNode $name, string $entity): string
+	{
+		return $name instanceof Scalar\StringNode
+			? $name->print($this)
+			: $this->format(
+				'(LR\Helpers::stringOrNull($ʟ_tmp = %node) ?? throw new InvalidArgumentException(sprintf(%dump, get_debug_type($ʟ_tmp))))',
+				$name,
+				$entity . ' must be a string, %s given.',
+			);
 	}
 }

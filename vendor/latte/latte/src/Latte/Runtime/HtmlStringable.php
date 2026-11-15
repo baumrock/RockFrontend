@@ -1,17 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Runtime;
 
 
+/**
+ * Marks a value as pre-escaped HTML that should not be escaped again when rendered.
+ */
 interface HtmlStringable
 {
-	/** in HTML format */
+	/** Returns content in HTML format (no further escaping needed). */
 	function __toString(): string;
 }

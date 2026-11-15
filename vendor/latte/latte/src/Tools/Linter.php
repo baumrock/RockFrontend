@@ -1,40 +1,53 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Tools;
 
 use Latte;
 use Nette;
+use function function_exists, strlen;
 
 
+/**
+ * Validates Latte template syntax.
+ */
 final class Linter
 {
+	/** @var string[] */
+	public array $excludedDirs = ['.*', '*.tmp', 'temp', 'vendor', 'node_modules'];
+
+
 	public function __construct(
 		private ?Latte\Engine $engine = null,
-		private bool $debug = false,
-		private bool $strict = false,
+		private readonly bool $debug = false,
+		private readonly bool $strict = false,
 	) {
 	}
 
 
 	public function scanDirectory(string $path): bool
 	{
+		echo "Scanning $path\n";
+		return $this->scanFiles($this->getFiles($path));
+	}
+
+
+	/**
+	 * @param  iterable<\Stringable>  $files
+	 */
+	public function scanFiles(iterable $files): bool
+	{
 		$this->initialize();
 
-		echo "Scanning $path\n";
-
-		$files = $this->getFiles($path);
 		$counter = 0;
 		$errors = 0;
 		foreach ($files as $file) {
 			$file = (string) $file;
-			echo preg_replace('~\.?[/\\\\]~A', '', $file), "\x0D";
+			echo preg_replace('~\.?[/\\\]~A', '', $file), "\x0D";
 			$errors += $this->lintLatte($file) ? 0 : 1;
 			echo str_pad('...', strlen($file)), "\x0D";
 			$counter++;
@@ -49,7 +62,7 @@ final class Linter
 	{
 		$engine = new Latte\Engine;
 		$engine->enablePhpLinter(PHP_BINARY);
-		$engine->setStrictParsing($this->strict);
+		$engine->setFeature(Latte\Feature::StrictParsing, $this->strict);
 		$engine->addExtension(new Latte\Essential\TranslatorExtension(null));
 
 		if (class_exists(Nette\Bridges\ApplicationLatte\UIExtension::class)) {
@@ -64,6 +77,12 @@ final class Linter
 			$engine->addExtension(new Nette\Bridges\FormsLatte\FormsExtension);
 		}
 
+		if (class_exists(Nette\Bridges\AssetsLatte\LatteExtension::class)) {
+			$engine->addExtension(new Nette\Bridges\AssetsLatte\LatteExtension(new Nette\Assets\Registry));
+		}
+
+		$engine->addExtension(new LinterExtension);
+
 		return $engine;
 	}
 
@@ -77,22 +96,27 @@ final class Linter
 
 	public function lintLatte(string $file): bool
 	{
-		set_error_handler(function (int $severity, string $message) use ($file) {
-			if (in_array($severity, [E_USER_DEPRECATED, E_USER_WARNING, E_USER_NOTICE], true)) {
-				$pos = preg_match('~on line (\d+)~', $message, $m) ? ':' . $m[1] : '';
-				fwrite(STDERR, "[DEPRECATED] $file$pos    $message\n");
-				return null;
-			}
-			return false;
-		});
-
 		if ($this->debug) {
 			echo $file, "\n";
 		}
 		$s = file_get_contents($file);
-		if (substr($s, 0, 3) === "\xEF\xBB\xBF") {
-			fwrite(STDERR, "[WARNING]    $file    contains BOM\n");
+		if ($s === false) {
+			$this->writeError('ERROR', $file, 'unable to read file');
+			return false;
 		}
+		if (str_starts_with($s, "\xEF\xBB\xBF")) {
+			$this->writeError('WARNING', $file, 'contains BOM');
+		}
+
+		set_error_handler(function (int $severity, string $message, string $errFile = '', int $errLine = 0) use ($file): bool {
+			if (in_array($severity, [E_USER_DEPRECATED, E_USER_WARNING, E_USER_NOTICE], true)) {
+				$pos = preg_match('~on line (\d+)~', $message, $m) ? ':' . $m[1] : '';
+				$label = $severity === E_USER_DEPRECATED ? 'DEPRECATED' : 'WARNING';
+				$this->writeError($label, $file . $pos, $message);
+				return true;
+			}
+			return false;
+		});
 
 		try {
 			$this->getEngine()
@@ -105,7 +129,7 @@ final class Linter
 			}
 			$pos = $e->position?->line ? ':' . $e->position->line : '';
 			$pos .= $e->position?->column ? ':' . $e->position->column : '';
-			fwrite(STDERR, "[ERROR]      $file$pos    {$e->getMessage()}\n");
+			$this->writeError('ERROR', $file . $pos, $e->getMessage());
 			return false;
 
 		} finally {
@@ -119,13 +143,13 @@ final class Linter
 	private function initialize(): void
 	{
 		if (function_exists('pcntl_signal')) {
-			pcntl_signal(SIGINT, function (): void {
+			pcntl_signal(SIGINT, function (): never {
 				pcntl_signal(SIGINT, SIG_DFL);
 				echo "Terminated\n";
 				exit(1);
 			});
 		} elseif (function_exists('sapi_windows_set_ctrl_handler')) {
-			sapi_windows_set_ctrl_handler(function () {
+			sapi_windows_set_ctrl_handler(function (): never {
 				echo "Terminated\n";
 				exit(1);
 			});
@@ -137,17 +161,38 @@ final class Linter
 
 	private function getFiles(string $path): \Iterator
 	{
-		if (is_file($path)) {
-			return new \ArrayIterator([$path]);
+		$it = match (true) {
+			is_file($path) => new \ArrayIterator([$path]),
+			is_dir($path) => $this->findLatteFiles($path),
+			(bool) preg_match('~[*?]~', $path) => new \GlobIterator($path),
+			default => throw new \InvalidArgumentException("File or directory '$path' not found."),
+		};
+		$it = new \CallbackFilterIterator($it, fn($file) => is_file((string) $file));
+		return $it;
+	}
 
-		} elseif (preg_match('~[*?]~', $path)) {
-			return new \GlobIterator($path);
 
-		} else {
-			$it = new \RecursiveDirectoryIterator($path);
-			$it = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD);
-			$it = new \RegexIterator($it, '~\.latte$~');
-			return $it;
+	private function findLatteFiles(string $dir): \Generator
+	{
+		foreach (scandir($dir) as $name) {
+			$path = ($dir === '.' ? '' : $dir . DIRECTORY_SEPARATOR) . $name;
+			if ($name !== '.' && $name !== '..' && is_dir($path)) {
+				foreach ($this->excludedDirs as $pattern) {
+					if (fnmatch($pattern, $name)) {
+						continue 2;
+					}
+				}
+				yield from $this->findLatteFiles($path);
+
+			} elseif (str_ends_with($name, '.latte')) {
+				yield $path;
+			}
 		}
+	}
+
+
+	private function writeError(string $label, string $file, string $message): void
+	{
+		file_put_contents('php://stderr', str_pad("[$label]", 13) . ' ' . $file . '    ' . $message . "\n");
 	}
 }

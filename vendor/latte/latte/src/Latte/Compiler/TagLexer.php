@@ -1,15 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler;
 
 use Latte\CompileException;
+use function count, is_float, is_int, strlen;
+use const PREG_SET_ORDER, PREG_UNMATCHED_AS_NULL;
 
 
 /**
@@ -82,8 +82,8 @@ final class TagLexer
 	{
 		preg_match(
 			$colon
-				? '~ ( [./@_a-z0-9#!-] | :(?!:) | \{\$ [_a-z0-9\[\]()>-]+ })++  (?=\s+[!"\'$(\[{,\\\\|\~\w-] | [,|]  | \s*$) ~xAi'
-				: '~ ( [./@_a-z0-9#!-]          | \{\$ [_a-z0-9\[\]()>-]+ })++  (?=\s+[!"\'$(\[{,\\\\|\~\w-] | [,:|] | \s*$) ~xAi',
+				? '~ ( [./@_a-z0-9#!-] | :(?!:) | \{\$ [_a-z0-9\[\]()>-]+ } )++  (?=\s+[!"\'$(\[{,\\\|\~\w-] | [,|]  | \s*$) ~xAi'
+				: '~ ( [./@_a-z0-9#!-]          | \{\$ [_a-z0-9\[\]()>-]+ } )++  (?=\s+[!"\'$(\[{,\\\|\~\w-] | [,:|] | \s*$) ~xAi',
 			$input,
 			$match,
 			offset: $position->offset - $offsetDelta,
@@ -145,8 +145,11 @@ final class TagLexer
 			(?<Php_PowEqual>  \*\*=  )|
 			(?<Php_CoalesceEqual>  \?\?=  )|
 			(?<Php_Coalesce>  \?\?  )|
+			(?<Php_NullsafePipe>  \?\|  )|
 			(?<Php_BooleanOr>  \|\|  )|
 			(?<Php_BooleanAnd>  &&  )|
+			(?<Php_Pipe>  \|>  )|
+			(?<Php_FilterPipe>  \| (?= [ \t]* [a-z] )  )|
 			(?<Php_AmpersandFollowed>  & (?= [ \t\r\n]* (\$|\.\.\.) )  )|
 			(?<Php_AmpersandNotFollowed>  &  )|
 			(?<Php_IsIdentical>  ===  )|
@@ -206,7 +209,7 @@ final class TagLexer
 				|| isset($m[$type = 'Php_NullsafeObjectOperator'])
 				|| isset($m[$type = 'Php_UndefinedsafeObjectOperator'])
 			) {
-				$this->addToken(constant(Token::class . '::' . $type), $m[$type]);
+				$this->addToken(constant(Token::class . '::' . $type), $m[$type] ?? '');
 				if (isset($m['Php_Whitespace'])) {
 					$this->addToken(Token::Php_Whitespace, $m['Php_Whitespace']);
 				}
@@ -217,13 +220,18 @@ final class TagLexer
 			} elseif (isset($m['Php_Identifier'])) {
 				$lower = strtolower($m['Php_Identifier']);
 				$this->addToken(
-					self::Keywords[$lower] ?? (preg_match('~[A-Z_][A-Z0-9_]{2,}$~DA', $m['Php_Identifier']) ? Token::Php_Constant : Token::Php_Identifier),
+					self::Keywords[$lower] ?? (preg_match('~[A-Z_][A-Z0-9_]{2,}$~DA', $m['Php_Identifier'])
+						? Token::Php_Constant
+						: Token::Php_Identifier),
 					$m['Php_Identifier'],
 				);
 
 			} elseif (isset($m['Php_IdentifierFollowed'])) {
 				$lower = strtolower($m['Php_IdentifierFollowed']);
-				$this->addToken(self::KeywordsFollowed[$lower] ?? self::Keywords[$lower] ?? Token::Php_Identifier, $m['Php_IdentifierFollowed']);
+				$this->addToken(
+					self::KeywordsFollowed[$lower] ?? self::Keywords[$lower] ?? Token::Php_Identifier,
+					$m['Php_IdentifierFollowed'],
+				);
 
 			} elseif (isset($m['Php_ConstantEncapsedString'])) {
 				isset($m['rest'])
@@ -241,7 +249,12 @@ final class TagLexer
 					count($this->tokens) <= $count + 2
 					&& (!$token || $token->type === Token::Php_EncapsedAndWhitespace)
 				) {
-					array_splice($this->tokens, $count - 1, null, [new Token(Token::Php_ConstantEncapsedString, '"' . $token?->text . '"', $pos)]);
+					array_splice(
+						$this->tokens,
+						$count - 1,
+						null,
+						[new Token(Token::Php_ConstantEncapsedString, '"' . $token?->text . '"', $pos)],
+					);
 				}
 				goto matchRE;
 
@@ -356,8 +369,8 @@ final class TagLexer
 					|| isset($m[$type = 'Php_NullsafeObjectOperator'])
 					|| isset($m[$type = 'Php_UndefinedsafeObjectOperator'])
 				) {
-					$this->addToken(constant(Token::class . '::' . $type), $m[$type]);
-					$this->addToken(Token::Php_Identifier, $m['Php_Identifier']);
+					$this->addToken(constant(Token::class . '::' . $type), $m[$type] ?? '');
+					$this->addToken(Token::Php_Identifier, $m['Php_Identifier'] ?? '');
 
 				} elseif (isset($m['offset'])) {
 					$this->addToken(null, '[');
@@ -389,8 +402,9 @@ final class TagLexer
 
 	private function addToken(?int $type, string $text): void
 	{
-		$this->tokens[] = new Token($type ?? ord($text), $text, $this->position);
-		$this->position = $this->position->advance($text);
+		$end = $this->position->advance($text);
+		$this->tokens[] = new Token($type ?? ord($text), $text, $this->position, $end);
+		$this->position = $end;
 		$this->offset += strlen($text);
 	}
 }

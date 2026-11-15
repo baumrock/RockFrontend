@@ -1,30 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Essential\Nodes;
 
-use Latte\Compiler\Block;
-use Latte\Compiler\Nodes\AreaNode;
-use Latte\Compiler\Nodes\Php\Expression\AssignNode;
-use Latte\Compiler\Nodes\Php\Expression\VariableNode;
-use Latte\Compiler\Nodes\Php\ParameterNode;
-use Latte\Compiler\Nodes\Php\Scalar;
-use Latte\Compiler\Nodes\StatementNode;
-use Latte\Compiler\PrintContext;
-use Latte\Compiler\Tag;
-use Latte\Compiler\TemplateParser;
-use Latte\Compiler\Token;
+use Latte\Compiler\{Block, PrintContext, Tag, TemplateParser, Token};
+use Latte\Compiler\Nodes\{AreaNode, StatementNode};
+use Latte\Compiler\Nodes\Php\Expression\{AssignNode, VariableNode};
+use Latte\Compiler\Nodes\Php\{ParameterNode, Scalar};
+use Latte\Helpers;
 use Latte\Runtime\Template;
+use function is_string;
 
 
 /**
- * {define [local] name}
+ * {define name($params)} ... {/define}
+ * Defines reusable block with parameters.
  */
 class DefineNode extends StatementNode
 {
@@ -32,7 +26,7 @@ class DefineNode extends StatementNode
 	public AreaNode $content;
 
 
-	/** @return \Generator<int, ?array, array{AreaNode, ?Tag}, static> */
+	/** @return \Generator<int, ?list<string>, array{AreaNode, ?Tag}, static> */
 	public static function create(Tag $tag, TemplateParser $parser): \Generator
 	{
 		$tag->expectArguments();
@@ -59,6 +53,7 @@ class DefineNode extends StatementNode
 	}
 
 
+	/** @return ParameterNode[] */
 	private static function parseParameters(Tag $tag): array
 	{
 		$stream = $tag->parser->stream;
@@ -112,8 +107,8 @@ class DefineNode extends StatementNode
 		$this->block->content = $this->content->print($context); // must be compiled after is added
 
 		return $context->format(
-			'$this->addBlock(%node, %dump, [[$this, %dump]], %dump);',
-			new AssignNode(new VariableNode('ʟ_nm'), $this->block->name),
+			'$this->addBlock(%raw, %dump, [$this->%raw(...)], %dump);',
+			$context->ensureString($this->block->name, 'Block name'),
 			$context->getEscaper()->export(),
 			$this->block->method,
 			$this->block->layer,
@@ -127,6 +122,7 @@ class DefineNode extends StatementNode
 		foreach ($this->block->parameters as &$param) {
 			yield $param;
 		}
+		Helpers::removeNulls($this->block->parameters);
 
 		yield $this->content;
 	}

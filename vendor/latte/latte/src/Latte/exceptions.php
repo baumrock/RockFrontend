@@ -1,22 +1,60 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte;
 
 
+/**
+ * Common interface for all Latte exceptions.
+ */
 interface Exception
 {
 }
 
 
 /**
- * The exception occurred during Latte compilation.
+ * @internal
+ */
+trait PositionAwareException
+{
+	public ?string $sourceCode = null;
+	public ?string $sourceName = null;
+	public ?Compiler\Position $position = null;
+	private string $origMessage;
+
+
+	public function setSource(string $code, ?string $name = null): self
+	{
+		$this->sourceCode = $code;
+		$this->sourceName = $name;
+		$this->generateMessage();
+		return $this;
+	}
+
+
+	private function generateMessage(): void
+	{
+		$this->origMessage ??= $this->message;
+		$info = [];
+		if ($this->sourceName && @is_file($this->sourceName)) { // @ - may trigger error
+			$info[] = "in '" . str_replace(dirname($this->sourceName, 2), '...', $this->sourceName) . "'";
+		}
+		if ($this->position) {
+			$info[] = $this->position;
+		}
+		$this->message = $info
+			? rtrim($this->origMessage, '.') . ' (' . implode(' ', $info) . ')'
+			: $this->origMessage;
+	}
+}
+
+
+/**
+ * Template compilation failed.
  */
 class CompileException extends \Exception implements Exception
 {
@@ -37,7 +75,7 @@ class CompileException extends \Exception implements Exception
 
 
 /**
- * The exception occurred during template rendering.
+ * Template rendering failed.
  */
 class RuntimeException extends \RuntimeException implements Exception
 {
@@ -45,7 +83,15 @@ class RuntimeException extends \RuntimeException implements Exception
 
 
 /**
- * Exception thrown when a not allowed construction is used in a template.
+ * Template file not found or could not be loaded.
+ */
+class TemplateNotFoundException extends RuntimeException
+{
+}
+
+
+/**
+ * Template uses forbidden function, filter or variable in sandbox mode.
  */
 class SecurityViolationException extends \Exception implements Exception
 {

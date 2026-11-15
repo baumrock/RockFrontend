@@ -1,27 +1,31 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php;
 
-use Latte\Compiler\Node;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{Node, Position, PrintContext};
+use Latte\Helpers;
 
 
+/**
+ * Chain of filters with auto-escape flag.
+ */
 class ModifierNode extends Node
 {
+	/** @deprecated */
+	public bool $check = true;
+
+
 	public function __construct(
 		/** @var FilterNode[] */
 		public array $filters,
 		public bool $escape = false,
-		public bool $check = true,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 		(function (FilterNode ...$args) {})(...$filters);
 	}
@@ -39,6 +43,21 @@ class ModifierNode extends Node
 	}
 
 
+	/**
+	 * Removes and returns the first filter with the given name, or null if not found.
+	 */
+	public function removeFilter(string $name): ?FilterNode
+	{
+		foreach ($this->filters as $i => $filter) {
+			if ($filter->name->name === $name) {
+				return array_splice($this->filters, $i, 1)[0];
+			}
+		}
+
+		return null;
+	}
+
+
 	public function print(PrintContext $context): string
 	{
 		throw new \LogicException('Cannot directly print ModifierNode');
@@ -47,54 +66,24 @@ class ModifierNode extends Node
 
 	public function printSimple(PrintContext $context, string $expr): string
 	{
-		$escape = $this->escape;
-		$check = $this->check;
-		foreach ($this->filters as $filter) {
-			$name = $filter->name->name;
-			if ($name === 'nocheck' || $name === 'noCheck') {
-				$check = false;
-			} elseif ($name === 'noescape') {
-				$escape = false;
-			} else {
-				if ($name === 'datastream' || $name === 'dataStream') {
-					$check = false;
-				}
-				$expr = $filter->printSimple($context, $expr);
-			}
-		}
+		$expr = FilterNode::printSimple($context, $this->filters, $expr);
 
 		$escaper = $context->getEscaper();
-		if ($check) {
-			$expr = $escaper->check($expr);
-		}
-
-		$expr = $escape
+		return $this->escape
 			? $escaper->escape($expr)
-			: $escaper->escapeMandatory($expr);
-
-		return $expr;
+			: $escaper->escapeMandatory($expr, $this->position);
 	}
 
 
 	public function printContentAware(PrintContext $context, string $expr): string
 	{
 		foreach ($this->filters as $filter) {
-			$name = $filter->name->name;
-			if ($name === 'noescape') {
-				$noescape = true;
-			} else {
-				$expr = $filter->printContentAware($context, $expr);
-			}
+			$expr = $filter->printContentAware($context, $expr);
 		}
 
-		if ($this->escape && empty($noescape)) {
-			$expr = 'LR\Filters::convertTo($ʟ_fi, '
-				. var_export($context->getEscaper()->export(), true) . ', '
-				. $expr
-				. ')';
-		}
-
-		return $expr;
+		return $this->escape
+			? $context->getEscaper()->escapeContent($expr)
+			: $expr;
 	}
 
 
@@ -103,5 +92,6 @@ class ModifierNode extends Node
 		foreach ($this->filters as &$filter) {
 			yield $filter;
 		}
+		Helpers::removeNulls($this->filters);
 	}
 }

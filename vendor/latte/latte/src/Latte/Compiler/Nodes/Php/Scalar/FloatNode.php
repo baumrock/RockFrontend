@@ -1,43 +1,44 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Latte\Compiler\Nodes\Php\Scalar;
 
 use Latte\Compiler\Nodes\Php\ScalarNode;
-use Latte\Compiler\PhpHelpers;
-use Latte\Compiler\Position;
-use Latte\Compiler\PrintContext;
+use Latte\Compiler\{PhpHelpers, Position, PrintContext};
+use const INF;
 
 
+/**
+ * Floating-point literal including infinity and NaN.
+ */
 class FloatNode extends ScalarNode
 {
 	public function __construct(
 		public float $value,
 		public ?Position $position = null,
+		public ?Position $end = null,
 	) {
 	}
 
 
-	public static function parse(string $str, Position $position): static
+	public static function parse(string $str, ?Position $start, ?Position $end = null): static
 	{
 		return strpbrk($str, '.eE') === false
-			? new static((float) PhpHelpers::decodeNumber($str), $position)
-			: new static((float) str_replace('_', '', $str), $position);
+			? new static((float) PhpHelpers::decodeNumber($str), $start, $end)
+			: new static((float) str_replace('_', '', $str), $start, $end);
 	}
 
 
 	public function print(PrintContext $context): string
 	{
 		if (!is_finite($this->value)) {
-			if ($this->value === \INF) {
+			if ($this->value === INF) {
 				return '\INF';
-			} elseif ($this->value === -\INF) {
+			} elseif ($this->value === -INF) {
 				return '-\INF';
 			} else {
 				return '\NAN';

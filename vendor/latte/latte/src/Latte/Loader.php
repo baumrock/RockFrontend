@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Latte (https://latte.nette.org)
  * Copyright (c) 2008 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Latte;
 
@@ -19,12 +17,6 @@ interface Loader
 	 * Returns template source code.
 	 */
 	function getContent(string $name): string;
-
-	/**
-	 * Checks whether template is expired.
-	 * @deprecated
-	 */
-	function isExpired(string $name, int $time): bool;
 
 	/**
 	 * Returns referred template name.

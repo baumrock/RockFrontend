@@ -1,15 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Nette\Utils;
 
 use Nette;
+use function array_key_exists, gettype, is_float, is_int, is_object, is_string, strlen;
 
 
 /**
@@ -25,7 +24,7 @@ class Validators
 		'never' => 1, 'true' => 1,
 	];
 
-	/** @var array<string,?callable> */
+	/** @var array<string, ?(callable(mixed): bool)> */
 	protected static $validators = [
 		// PHP types
 		'array' => 'is_array',
@@ -75,7 +74,7 @@ class Validators
 		'type' => [self::class, 'isType'],
 	];
 
-	/** @var array<string,callable> */
+	/** @var array<string, callable(mixed): int> */
 	protected static $counters = [
 		'string' => 'strlen',
 		'unicode' => [Strings::class, 'length'],
@@ -113,22 +112,22 @@ class Validators
 
 
 	/**
-	 * Verifies that element $key in array is of expected types separated by pipe.
+	 * Verifies that item $key in array exists and is of expected types separated by pipe.
 	 * @param  mixed[]  $array
 	 * @throws AssertionException
 	 */
 	public static function assertField(
 		array $array,
-		$key,
+		int|string $key,
 		?string $expected = null,
 		string $label = "item '%' in array",
 	): void
 	{
 		if (!array_key_exists($key, $array)) {
-			throw new AssertionException('Missing ' . str_replace('%', $key, $label) . '.');
+			throw new AssertionException('Missing ' . str_replace('%', (string) $key, $label) . '.');
 
 		} elseif ($expected) {
-			static::assert($array[$key], $expected, str_replace('%', $key, $label));
+			static::assert($array[$key], $expected, str_replace('%', (string) $key, $label));
 		}
 	}
 
@@ -145,6 +144,7 @@ class Validators
 				}
 
 				continue;
+
 			} elseif (str_starts_with($item, '?')) {
 				$item = substr($item, 1);
 				if ($value === null) {
@@ -158,7 +158,7 @@ class Validators
 					if (!static::$validators[$type]($value)) {
 						continue;
 					}
-				} catch (\TypeError $e) {
+				} catch (\TypeError) {
 					continue;
 				}
 			} elseif ($type === 'pattern') {
@@ -167,6 +167,7 @@ class Validators
 				}
 
 				continue;
+
 			} elseif (!$value instanceof $type) {
 				continue;
 			}
@@ -196,7 +197,7 @@ class Validators
 
 	/**
 	 * Finds whether all values are of expected types separated by pipe.
-	 * @param  mixed[]  $values
+	 * @param  iterable<mixed>  $values
 	 */
 	public static function everyIs(iterable $values, string $expected): bool
 	{
@@ -260,7 +261,7 @@ class Validators
 
 	/**
 	 * Checks if the value is 0, '', false or null.
-	 * @return ($value is 0|''|false|null ? true : false)
+	 * @return ($value is 0|0.0|''|false|null ? true : false)
 	 */
 	public static function isNone(mixed $value): bool
 	{
@@ -289,6 +290,7 @@ class Validators
 	/**
 	 * Checks if the value is in the given range [min, max], where the upper or lower limit can be omitted (null).
 	 * Numbers, strings and DateTime objects can be compared.
+	 * @param  array{int|float|string|\DateTimeInterface|null, int|float|string|\DateTimeInterface|null}  $range
 	 */
 	public static function isInRange(mixed $value, array $range): bool
 	{
@@ -337,14 +339,15 @@ class Validators
 	public static function isUrl(string $value): bool
 	{
 		$alpha = "a-z\x80-\xFF";
+		$octet = '(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])'; // 0..255
 		return (bool) preg_match(<<<XX
 			(^(?n)
 				https?://(
 					(([-_0-9$alpha]+\\.)*                       # subdomain
 						[0-9$alpha]([-0-9$alpha]{0,61}[0-9$alpha])?\\.)?  # domain
 						[$alpha]([-0-9$alpha]{0,17}[$alpha])?   # top domain
-					|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}  # IPv4
-					|\\[[0-9a-f:]{3,39}\\]                      # IPv6
+					|$octet(\\.$octet){3}                       # IPv4
+					|\\[[0-9a-f:]{3,39}]                        # IPv6
 				)(:\\d{1,5})?                                   # port
 				(/\\S*)?                                        # path
 				(\\?\\S*)?                                      # query
@@ -359,7 +362,7 @@ class Validators
 	 */
 	public static function isUri(string $value): bool
 	{
-		return (bool) preg_match('#^[a-z\d+\.-]+:\S+$#Di', $value);
+		return (bool) preg_match('#^[a-z\d+.-]+:\S+$#Di', $value);
 	}
 
 
